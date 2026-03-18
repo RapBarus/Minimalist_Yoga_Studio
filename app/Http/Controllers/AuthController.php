@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
 {
-    // ── Show Register ─────────────────────────────────────────
+    // Show Register
     public function showRegister()
     {
         return view('auth.register');
     }
 
-    // ── Register ──────────────────────────────────────────────
+    // Register
     public function register(Request $request)
     {
         $request->validate([
@@ -29,7 +29,6 @@ class AuthController extends Controller
             'password.min' => 'Password minimal 6 karakter.',
         ]);
 
-        // Check if username already taken
         $exists = DB::table('users')->where('name', $request->username)->exists();
         if ($exists) {
             return back()
@@ -53,13 +52,13 @@ class AuthController extends Controller
             ->with('success', 'Akun berhasil dibuat! Silakan login.');
     }
 
-    // ── Show Login ────────────────────────────────────────────
+    // Show Login
     public function showLogin()
     {
         return view('auth.login');
     }
 
-    // ── Login ─────────────────────────────────────────────────
+    // Login
     public function login(Request $request)
     {
         $request->validate([
@@ -92,7 +91,7 @@ class AuthController extends Controller
             ->with('success', 'Selamat datang, ' . $user->name . '!');
     }
 
-    // ── Logout ────────────────────────────────────────────────
+    // Logout
     public function logout()
     {
         Session::flush();

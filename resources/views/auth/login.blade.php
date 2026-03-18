@@ -253,7 +253,7 @@
         <h1 class="page-title">Login</h1>
         <p class="subtitle">Belum punya akun? <a href="{{ route('register') }}">Register</a></p>
 
-        {{-- Success message from register --}}
+        {{-- Success message register --}}
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
