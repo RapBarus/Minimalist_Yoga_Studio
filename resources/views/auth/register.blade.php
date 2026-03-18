@@ -1,134 +1,330 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#F2EFEB">
     <title>Register | Minimalist Studio</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Raleway:wght@200;300;400;500;600&display=swap"
+        rel="stylesheet">
+
     <style>
-        body {
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 0;
         }
 
-        .container {
+        :root {
+            --clay: #A0522D;
+            --clay-dark: #8B4513;
+            --bg: #F2EFEB;
+            --bg-input: #FFFFFF;
+            --text: #3A2E28;
+            --text-muted: #9A8C82;
+            --border: #E0D8D0;
+            --error: #C0392B;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Raleway', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+        }
+
+        .card {
             width: 100%;
             max-width: 360px;
-            padding: 24px;
-            box-sizing: border-box;
+            animation: fadeUp .55s ease both;
         }
 
         .logo {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 1.75rem;
+        }
+
+        .logo a {
+            display: inline-block;
+            transition: opacity .2s;
+        }
+
+        .logo a:hover {
+            opacity: .75;
         }
 
         .logo img {
-            width: 220px;
-            max-width: 80%;
+            width: 260px;
+            height: auto;
+            object-fit: contain;
         }
 
-        h2 {
+        .page-title {
+            font-weight: 600;
+            font-size: 1.6rem;
+            color: var(--text);
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: .4rem;
         }
 
         .subtitle {
             text-align: center;
-            font-size: 14px;
-            margin-bottom: 24px;
+            font-size: .8rem;
+            color: var(--text-muted);
+            margin-bottom: 1.75rem;
         }
 
         .subtitle a {
-            color: #0d6efd;
+            color: var(--clay);
             text-decoration: none;
+            font-weight: 500;
         }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 16px;
+        .subtitle a:hover {
+            text-decoration: underline;
+        }
+
+        /* Alert */
+        .alert-error {
+            background: #fdecea;
+            color: var(--error);
+            border: 1px solid #f5c6c2;
+            padding: .7rem .9rem;
             border-radius: 8px;
-            border: 1px solid #ddd;
-            box-sizing: border-box;
-            font-size: 14px;
+            font-size: .78rem;
+            margin-bottom: 1rem;
+            text-align: center;
         }
 
+        /* Form */
+        .field {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: .72rem;
+            font-weight: 500;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: .4rem;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="password"] {
+            width: 100%;
+            padding: .75rem 2.5rem .75rem .9rem;
+            background: var(--bg-input);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .85rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        input.is-error {
+            border-color: var(--error);
+        }
+
+        input::placeholder {
+            color: #C0B4AC;
+        }
+
+        input:focus {
+            border-color: var(--clay);
+            box-shadow: 0 0 0 3px rgba(160, 82, 45, .10);
+        }
+
+        /* Phone group */
         .phone-group {
             display: flex;
-            width: 100%;
-            margin-bottom: 16px;
         }
 
         .country-code {
-            padding: 12px;
-            background: #f9f9f9;
-            border: 1px solid #ddd;
+            padding: .75rem .9rem;
+            background: var(--bg-input);
+            border: 1.5px solid var(--border);
             border-right: none;
-            border-radius: 8px 0 0 8px;
-            font-size: 14px;
+            border-radius: 10px 0 0 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .85rem;
+            font-weight: 500;
+            color: var(--text);
+            white-space: nowrap;
             display: flex;
             align-items: center;
         }
 
-        .phone-group input {
-            flex: 1;
-            border-radius: 0 8px 8px 0;
-            border: 1px solid #ddd;
-            border-left: none;
-            padding: 12px;
-            font-size: 14px;
-            margin-bottom: 0;
+        .country-code::after {
+            content: '';
+            display: block;
+            width: 1px;
+            height: 16px;
+            background: var(--border);
+            margin-left: .5rem;
         }
 
-        .btn {
+        .phone-group input {
+            border-radius: 0 10px 10px 0;
+            padding-left: .75rem;
+        }
+
+        /* Eye toggle */
+        .eye-btn {
+            position: absolute;
+            right: .75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+        }
+
+        .eye-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-submit {
             width: 100%;
-            padding: 12px;
-            background: #9c4b2b;
+            padding: .85rem;
+            margin-top: .5rem;
+            background: var(--clay);
             color: #fff;
             border: none;
             border-radius: 10px;
-            font-size: 14px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .82rem;
+            font-weight: 500;
+            letter-spacing: .18em;
+            text-transform: uppercase;
             cursor: pointer;
+            box-shadow: 0 4px 18px rgba(160, 82, 45, .28);
+            transition: background .18s, transform .18s, box-shadow .18s;
         }
 
-        .btn:hover {
-            opacity: 0.9;
+        .btn-submit:hover {
+            background: var(--clay-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px rgba(160, 82, 45, .38);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (min-width: 640px) {
+            .logo img {
+                width: 280px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
+    <div class="card">
+
         <div class="logo">
-            <img src="{{ asset('images/minimalist-logo.png') }}" alt="Minimalist Studio">
+            <a href="{{ route('welcome') }}">
+                <img src="{{ asset('images/minimalist-logo.png') }}" alt="Minimalist Studio">
+            </a>
         </div>
 
-        <h2>Register</h2>
-        <div class="subtitle">
-            Sudah punya akun? <a href="/">Log In</a>
-        </div>
+        <h1 class="page-title">Register</h1>
+        <p class="subtitle">Sudah punya akun? <a href="{{ route('login') }}">Log In</a></p>
 
-        <form>
-            <input type="text" name="username" placeholder="Masukkan Username Anda">
+        @if ($errors->any())
+            <div class="alert-error">{{ $errors->first() }}</div>
+        @endif
 
-            <div class="phone-group">
-                <div class="country-code">+62</div>
-                <input type="tel" name="phone" placeholder="Masukkan Nomor HP Anda">
+        <form action="{{ route('register.post') }}" method="POST">
+            @csrf
+
+            <div class="field">
+                <label for="username">Username</label>
+                <div class="input-wrap">
+                    <input type="text" id="username" name="username" placeholder="Masukan Username Anda"
+                        value="{{ old('username') }}" autocomplete="username"
+                        class="{{ $errors->has('username') ? 'is-error' : '' }}">
+                </div>
             </div>
 
-            <input type="password" placeholder="Masukkan Password">
+            <div class="field">
+                <label>Nomer HP</label>
+                <div class="phone-group">
+                    <div class="country-code">+62</div>
+                    <input type="tel" name="phone" placeholder="Masukan Nomer HP anda" value="{{ old('phone') }}"
+                        autocomplete="tel" class="{{ $errors->has('phone') ? 'is-error' : '' }}">
+                </div>
+            </div>
 
-            <button class="btn" type="submit">Buat Akun</button>
+            <div class="field">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <input type="password" id="password" name="password" placeholder="Masukan Password"
+                        autocomplete="new-password">
+                    <button type="button" class="eye-btn" onclick="togglePassword('password', this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="1.6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">Buat Akun</button>
         </form>
+
     </div>
+
+    <script>
+        function togglePassword(id, btn) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+            btn.querySelector('svg').style.opacity = input.type === 'text' ? '1' : '.5';
+        }
+    </script>
 
 </body>
 
