@@ -30,6 +30,7 @@
             --text: #3A2E28;
             --text-muted: #9A8C82;
             --border: #E0D8D0;
+            --error: #C0392B;
         }
 
         html,
@@ -53,7 +54,6 @@
             animation: fadeUp .55s ease both;
         }
 
-        /* Logo */
         .logo {
             text-align: center;
             margin-bottom: 1.75rem;
@@ -61,7 +61,7 @@
 
         .logo a {
             display: inline-block;
-            transition: opacity .2s ease;
+            transition: opacity .2s;
         }
 
         .logo a:hover {
@@ -74,9 +74,7 @@
             object-fit: contain;
         }
 
-        /* Heading */
         .page-title {
-            font-family: 'Raleway', sans-serif;
             font-weight: 600;
             font-size: 1.6rem;
             color: var(--text);
@@ -99,6 +97,18 @@
 
         .subtitle a:hover {
             text-decoration: underline;
+        }
+
+        /* Alert */
+        .alert-error {
+            background: #fdecea;
+            color: var(--error);
+            border: 1px solid #f5c6c2;
+            padding: .7rem .9rem;
+            border-radius: 8px;
+            font-size: .78rem;
+            margin-bottom: 1rem;
+            text-align: center;
         }
 
         /* Form */
@@ -132,7 +142,11 @@
             font-size: .85rem;
             color: var(--text);
             outline: none;
-            transition: border-color .2s ease, box-shadow .2s ease;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        input.is-error {
+            border-color: var(--error);
         }
 
         input::placeholder {
@@ -240,8 +254,7 @@
 
         @media (min-width: 640px) {
             .logo img {
-                width: 180px;
-                height: 180px;
+                width: 280px;
             }
         }
     </style>
@@ -252,7 +265,7 @@
     <div class="card">
 
         <div class="logo">
-            <a href="{{ route('welcome') }}" title="Back to home">
+            <a href="{{ route('welcome') }}">
                 <img src="{{ asset('images/minimalist-logo.png') }}" alt="Minimalist Studio">
             </a>
         </div>
@@ -260,14 +273,19 @@
         <h1 class="page-title">Register</h1>
         <p class="subtitle">Sudah punya akun? <a href="{{ route('login') }}">Log In</a></p>
 
-        <form action="#" method="POST">
+        @if ($errors->any())
+            <div class="alert-error">{{ $errors->first() }}</div>
+        @endif
+
+        <form action="{{ route('register.post') }}" method="POST">
             @csrf
 
             <div class="field">
                 <label for="username">Username</label>
                 <div class="input-wrap">
                     <input type="text" id="username" name="username" placeholder="Masukan Username Anda"
-                        autocomplete="username">
+                        value="{{ old('username') }}" autocomplete="username"
+                        class="{{ $errors->has('username') ? 'is-error' : '' }}">
                 </div>
             </div>
 
@@ -275,14 +293,16 @@
                 <label>Nomer HP</label>
                 <div class="phone-group">
                     <div class="country-code">+62</div>
-                    <input type="tel" name="phone" placeholder="Masukan Nomer HP anda" autocomplete="tel">
+                    <input type="tel" name="phone" placeholder="Masukan Nomer HP anda" value="{{ old('phone') }}"
+                        autocomplete="tel" class="{{ $errors->has('phone') ? 'is-error' : '' }}">
                 </div>
             </div>
 
             <div class="field">
                 <label for="password">Password</label>
                 <div class="input-wrap">
-                    <input type="password" id="password" name="password" placeholder="Masukan Password">
+                    <input type="password" id="password" name="password" placeholder="Masukan Password"
+                        autocomplete="new-password">
                     <button type="button" class="eye-btn" onclick="togglePassword('password', this)">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             stroke-width="1.6">
@@ -301,9 +321,8 @@
     <script>
         function togglePassword(id, btn) {
             const input = document.getElementById(id);
-            const isHidden = input.type === 'password';
-            input.type = isHidden ? 'text' : 'password';
-            btn.querySelector('svg').style.opacity = isHidden ? '1' : '.5';
+            input.type = input.type === 'password' ? 'text' : 'password';
+            btn.querySelector('svg').style.opacity = input.type === 'text' ? '1' : '.5';
         }
     </script>
 
