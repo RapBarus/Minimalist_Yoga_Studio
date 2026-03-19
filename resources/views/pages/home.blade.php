@@ -49,7 +49,7 @@
         }
 
         .page {
-            max-width: 680px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 0 calc(var(--navbar-h) + 12px);
             animation: fadeUp .5s ease both;
@@ -61,7 +61,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 18px 10px;
+            padding: 14px 24px 10px;
             background: var(--bg);
             position: sticky;
             top: 0;
@@ -70,7 +70,7 @@
         }
 
         .header img {
-            width: 260px;
+            width: 340px;
             height: auto;
             object-fit: contain;
         }
@@ -92,10 +92,10 @@
 
         /* ── Content ── */
         .content {
-            padding: 18px 16px;
+            padding: 24px 24px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 18px;
         }
 
         .section-label {
@@ -104,7 +104,6 @@
             letter-spacing: .06em;
             color: var(--clay);
             text-transform: uppercase;
-            margin-bottom: -4px;
         }
 
         /* ── Promo carousel ── */
@@ -114,12 +113,11 @@
 
         .promo-scroll {
             display: flex;
-            gap: 12px;
+            gap: 14px;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
-            margin: 0 -16px;
-            padding: 0 16px 8px;
+            padding: 4px 4px 10px;
             user-select: none;
             -webkit-user-select: none;
             cursor: grab;
@@ -133,13 +131,20 @@
         .card-promo {
             background: var(--clay);
             border-radius: 18px;
-            padding: 18px 18px 16px;
+            padding: 20px 20px 18px;
             color: #fff;
             position: relative;
             overflow: hidden;
             box-shadow: 0 6px 24px rgba(160, 82, 45, .30);
             flex: 0 0 300px;
             scroll-snap-align: start;
+        }
+
+        /* On desktop show more cards at once */
+        @media (min-width: 900px) {
+            .card-promo {
+                flex: 0 0 340px;
+            }
         }
 
         .card-promo::before {
@@ -278,6 +283,59 @@
             letter-spacing: .04em;
         }
 
+        /* ── Filter pills ── */
+        .filter-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .filter-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-pill {
+            flex-shrink: 0;
+            padding: 7px 18px;
+            border-radius: 20px;
+            border: 1.5px solid var(--clay);
+            background: transparent;
+            color: var(--clay);
+            font-family: 'Raleway', sans-serif;
+            font-size: .75rem;
+            font-weight: 500;
+            letter-spacing: .05em;
+            cursor: pointer;
+            transition: background .18s, color .18s;
+            white-space: nowrap;
+        }
+
+        .filter-pill.active,
+        .filter-pill:hover {
+            background: var(--clay);
+            color: #fff;
+        }
+
+        /* ── Class cards grid ── */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        @media (min-width: 700px) {
+            .cards-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (min-width: 1000px) {
+            .cards-grid {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
         /* ── Class card (blue) ── */
         .card-class {
             background: var(--blue-card);
@@ -287,7 +345,6 @@
             position: relative;
             overflow: hidden;
             box-shadow: 0 4px 16px rgba(74, 127, 165, .18);
-            margin-bottom: 10px;
         }
 
         .card-class::before {
@@ -345,12 +402,6 @@
             stroke-linejoin: round;
         }
 
-        .class-price {
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--blue-dark);
-        }
-
         .class-quota {
             font-size: .75rem;
             color: #3A5A6A;
@@ -363,49 +414,13 @@
             font-weight: 600;
         }
 
-        /* ── Filter pills ── */
-        .filter-scroll {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-            margin: 0 -16px;
-            padding-left: 16px;
-            padding-right: 16px;
-        }
-
-        .filter-scroll::-webkit-scrollbar {
-            display: none;
-        }
-
-        .filter-pill {
-            flex-shrink: 0;
-            padding: 7px 18px;
-            border-radius: 20px;
-            border: 1.5px solid var(--clay);
-            background: transparent;
-            color: var(--clay);
-            font-family: 'Raleway', sans-serif;
-            font-size: .75rem;
-            font-weight: 500;
-            letter-spacing: .05em;
-            cursor: pointer;
-            transition: background .18s, color .18s;
-            white-space: nowrap;
-        }
-
-        .filter-pill.active,
-        .filter-pill:hover {
-            background: var(--clay);
-            color: #fff;
-        }
-
         /* Empty state */
         .empty-state {
             text-align: center;
             padding: 2rem 1rem;
             color: var(--text-muted);
             font-size: .85rem;
+            grid-column: 1 / -1;
         }
 
         /* ── Bottom navbar ── */
@@ -496,12 +511,11 @@
 
         <div class="content">
 
-            {{-- Promo section (dynamic from DB) --}}
+            {{-- Promo section --}}
             <div class="section-label">Penawaran Special !!!</div>
 
             <div class="promo-wrapper">
                 <div class="promo-scroll" id="slider">
-
                     @forelse ($promotions as $promo)
                         <div class="card-promo">
                             <div class="card-promo-title">{{ $promo->title }}</div>
@@ -523,11 +537,10 @@
                             Tidak ada penawaran saat ini.
                         </div>
                     @endforelse
-
                 </div>
             </div>
 
-            {{-- Upcoming schedules from DB --}}
+            {{-- Jadwal Kelas --}}
             <div class="section-row">
                 <div class="section-label">Jadwal Kelas</div>
                 <span class="section-count" id="class-count">{{ $schedules->count() }} kelas tersedia</span>
@@ -541,52 +554,53 @@
                 @endforeach
             </div>
 
-            @forelse ($schedules as $schedule)
-                <div class="card-class" data-class="{{ $schedule->class_name }}">
-                    <div class="card-class-title">{{ $schedule->class_name }}</div>
-                    <div class="card-class-coach">with {{ $schedule->coach_name }}</div>
+            {{-- Cards grid --}}
+            <div class="cards-grid" id="cards-grid">
+                @forelse ($schedules as $schedule)
+                    <div class="card-class" data-class="{{ $schedule->class_name }}">
+                        <div class="card-class-title">{{ $schedule->class_name }}</div>
+                        <div class="card-class-coach">with {{ $schedule->coach_name }}</div>
 
-                    <div class="class-meta">
-                        <div class="class-meta-row">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="3" y="4" width="18" height="18" rx="2" />
-                                <line x1="16" y1="2" x2="16" y2="6" />
-                                <line x1="8" y1="2" x2="8" y2="6" />
-                                <line x1="3" y1="10" x2="21" y2="10" />
-                            </svg>
-                            {{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l, d F Y') }}
+                        <div class="class-meta">
+                            <div class="class-meta-row">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                {{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l, d F Y') }}
+                            </div>
+                            <div class="class-meta-row">
+                                <svg viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg>
+                                {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} –
+                                {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
+                            </div>
                         </div>
-                        <div class="class-meta-row">
-                            <svg viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                            {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} –
-                            {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
-                        </div>
-                    </div>
 
-                    <div class="class-quota @if ($schedule->available_slots == 0) quota-full @endif">
+                        <div class="class-quota @if ($schedule->available_slots == 0) quota-full @endif">
+                            @if ($schedule->available_slots > 0)
+                                Kuota tersedia: {{ $schedule->available_slots }} / {{ $schedule->capacity }}
+                            @else
+                                Kuota penuh
+                            @endif
+                        </div>
+
                         @if ($schedule->available_slots > 0)
-                            Kuota tersedia: {{ $schedule->available_slots }} / {{ $schedule->capacity }}
+                            <a href="{{ route('payment.show', $schedule->schedule_id) }}" class="btn btn-blue"
+                                style="margin-top: 14px;">Pesan Sekarang</a>
                         @else
-                            Kuota penuh
+                            <button class="btn btn-blue" style="margin-top: 14px; opacity: .5; cursor: not-allowed;"
+                                disabled>Kuota Penuh</button>
                         @endif
                     </div>
-
-                    @if ($schedule->available_slots > 0)
-                        <a href="{{ route('payment.show', $schedule->schedule_id) }}" class="btn btn-blue"
-                            style="margin-top: 14px;">Pesan Sekarang</a>
-                    @else
-                        <button class="btn btn-blue" style="margin-top: 14px; opacity: .5; cursor: not-allowed;"
-                            disabled>Kuota Penuh</button>
-                    @endif
-                </div>
-            @empty
-                <div class="empty-state">
-                    Tidak ada jadwal kelas yang tersedia saat ini.
-                </div>
-            @endforelse
+                @empty
+                    <div class="empty-state">Tidak ada jadwal kelas yang tersedia saat ini.</div>
+                @endforelse
+            </div>
 
         </div>
     </div>
@@ -601,6 +615,15 @@
                 </svg>
                 Home
             </div>
+        </a>
+        <a href="#" class="nav-item">
+            <svg viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            Member
         </a>
         <a href="{{ route('activity') }}" class="nav-item">
             <svg viewBox="0 0 24 24">
@@ -626,9 +649,48 @@
             const slider = document.getElementById('slider');
             let isDown = false,
                 startX, scrollLeft;
+            let autoRotate;
+
+            function startAutoRotate() {
+                autoRotate = setInterval(function() {
+                    const cards = slider.querySelectorAll('.card-promo');
+                    const cardWidth = cards[0].offsetWidth + 14; // card + gap
+                    const maxScroll = slider.scrollWidth - slider.clientWidth;
+
+                    if (slider.scrollLeft >= maxScroll - 2) {
+                        // Back to start
+                        slider.scrollTo({
+                            left: 0,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        slider.scrollBy({
+                            left: cardWidth,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 3000);
+            }
+
+            function stopAutoRotate() {
+                clearInterval(autoRotate);
+            }
+
+            startAutoRotate();
+
+            // Pause on hover/drag
+            slider.addEventListener('mouseenter', stopAutoRotate);
+            slider.addEventListener('mouseleave', startAutoRotate);
+            slider.addEventListener('touchstart', stopAutoRotate, {
+                passive: true
+            });
+            slider.addEventListener('touchend', function() {
+                setTimeout(startAutoRotate, 3000);
+            });
 
             slider.addEventListener('mousedown', function(e) {
                 isDown = true;
+                stopAutoRotate();
                 slider.style.cursor = 'grabbing';
                 startX = e.pageX - slider.getBoundingClientRect().left;
                 scrollLeft = slider.scrollLeft;
@@ -636,10 +698,12 @@
             });
 
             document.addEventListener('mouseup', function() {
-                isDown = false;
-                slider.style.cursor = 'grab';
+                if (isDown) {
+                    isDown = false;
+                    slider.style.cursor = 'grab';
+                    setTimeout(startAutoRotate, 3000);
+                }
             });
-
             document.addEventListener('mousemove', function(e) {
                 if (!isDown) return;
                 const x = e.pageX - slider.getBoundingClientRect().left;
@@ -654,16 +718,13 @@
             filterBtns.forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     const filter = btn.dataset.filter;
-
-                    // Update active pill
                     filterBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
 
-                    // Show/hide cards
                     let visible = 0;
                     cards.forEach(function(card) {
                         const match = filter === 'all' || card.dataset.class === filter;
-                        card.style.display = match ? 'block' : 'none';
+                        card.style.display = match ? '' : 'none';
                         if (match) visible++;
                     });
 
