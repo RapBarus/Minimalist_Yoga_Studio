@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════
-   Minimalist Studio — Global Stylesheet
-   ═══════════════════════════════════════════ */
+/*Minimalist Studio — Global Stylesheet */
 
 *,
 *::before,
@@ -38,7 +36,7 @@ body {
     color: var(--text);
 }
 
-/* ── Page wrapper*/
+/* ── Page wrapper ─────────────────────────── */
 .page {
     max-width: 1200px;
     margin: 0 auto;
@@ -47,7 +45,7 @@ body {
     animation: fadeUp .5s ease both;
 }
 
-/* ── Header*/
+/* ── Header ───────────────────────────────── */
 .header {
     display: flex;
     align-items: center;
@@ -140,7 +138,7 @@ body {
     gap: 4px;
 }
 
-/* ── Buttons*/
+/* ── Buttons ──────────────────────────────── */
 .btn {
     display: inline-block;
     width: 100%;
@@ -228,7 +226,7 @@ body {
     letter-spacing: .04em;
 }
 
-/* ── Cards*/
+/* ── Cards ────────────────────────────────── */
 .card {
     background: var(--bg-white);
     border: 1.5px solid var(--border);
@@ -289,7 +287,7 @@ body {
     border-radius: 50%;
 }
 
-/* ── Info rows (used in profile etc)*/
+/* ── Info rows (used in profile etc) ─────── */
 .info-card {
     background: var(--bg-white);
     border: 1.5px solid var(--border);
@@ -373,7 +371,7 @@ body {
     stroke-linejoin: round;
 }
 
-/* ── Filter pills */
+/* ── Filter pills ─────────────────────────── */
 .filter-scroll {
     display: flex;
     gap: 8px;
@@ -407,7 +405,7 @@ body {
     color: #fff;
 }
 
-/* ── Promo carousel */
+/* ── Promo carousel ───────────────────────── */
 .promo-scroll {
     display: flex;
     gap: 14px;
@@ -425,7 +423,7 @@ body {
     display: none;
 }
 
-/* ── Cards grid*/
+/* ── Cards grid ───────────────────────────── */
 .cards-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -490,7 +488,7 @@ body {
     color: var(--text);
 }
 
-/* ── Empty state*/
+/* ── Empty state ──────────────────────────── */
 .empty-state {
     text-align: center;
     padding: 2rem 1rem;
@@ -499,7 +497,7 @@ body {
     grid-column: 1 / -1;
 }
 
-/* ── Alert */
+/* ── Alert ────────────────────────────────── */
 .alert {
     padding: .7rem .9rem;
     border-radius: 8px;
@@ -520,7 +518,7 @@ body {
     border: 1px solid #a9dfbf;
 }
 
-/* ── Animations */
+/* ── Animations ───────────────────────────── */
 @keyframes fadeUp {
     from {
         opacity: 0;
