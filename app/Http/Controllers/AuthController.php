@@ -69,11 +69,34 @@ class AuthController extends Controller
             'password.required' => 'Password wajib diisi.',
         ]);
 
-        $user = DB::table('users')->where('name', $request->username)->first();
+        $input = $request->username;
+        $isEmail = str_contains($input, '@');
+        // Admin login via username@admin.com format
+        if ($isEmail) {
+            if (!str_ends_with($input, '@admin.com')) {
+                return back()
+                    ->withErrors(['username' => 'Format tidak valid. Gunakan username@admin.com untuk admin.'])
+                    ->withInput();
+            }
+
+            // Extract the name part before @admin.com
+            $adminName = str_replace('@admin.com', '', $input);
+
+            $user = DB::table('users')
+                ->where('name', $adminName)
+                ->where('role', 'admin')
+                ->first();
+        } else {
+            // Customer/coach login via username
+            $user = DB::table('users')
+                ->where('name', $input)
+                ->whereIn('role', ['customer', 'coach'])
+                ->first();
+        }
 
         if (!$user || !Hash::check($request->password, $user->password_hash)) {
             return back()
-                ->withErrors(['username' => 'Username atau password salah.'])
+                ->withErrors(['username' => 'Username/email atau password salah.'])
                 ->withInput();
         }
 
@@ -87,8 +110,11 @@ class AuthController extends Controller
         Session::put('user_name', $user->name);
         Session::put('user_role', $user->role);
 
-        return redirect()->route('home')
-            ->with('success', 'Selamat datang, ' . $user->name . '!');
+        // Redirect based on role
+        return match ($user->role) {
+            'admin' => redirect()->route('admin.dashboard'),
+            default => redirect()->route('home')->with('success', 'Selamat datang, ' . $user->name . '!'),
+        };
     }
 
     // Logout
