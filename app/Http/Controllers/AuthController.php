@@ -69,7 +69,37 @@ class AuthController extends Controller
             'password.required' => 'Password wajib diisi.',
         ]);
 
-        $user = DB::table('users')->where('name', $request->username)->first();
+        $input = $request->username;
+        $isEmail = str_contains($input, '@');
+        if ($isEmail) {
+            if (str_ends_with($input, '@admin.com')) {
+                // ── Admin login ──
+                $name = str_replace('@admin.com', '', $input);
+                $user = DB::table('users')
+                    ->where('name', $name)
+                    ->where('role', 'admin')
+                    ->first();
+
+            } elseif (str_ends_with($input, '@coach.com')) {
+                // ── Coach login ──
+                $name = str_replace('@coach.com', '', $input);
+                $user = DB::table('users')
+                    ->where('name', $name)
+                    ->where('role', 'coach')
+                    ->first();
+
+            } else {
+                return back()
+                    ->withErrors(['username' => 'Format tidak valid. Gunakan username@admin.com atau username@coach.com.'])
+                    ->withInput();
+            }
+        } else {
+            // ── Customer login ──
+            $user = DB::table('users')
+                ->where('name', $input)
+                ->where('role', 'customer')
+                ->first();
+        }
 
         if (!$user || !Hash::check($request->password, $user->password_hash)) {
             return back()
@@ -82,13 +112,15 @@ class AuthController extends Controller
                 ->withErrors(['username' => 'Akun Anda nonaktif. Hubungi admin.']);
         }
 
-        // Save to session
         Session::put('user_id', $user->user_id);
         Session::put('user_name', $user->name);
         Session::put('user_role', $user->role);
 
-        return redirect()->route('home')
-            ->with('success', 'Selamat datang, ' . $user->name . '!');
+        return match ($user->role) {
+            'admin' => redirect()->route('admin.dashboard'),
+            'coach' => redirect()->route('coach.dashboard'),
+            default => redirect()->route('home')->with('success', 'Selamat datang, ' . $user->name . '!'),
+        };
     }
 
     // Logout
