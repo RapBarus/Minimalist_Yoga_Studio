@@ -13,10 +13,8 @@
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 </head>
 
-
-
 <body>
-    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
     <aside class="sidebar">
         <div class="sidebar-logo">
             <img src="{{ asset('images/minimalist-logo-2.png') }}" alt="Minimalist Studio">
@@ -72,13 +70,6 @@
                 <div class="topbar-title">Kelola Coach</div>
                 <div class="topbar-sub">Tambah dan kelola akun coach</div>
             </div>
-            <button class="topbar-menu-btn" onclick="toggleSidebar()">
-                <svg viewBox="0 0 24 24">
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <line x1="3" y1="12" x2="21" y2="12" />
-                    <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
-            </button>
         </div>
 
         <div class="content">
@@ -122,7 +113,19 @@
                             </div>
                             <div class="field">
                                 <label>Password</label>
-                                <input type="password" name="password" placeholder="Minimal 6 karakter" required>
+                                <div style="position:relative;">
+                                    <input type="password" name="password" id="coach-password"
+                                        placeholder="Minimal 6 karakter" required style="padding-right:2.5rem;">
+                                    <button type="button" onclick="toggleCoachPassword()"
+                                        style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:var(--text-muted);display:flex;align-items:center;">
+                                        <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18"
+                                            height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                            <path
+                                                d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                             <div class="field">
                                 <label>Spesialisasi</label>
@@ -175,11 +178,19 @@
                                     <td><span class="badge badge-{{ $coach->status }}">{{ $coach->status }}</span>
                                     </td>
                                     <td>
-                                        <form action="{{ route('admin.coaches.destroy', $coach->coach_id) }}"
-                                            method="POST" onsubmit="return confirm('Nonaktifkan coach ini?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn-danger-sm">Nonaktifkan</button>
-                                        </form>
+                                        @if ($coach->status === 'active')
+                                            <form action="{{ route('admin.coaches.destroy', $coach->coach_id) }}"
+                                                method="POST" onsubmit="return confirm('Nonaktifkan coach ini?')">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="btn-danger-sm">Nonaktifkan</button>
+                                            </form>
+                                        @else
+                                            <form action="{{ route('admin.coaches.restore', $coach->coach_id) }}"
+                                                method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn-restore-sm">Aktifkan</button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
@@ -192,10 +203,10 @@
                         </tbody>
                     </table>
                 </div>
-
             </div>
         </div>
     </div>
+
     <script>
         function toggleSidebar() {
             document.querySelector('.sidebar').classList.toggle('open');
@@ -207,8 +218,8 @@
             const icon = document.getElementById('eye-icon');
             input.type = input.type === 'password' ? 'text' : 'password';
             icon.style.opacity = input.type === 'text' ? '1' : '.5';
+        }
     </script>
 </body>
-
 
 </html>

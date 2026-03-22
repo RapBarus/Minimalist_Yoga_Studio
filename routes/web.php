@@ -46,5 +46,6 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/coaches', [CoachController::class, 'index'])->name('coaches');
     Route::post('/coaches', [CoachController::class, 'store'])->name('coaches.store');
+    Route::post('/coaches/{coachId}/restore', [CoachController::class, 'restore'])->name('coaches.restore');
     Route::delete('/coaches/{coachId}', [CoachController::class, 'destroy'])->name('coaches.destroy');
 });

@@ -76,11 +76,23 @@ class CoachController extends Controller
             ->with('success', 'Coach ' . $request->name . ' berhasil ditambahkan! Login dengan ' . $request->name . '@coach.com');
     }
 
+    public function restore($coachId)
+    {
+        $coach = DB::table('coaches')->where('coach_id', $coachId)->first();
+        if ($coach) {
+            DB::table('users')->where('user_id', $coach->user_id)->update([
+                'status' => 'active',
+                'updated_at' => now(),
+            ]);
+        }
+
+        return redirect()->route('admin.coaches')->with('success', 'Coach berhasil diaktifkan kembali.');
+    }
+
     public function destroy($coachId)
     {
         $coach = DB::table('coaches')->where('coach_id', $coachId)->first();
         if ($coach) {
-            DB::table('coaches')->where('coach_id', $coachId)->delete();
             DB::table('users')->where('user_id', $coach->user_id)->update([
                 'status' => 'inactive',
                 'updated_at' => now(),
