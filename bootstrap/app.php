@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth.session' => \App\Http\Middleware\AuthSession::class,
             'admin.auth' => \App\Http\Middleware\AdminAuth::class,
+            'coach.auth' => \App\Http\Middleware\CoachAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

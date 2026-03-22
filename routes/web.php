@@ -6,6 +6,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\CoachController;
+use App\Http\Controllers\Coach\CoachDashboardController;
 
 // Welcome
 Route::get('/', function () {
@@ -33,7 +35,16 @@ Route::middleware('auth.session')->group(function () {
     })->name('activity');
 });
 
+// Coach pages
+Route::middleware(['auth.session', 'coach.auth'])->prefix('coach')->name('coach.')->group(function () {
+    Route::get('/dashboard', [CoachDashboardController::class, 'index'])->name('dashboard');
+});
+
+
 // Admin pages
 Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/coaches', [CoachController::class, 'index'])->name('coaches');
+    Route::post('/coaches', [CoachController::class, 'store'])->name('coaches.store');
+    Route::delete('/coaches/{coachId}', [CoachController::class, 'destroy'])->name('coaches.destroy');
 });

@@ -8,422 +8,21 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Raleway:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-
-    <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        :root {
-            --clay: #A0522D;
-            --clay-dark: #8B4513;
-            --clay-pale: #F0E6DF;
-            --bg: #F2EFEB;
-            --bg-white: #FFFFFF;
-            --text: #3A2E28;
-            --text-muted: #9A8C82;
-            --border: #E0D8D0;
-            --sidebar-w: 240px;
-            --success: #27AE60;
-            --warning: #F39C12;
-            --danger: #C0392B;
-        }
-
-        html,
-        body {
-            height: 100%;
-        }
-
-        body {
-            font-family: 'Raleway', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            display: flex;
-        }
-
-        /* ── Sidebar ── */
-        .sidebar {
-            width: var(--sidebar-w);
-            min-height: 100vh;
-            background: var(--text);
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            z-index: 100;
-        }
-
-        .sidebar-logo {
-            padding: 20px 20px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-        }
-
-        .sidebar-logo img {
-            width: 160px;
-            height: auto;
-            object-fit: contain;
-            filter: brightness(0) invert(1);
-            opacity: .9;
-        }
-
-        .sidebar-admin {
-            padding: 16px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-            font-size: .75rem;
-            color: rgba(255, 255, 255, .5);
-            letter-spacing: .05em;
-        }
-
-        .sidebar-admin strong {
-            display: block;
-            color: #fff;
-            font-size: .85rem;
-            margin-top: 2px;
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            padding: 12px 0;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 11px 20px;
-            color: rgba(255, 255, 255, .6);
-            text-decoration: none;
-            font-size: .8rem;
-            font-weight: 500;
-            letter-spacing: .04em;
-            transition: background .18s, color .18s;
-        }
-
-        .nav-link:hover {
-            background: rgba(255, 255, 255, .06);
-            color: #fff;
-        }
-
-        .nav-link.active {
-            background: var(--clay);
-            color: #fff;
-        }
-
-        .nav-link svg {
-            width: 18px;
-            height: 18px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 1.6;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            flex-shrink: 0;
-        }
-
-        .nav-section {
-            font-size: .62rem;
-            font-weight: 600;
-            letter-spacing: .14em;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, .3);
-            padding: 16px 20px 6px;
-        }
-
-        .sidebar-logout {
-            padding: 16px 20px;
-            border-top: 1px solid rgba(255, 255, 255, .08);
-        }
-
-        .btn-sidebar-logout {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 9px 14px;
-            background: rgba(192, 57, 43, .2);
-            color: #e87c6e;
-            border: 1px solid rgba(192, 57, 43, .3);
-            border-radius: 8px;
-            font-family: 'Raleway', sans-serif;
-            font-size: .78rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background .18s;
-        }
-
-        .btn-sidebar-logout:hover {
-            background: rgba(192, 57, 43, .35);
-        }
-
-        .btn-sidebar-logout svg {
-            width: 15px;
-            height: 15px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        /* ── Main content ── */
-        .main {
-            margin-left: var(--sidebar-w);
-            flex: 1;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .topbar {
-            background: var(--bg-white);
-            border-bottom: 1px solid var(--border);
-            padding: 16px 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .topbar-title {
-            font-weight: 700;
-            font-size: 1.1rem;
-            letter-spacing: .02em;
-            color: var(--text);
-        }
-
-        .topbar-sub {
-            font-size: .75rem;
-            color: var(--text-muted);
-            margin-top: 1px;
-        }
-
-        .content {
-            padding: 28px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        /* ── Stat cards ── */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-        }
-
-        @media (max-width: 1000px) {
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .stat-card {
-            background: var(--bg-white);
-            border: 1.5px solid var(--border);
-            border-radius: 14px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .stat-icon svg {
-            width: 22px;
-            height: 22px;
-            stroke: #fff;
-            fill: none;
-            stroke-width: 1.6;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .stat-icon.clay {
-            background: var(--clay);
-        }
-
-        .stat-icon.blue {
-            background: #4A7FA5;
-        }
-
-        .stat-icon.green {
-            background: var(--success);
-        }
-
-        .stat-icon.amber {
-            background: var(--warning);
-        }
-
-        .stat-number {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--text);
-            line-height: 1;
-        }
-
-        .stat-label {
-            font-size: .72rem;
-            font-weight: 500;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-top: 3px;
-        }
-
-        /* ── Tables ── */
-        .section-card {
-            background: var(--bg-white);
-            border: 1.5px solid var(--border);
-            border-radius: 16px;
-            overflow: hidden;
-        }
-
-        .section-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .section-header-title {
-            font-weight: 600;
-            font-size: .88rem;
-            letter-spacing: .02em;
-        }
-
-        .section-header-sub {
-            font-size: .72rem;
-            color: var(--text-muted);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            text-align: left;
-            padding: 10px 20px;
-            font-size: .68rem;
-            font-weight: 600;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border);
-            background: #faf8f6;
-        }
-
-        td {
-            padding: 12px 20px;
-            font-size: .82rem;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background: #faf8f6;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: .68rem;
-            font-weight: 600;
-            letter-spacing: .05em;
-            text-transform: uppercase;
-        }
-
-        .badge-confirmed {
-            background: #eafaf1;
-            color: var(--success);
-        }
-
-        .badge-cancelled {
-            background: #fdecea;
-            color: var(--danger);
-        }
-
-        .badge-attended {
-            background: #eaf3fb;
-            color: #2980B9;
-        }
-
-        .badge-pending {
-            background: #fef9e7;
-            color: var(--warning);
-        }
-
-        /* Two col layout */
-        .two-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        @media (max-width: 900px) {
-            .two-col {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .main {
-            animation: fadeUp .4s ease both;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 </head>
 
-<body>
 
+
+<body>
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
     {{-- Sidebar --}}
     <aside class="sidebar">
         <div class="sidebar-logo">
             <img src="{{ asset('images/minimalist-logo-2.png') }}" alt="Minimalist Studio">
         </div>
 
-        <div class="sidebar-admin">
-            Admin Panel
-            <strong>{{ $admin_name }}</strong>
-        </div>
-
+        <div class="sidebar-admin">Admin Panel<strong>{{ Session::get('user_name') }}</strong></div>
         <nav class="sidebar-nav">
             <div class="nav-section">Menu</div>
             <a href="{{ route('admin.dashboard') }}" class="nav-link active">
@@ -435,14 +34,14 @@
                 </svg>
                 Dashboard
             </a>
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.coaches') }}" class="nav-link">
                 <svg viewBox="0 0 24 24">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="9" cy="7" r="4" />
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
-                Member
+                Coach
             </a>
             <a href="#" class="nav-link">
                 <svg viewBox="0 0 24 24">
@@ -501,6 +100,13 @@
                 <div class="topbar-title">Dashboard</div>
                 <div class="topbar-sub">{{ now()->translatedFormat('l, d F Y') }}</div>
             </div>
+            <button class="topbar-menu-btn" onclick="toggleSidebar()">
+                <svg viewBox="0 0 24 24">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+            </button>
         </div>
 
         <div class="content">
@@ -653,6 +259,12 @@
         </div>
     </div>
 
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('open');
+        }
+    </script>
 </body>
 
 </html>
