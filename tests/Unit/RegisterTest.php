@@ -52,4 +52,5 @@ class RegisterTest extends TestCase
         $response->assertRedirect('/register');
         $response->assertSessionHasErrors(['phone']);
     }
+
 }
