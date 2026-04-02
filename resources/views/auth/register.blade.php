@@ -99,7 +99,6 @@
             text-decoration: underline;
         }
 
-        /* Alert */
         .alert-error {
             background: #fdecea;
             color: var(--error);
@@ -111,7 +110,6 @@
             text-align: center;
         }
 
-        /* Form */
         .field {
             margin-bottom: 1rem;
         }
@@ -190,6 +188,33 @@
         .phone-group input {
             border-radius: 0 10px 10px 0;
             padding-left: .75rem;
+        }
+
+        /* Criteria hints */
+        .criteria {
+            list-style: none;
+            font-size: .7rem;
+            color: var(--text-muted);
+            background: #faf8f6;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-top: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .criteria li {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .criteria li::before {
+            content: '•';
+            color: var(--clay);
+            flex-shrink: 0;
         }
 
         /* Eye toggle */
@@ -287,13 +312,18 @@
                         value="{{ old('username') }}" autocomplete="username"
                         class="{{ $errors->has('username') ? 'is-error' : '' }}">
                 </div>
+                <ul class="criteria">
+                    <li>Hanya huruf (a-z, A-Z), angka (0-9), dan underscore (_)</li>
+                    <li>Tanpa spasi atau karakter spesial</li>
+                    <li>Maksimal 50 karakter</li>
+                </ul>
             </div>
 
             <div class="field">
                 <label>Nomer HP</label>
                 <div class="phone-group">
                     <div class="country-code">+62</div>
-                    <input type="tel" name="phone" placeholder="Masukan Nomer HP anda" value="{{ old('phone') }}"
+                    <input type="tel" name="phone" placeholder="81234567890" value="{{ old('phone') }}"
                         autocomplete="tel" class="{{ $errors->has('phone') ? 'is-error' : '' }}">
                 </div>
             </div>
@@ -302,7 +332,7 @@
                 <label for="password">Password</label>
                 <div class="input-wrap">
                     <input type="password" id="password" name="password" placeholder="Masukan Password"
-                        autocomplete="new-password">
+                        autocomplete="new-password" class="{{ $errors->has('password') ? 'is-error' : '' }}">
                     <button type="button" class="eye-btn" onclick="togglePassword('password', this)">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             stroke-width="1.6">
@@ -311,6 +341,10 @@
                         </svg>
                     </button>
                 </div>
+                <ul class="criteria">
+                    <li>Minimal 6 karakter, maksimal 50 karakter</li>
+                    <li>Harus mengandung minimal 1 huruf dan 1 angka</li>
+                </ul>
             </div>
 
             <button type="submit" class="btn-submit">Buat Akun</button>

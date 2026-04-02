@@ -159,6 +159,49 @@
             stroke-linecap: round;
             stroke-linejoin: round;
         }
+
+        .info-input {
+            font-size: .8rem;
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            width: 100%;
+        }
+
+        .save-btn {
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+        }
+
+        .edit-btn:hover {
+            background: var(--clay-pale);
+        }
+
+        .edit-icon {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .editable.editing .edit-btn {
+            display: none;
+        }
     </style>
 @endpush
 
@@ -186,7 +229,7 @@
             @endif
         </div>
 
-        <div class="stats-row">
+        {{-- <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-number">{{ $totalBookings }}</div>
                 <div class="stat-label">Total Kelas</div>
@@ -199,28 +242,46 @@
                 <div class="stat-number">{{ $upcomingBookings }}</div>
                 <div class="stat-label">Mendatang</div>
             </div>
-        </div>
+        </div> --}}
 
         <div class="info-card">
             <div class="info-card-title">Informasi Akun</div>
 
-            <div class="info-row">
+            <form action="{{ route('profile.update') }}" method="POST" class="info-row editable">
+                @csrf
+                @method('PUT')
+
                 <div class="info-row-left">
-                    <div class="info-icon"><svg viewBox="0 0 24 24">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                             <circle cx="12" cy="7" r="4" />
-                        </svg></div>
+                        </svg>
+                    </div>
+
                     <div>
                         <div class="info-label">Username</div>
-                        <div class="info-value">{{ $user->name }}</div>
+
+                        <input type="text" name="name" value="{{ $user->name }}" class="info-input" hidden>
+
+                        <div class="info-value value-text">{{ $user->name }}</div>
                     </div>
                 </div>
-                <svg class="info-chevron" viewBox="0 0 24 24">
-                    <polyline points="9 18 15 12 9 6" />
-                </svg>
-            </div>
 
-            <div class="info-row">
+                <button type="button" class="edit-btn">
+                    <svg viewBox="0 0 24 24" class="edit-icon">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                </button>
+
+                <button type="submit" class="save-btn" hidden>✔</button>
+            </form>
+
+            <form action="{{ route('profile.update') }}" method="POST" class="info-row editable">
+                @csrf
+                @method('PUT')
+
                 <div class="info-row-left">
                     <div class="info-icon"><svg viewBox="0 0 24 24">
                             <path
@@ -228,15 +289,28 @@
                         </svg></div>
                     <div>
                         <div class="info-label">Nomor HP</div>
-                        <div class="info-value">{{ $user->phone_number ?? '—' }}</div>
+
+                        <input type="text" name="phone_number" value="{{ $user->phone_number }}" class="info-input"
+                            hidden>
+
+                        <div class="info-value value-text">{{ $user->phone_number ?? '—' }}</div>
                     </div>
                 </div>
-                <svg class="info-chevron" viewBox="0 0 24 24">
-                    <polyline points="9 18 15 12 9 6" />
-                </svg>
-            </div>
 
-            <div class="info-row">
+                <button type="button" class="edit-btn">
+                    <svg viewBox="0 0 24 24" class="edit-icon">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                </button>
+
+                <button type="submit" class="save-btn" hidden>✔</button>
+            </form>
+
+            <form action="{{ route('profile.update') }}" method="POST" class="info-row editable">
+                @csrf
+                @method('PUT')
+
                 <div class="info-row-left">
                     <div class="info-icon"><svg viewBox="0 0 24 24">
                             <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -244,13 +318,22 @@
                         </svg></div>
                     <div>
                         <div class="info-label">Password</div>
-                        <div class="info-value">••••••••</div>
+
+                        <input type="password" name="password" placeholder="Password baru" class="info-input" hidden>
+                        <input type="password" name="password_confirmation" placeholder="Konfirmasi password"
+                            class="info-input" hidden>
+
+                        <div class="info-value value-text">••••••••</div>
                     </div>
                 </div>
-                <svg class="info-chevron" viewBox="0 0 24 24">
-                    <polyline points="9 18 15 12 9 6" />
-                </svg>
-            </div>
+                <button type="button" class="edit-btn">
+                    <svg viewBox="0 0 24 24" class="edit-icon">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                </button>
+                <button type="submit" class="save-btn" hidden>✔</button>
+            </form>
 
             <div class="info-row">
                 <div class="info-row-left">
@@ -281,17 +364,41 @@
             </div>
         </div>
 
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="btn-logout">
-                <svg viewBox="0 0 24 24">
+        <form action="{{ route('logout') }}" method="POST"> @csrf <button type="submit" class="btn-logout"> <svg
+                    viewBox="0 0 24 24">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                     <polyline points="16 17 21 12 16 7" />
                     <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-                Keluar
-            </button>
-        </form>
+                </svg> Keluar </button> </form>
 
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('.editable').forEach(row => {
+                        const editBtn = row.querySelector('.edit-btn');
+                        const saveBtn = row.querySelector('.save-btn');
+                        const inputs = row.querySelectorAll('.info-input');
+                        const valueText = row.querySelector('.value-text');
+
+                        editBtn.addEventListener('click', () => {
+                            row.classList.add('editing');
+                            inputs.forEach(i => i.hidden = false);
+                            valueText.hidden = true;
+                            saveBtn.hidden = false;
+                        });
+                    });
+                });
+            </script>
+            <script>
+                document.querySelectorAll('.editable').forEach(row => {
+                    row.addEventListener('click', () => {
+                        row.querySelectorAll('.info-input').forEach(i => i.hidden = false);
+                        row.querySelector('.value-text').hidden = true;
+                        row.querySelector('.save-btn').hidden = false;
+                    });
+                });
+            </script>
+        @endpush
     </div>
+
 @endsection

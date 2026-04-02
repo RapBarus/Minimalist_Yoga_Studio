@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Rules\ValidPhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -20,14 +19,34 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'username' => 'required|string|max:100',
-            'phone' => ['required', 'string', 'max:20', new ValidPhoneNumber()],
-            'password' => 'required|string|min:6',
+            'username' => [
+                'required',
+                'string',
+                'max:50',
+                'regex:/^[a-zA-Z0-9_]+$/',
+            ],
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^[0-9]{8,13}$/',
+            ],
+            'password' => [
+                'required',
+                'string',
+                'min:6',
+                'max:50',
+                'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/',
+            ],
         ], [
             'username.required' => 'Username wajib diisi.',
+            'username.max' => 'Username maksimal 50 karakter.',
+            'username.regex' => 'Username hanya boleh huruf, angka, dan underscore. Tanpa spasi.',
             'phone.required' => 'Nomor HP wajib diisi.',
+            'phone.regex' => 'Nomor HP hanya boleh angka, 8–13 digit (tanpa awalan 0).',
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal 6 karakter.',
+            'password.max' => 'Password maksimal 50 karakter.',
+            'password.regex' => 'Password harus mengandung minimal 1 huruf dan 1 angka.',
         ]);
 
         $exists = DB::table('users')->where('name', $request->username)->exists();
@@ -37,7 +56,6 @@ class AuthController extends Controller
                 ->withInput();
         }
 
-        // Insert new user
         DB::table('users')->insert([
             'name' => $request->username,
             'phone_number' => '+62' . ltrim($request->phone, '0'),
@@ -63,18 +81,28 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
+            'username' => [
+                'required',
+                'string',
+                'regex:/^([a-zA-Z0-9_]+|[a-zA-Z0-9_]+@(admin|coach)\.com)$/',
+            ],
+            'password' => [
+                'required',
+                'string',
+                'min:6',
+            ],
         ], [
             'username.required' => 'Username wajib diisi.',
+            'username.regex' => 'Format tidak valid. Gunakan username, username@admin.com, atau username@coach.com.',
             'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 6 karakter.',
         ]);
 
         $input = $request->username;
         $isEmail = str_contains($input, '@');
+
         if ($isEmail) {
             if (str_ends_with($input, '@admin.com')) {
-                // ── Admin login ──
                 $name = str_replace('@admin.com', '', $input);
                 $user = DB::table('users')
                     ->where('name', $name)
@@ -82,7 +110,6 @@ class AuthController extends Controller
                     ->first();
 
             } elseif (str_ends_with($input, '@coach.com')) {
-                // ── Coach login ──
                 $name = str_replace('@coach.com', '', $input);
                 $user = DB::table('users')
                     ->where('name', $name)
@@ -95,7 +122,6 @@ class AuthController extends Controller
                     ->withInput();
             }
         } else {
-            // ── Customer login ──
             $user = DB::table('users')
                 ->where('name', $input)
                 ->where('role', 'customer')

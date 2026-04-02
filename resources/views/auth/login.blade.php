@@ -100,7 +100,6 @@
             text-decoration: underline;
         }
 
-        /* Alerts */
         .alert {
             padding: .7rem .9rem;
             border-radius: 8px;
@@ -121,7 +120,6 @@
             border: 1px solid #a9dfbf;
         }
 
-        /* Form */
         .field {
             margin-bottom: 1rem;
         }
@@ -167,10 +165,31 @@
             box-shadow: 0 0 0 3px rgba(160, 82, 45, .10);
         }
 
-        .field-error {
-            font-size: .72rem;
-            color: var(--error);
-            margin-top: .35rem;
+        /* Criteria hints */
+        .criteria {
+            list-style: none;
+            font-size: .7rem;
+            color: var(--text-muted);
+            background: #faf8f6;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-top: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .criteria li {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .criteria li::before {
+            content: '•';
+            color: var(--clay);
+            flex-shrink: 0;
         }
 
         .eye-btn {
@@ -253,12 +272,10 @@
         <h1 class="page-title">Login</h1>
         <p class="subtitle">Belum punya akun? <a href="{{ route('register') }}">Register</a></p>
 
-        {{-- Success message register --}}
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        {{-- Error message --}}
         @if ($errors->any())
             <div class="alert alert-error">{{ $errors->first() }}</div>
         @endif
@@ -288,6 +305,9 @@
                         </svg>
                     </button>
                 </div>
+                <ul class="criteria">
+                    <li>Minimal 6 karakter</li>
+                </ul>
             </div>
 
             <button type="submit" class="btn-submit">Masuk</button>
