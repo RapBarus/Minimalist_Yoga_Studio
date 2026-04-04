@@ -5,23 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | Minimalist Studio</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Raleway:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 </head>
 
-
-
 <body>
+
     <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
-    {{-- Sidebar --}}
-    <aside class="sidebar">
+
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <img src="{{ asset('images/minimalist-logo-2.png') }}" alt="Minimalist Studio">
         </div>
-
         <div class="sidebar-admin">Admin Panel<strong>{{ Session::get('user_name') }}</strong></div>
         <nav class="sidebar-nav">
             <div class="nav-section">Menu</div>
@@ -43,7 +42,7 @@
                 </svg>
                 Coach
             </a>
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.schedules') }}" class="nav-link">
                 <svg viewBox="0 0 24 24">
                     <rect x="3" y="4" width="18" height="18" rx="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />
@@ -59,24 +58,21 @@
                 </svg>
                 Booking
             </a>
-
             <div class="nav-section">Konten</div>
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.promotions') }}" class="nav-link">
                 <svg viewBox="0 0 24 24">
                     <polygon
                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
                 Penawaran
             </a>
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.classes') }}" class="nav-link">
                 <svg viewBox="0 0 24 24">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                 </svg>
                 Kelas
             </a>
         </nav>
-
         <div class="sidebar-logout">
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
@@ -92,9 +88,7 @@
         </div>
     </aside>
 
-    {{-- Main --}}
     <div class="main">
-
         <div class="topbar">
             <div>
                 <div class="topbar-title">Dashboard</div>
@@ -110,8 +104,6 @@
         </div>
 
         <div class="content">
-
-            {{-- Stats --}}
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon clay">
@@ -125,7 +117,6 @@
                         <div class="stat-label">Total Member</div>
                     </div>
                 </div>
-
                 <div class="stat-card">
                     <div class="stat-icon blue">
                         <svg viewBox="0 0 24 24">
@@ -140,7 +131,6 @@
                         <div class="stat-label">Jadwal Aktif</div>
                     </div>
                 </div>
-
                 <div class="stat-card">
                     <div class="stat-icon green">
                         <svg viewBox="0 0 24 24">
@@ -155,7 +145,6 @@
                         <div class="stat-label">Total Booking</div>
                     </div>
                 </div>
-
                 <div class="stat-card">
                     <div class="stat-icon amber">
                         <svg viewBox="0 0 24 24">
@@ -169,10 +158,7 @@
                 </div>
             </div>
 
-            {{-- Two column --}}
             <div class="two-col">
-
-                {{-- Recent bookings --}}
                 <div class="section-card">
                     <div class="section-header">
                         <div>
@@ -197,8 +183,7 @@
                                         <span
                                             style="font-size:.72rem;color:var(--text-muted)">{{ \Carbon\Carbon::parse($booking->schedule_date)->format('d M') }}</span>
                                     </td>
-                                    <td>
-                                        <span
+                                    <td><span
                                             class="badge badge-{{ $booking->status }}">{{ $booking->status }}</span>
                                     </td>
                                 </tr>
@@ -213,7 +198,6 @@
                     </table>
                 </div>
 
-                {{-- Upcoming schedules --}}
                 <div class="section-card">
                     <div class="section-header">
                         <div>
@@ -254,14 +238,13 @@
                         </tbody>
                     </table>
                 </div>
-
             </div>
         </div>
     </div>
 
     <script>
         function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('open');
+            document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('overlay').classList.toggle('open');
         }
     </script>

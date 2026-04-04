@@ -7,6 +7,9 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CoachController;
+use App\Http\Controllers\Admin\ScheduleController;
+use App\Http\Controllers\Admin\ClassController;
+use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Coach\CoachDashboardController;
 
 // Welcome
@@ -45,9 +48,29 @@ Route::middleware(['auth.session', 'coach.auth'])->prefix('coach')->name('coach.
 
 // Admin pages
 Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Coaches
     Route::get('/coaches', [CoachController::class, 'index'])->name('coaches');
     Route::post('/coaches', [CoachController::class, 'store'])->name('coaches.store');
     Route::post('/coaches/{coachId}/restore', [CoachController::class, 'restore'])->name('coaches.restore');
     Route::delete('/coaches/{coachId}', [CoachController::class, 'destroy'])->name('coaches.destroy');
+
+    // Schedules
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules');
+    Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
+    Route::post('/schedules/{scheduleId}/status', [ScheduleController::class, 'updateStatus'])->name('schedules.status');
+    Route::delete('/schedules/{scheduleId}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
+
+    // Classes
+    Route::get('/classes', [ClassController::class, 'index'])->name('classes');
+    Route::post('/classes', [ClassController::class, 'store'])->name('classes.store');
+    Route::delete('/classes/{classId}', [ClassController::class, 'destroy'])->name('classes.destroy');
+
+    // Promotions
+    Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions');
+    Route::post('/promotions', [PromotionController::class, 'store'])->name('promotions.store');
+    Route::post('/promotions/{id}/toggle', [PromotionController::class, 'toggleActive'])->name('promotions.toggle');
+    Route::delete('/promotions/{id}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
 });

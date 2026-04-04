@@ -10,7 +10,6 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // Upcoming schedules
         $schedules = DB::table('schedules')
             ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
             ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
@@ -28,11 +27,11 @@ class HomeController extends Controller
                 'schedules.capacity',
                 'classes.class_name',
                 'classes.description',
+                'coaches.rate_per_class',
                 'users.name as coach_name'
             )
             ->get();
 
-        // Active promotions
         $promotions = DB::table('promotions')
             ->where('is_active', 1)
             ->orderBy('promo_id', 'asc')
