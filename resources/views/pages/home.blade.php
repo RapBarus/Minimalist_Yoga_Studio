@@ -36,6 +36,24 @@
             align-items: center;
             gap: 6px;
             margin-bottom: 10px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .coach-badge-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: inherit;
+            border-radius: 20px;
+            padding: 3px 10px 3px 3px;
+            transition: background .18s;
+        }
+
+        .coach-badge-link:hover {
+            background: rgba(255, 255, 255, .2);
         }
 
         .coach-avatar {
@@ -344,12 +362,19 @@
 
                     <div class="card-promo-title">{{ $promo->title }}</div>
 
-                    {{-- Coach badge --}}
+                    {{-- Coach badge (clickable) --}}
                     @if ($promo->coach_name)
-                        <div class="coach-badge">
-                            <div class="coach-avatar">{{ strtoupper(substr($promo->coach_name, 0, 1)) }}</div>
-                            <span style="font-size:.78rem;opacity:.9;">{{ $promo->coach_name }}</span>
-                        </div>
+                        @if (!empty($promo->coach_id))
+                            <a href="{{ route('coach.profile', $promo->coach_id) }}" class="coach-badge-link">
+                                <div class="coach-avatar">{{ strtoupper(substr($promo->coach_name, 0, 1)) }}</div>
+                                <span style="font-size:.78rem;opacity:.9;">{{ $promo->coach_name }}</span>
+                            </a>
+                        @else
+                            <div class="coach-badge">
+                                <div class="coach-avatar">{{ strtoupper(substr($promo->coach_name, 0, 1)) }}</div>
+                                <span style="font-size:.78rem;opacity:.9;">{{ $promo->coach_name }}</span>
+                            </div>
+                        @endif
                     @endif
 
                     {{-- Date & time --}}
@@ -427,7 +452,12 @@
                 </button>
                 <div class="dropdown-menu" id="menu-waktu">
                     <div class="dropdown-label">Filter Hari</div>
-                    @php $days = $schedules->map(fn($s) => \Carbon\Carbon::parse($s->schedule_date)->translatedFormat('l'))->unique()->values(); @endphp
+                    @php
+                        $days = $schedules
+                            ->map(fn($s) => \Carbon\Carbon::parse($s->schedule_date)->translatedFormat('l'))
+                            ->unique()
+                            ->values();
+                    @endphp
                     @foreach ($days as $day)
                         <label class="dropdown-item">
                             <input type="checkbox" class="filter-check" data-type="waktu" value="{{ $day }}">
@@ -467,10 +497,11 @@
 
                     <div class="card-class-title">{{ $schedule->class_name }}</div>
 
-                    <div class="coach-badge">
+                    {{-- Coach badge (clickable) --}}
+                    <a href="{{ route('coach.profile', $schedule->coach_id) }}" class="coach-badge-link">
                         <div class="coach-avatar">{{ $initial }}</div>
                         <span style="font-size:.78rem;opacity:.9;">{{ $schedule->coach_name }}</span>
-                    </div>
+                    </a>
 
                     <div class="card-class-meta">
                         <div class="card-class-meta-row">
@@ -609,11 +640,9 @@
             document.querySelectorAll('.filter-check').forEach(function(checkbox) {
                 checkbox.addEventListener('change', function() {
                     const type = this.dataset.type;
-                    if (this.checked) {
-                        activeFilters[type].push(this.value);
-                    } else {
+                    this.checked ?
+                        activeFilters[type].push(this.value) :
                         activeFilters[type] = activeFilters[type].filter(v => v !== this.value);
-                    }
                     document.getElementById('btn-' + type).classList.toggle('has-selection',
                         activeFilters[type].length > 0);
                     applyFilters();
@@ -623,8 +652,9 @@
             function applyFilters() {
                 let visible = 0;
                 cards.forEach(function(card) {
-                    const show = (activeFilters.kelas.length === 0 || activeFilters.kelas.includes(card
-                            .dataset.kelas)) &&
+                    const show =
+                        (activeFilters.kelas.length === 0 || activeFilters.kelas.includes(card.dataset
+                            .kelas)) &&
                         (activeFilters.waktu.length === 0 || activeFilters.waktu.includes(card.dataset
                             .waktu)) &&
                         (activeFilters.coach.length === 0 || activeFilters.coach.includes(card.dataset

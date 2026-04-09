@@ -34,6 +34,8 @@ Route::middleware('auth.session')->group(function () {
         ->name('profile.update');
     Route::get('/payment/{schedule_id}', [PaymentController::class, 'show'])->name('payment.show');
     Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
+    Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])
+        ->name('coach.profile');
 
     Route::get('/activity', function () {
         return view('pages.activity');

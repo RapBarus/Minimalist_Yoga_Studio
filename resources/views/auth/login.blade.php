@@ -305,9 +305,7 @@
                         </svg>
                     </button>
                 </div>
-                <ul class="criteria">
-                    <li>Minimal 6 karakter</li>
-                </ul>
+
             </div>
 
             <button type="submit" class="btn-submit">Masuk</button>
