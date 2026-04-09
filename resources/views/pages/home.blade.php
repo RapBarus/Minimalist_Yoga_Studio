@@ -362,7 +362,7 @@
 
                     <div class="card-promo-title">{{ $promo->title }}</div>
 
-                    {{-- Coach badge (clickable) --}}
+                    {{-- Coach badge --}}
                     @if ($promo->coach_name)
                         @if (!empty($promo->coach_id))
                             <a href="{{ route('coach.profile', $promo->coach_id) }}" class="coach-badge-link">
@@ -497,7 +497,7 @@
 
                     <div class="card-class-title">{{ $schedule->class_name }}</div>
 
-                    {{-- Coach badge (clickable) --}}
+                    {{-- Coach badge --}}
                     <a href="{{ route('coach.profile', $schedule->coach_id) }}" class="coach-badge-link">
                         <div class="coach-avatar">{{ $initial }}</div>
                         <span style="font-size:.78rem;opacity:.9;">{{ $schedule->coach_name }}</span>

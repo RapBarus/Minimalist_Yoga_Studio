@@ -249,7 +249,6 @@
             Kembali
         </a>
 
-        {{-- Hero --}}
         <div class="coach-hero">
             <div class="coach-hero-avatar">
                 {{ strtoupper(substr($coach->coach_name, 0, 1)) }}
@@ -258,7 +257,6 @@
 
         </div>
 
-        {{-- Specialization --}}
         @if ($coach->specialization)
             <div>
                 <div class="section-heading">Spesialis</div>

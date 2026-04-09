@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Coach\CoachDashboardController;
+use App\Http\Controllers\ActivityController;
 
 // Welcome
 Route::get('/', function () {
@@ -36,10 +37,8 @@ Route::middleware('auth.session')->group(function () {
     Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
     Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])
         ->name('coach.profile');
+    Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
 
-    Route::get('/activity', function () {
-        return view('pages.activity');
-    })->name('activity');
 });
 
 // Coach pages
