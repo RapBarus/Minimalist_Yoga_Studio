@@ -22,26 +22,9 @@ Route::get('/', function () {
 //Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
-
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-// Customer pages
-Route::middleware('auth.session')->group(function () {
-    Route::get('/home', [HomeController::class, 'index'])->name('home');
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::put('/profile/update', [ProfileController::class, 'update'])
-        ->name('profile.update');
-    Route::get('/payment/{schedule_id}', [PaymentController::class, 'show'])->name('payment.show');
-    Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
-    Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])
-        ->name('coach.profile');
-    Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
-    Route::get('/member', [MemberController::class, 'index'])->name('member');
-
-});
 
 // Coach pages
 Route::middleware(['auth.session', 'coach.auth'])->prefix('coach')->name('coach.')->group(function () {
@@ -76,4 +59,20 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::post('/promotions', [PromotionController::class, 'store'])->name('promotions.store');
     Route::post('/promotions/{id}/toggle', [PromotionController::class, 'toggleActive'])->name('promotions.toggle');
     Route::delete('/promotions/{id}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
+});
+
+
+// Customer pages
+Route::middleware('auth.session')->group(function () {
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile/update', [ProfileController::class, 'update'])
+        ->name('profile.update');
+    Route::get('/payment/{schedule_id}', [PaymentController::class, 'show'])->name('payment.show');
+    Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
+    Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])
+        ->name('coach.profile');
+    Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
+    Route::get('/member', [MemberController::class, 'index'])->name('member');
+
 });

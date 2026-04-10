@@ -66,6 +66,9 @@ class HomeController extends Controller
 
     public function coachProfile($coachId)
     {
+        if (!is_numeric($coachId)) {
+            abort(404);
+        }
         $coach = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
             ->where('coaches.coach_id', $coachId)
