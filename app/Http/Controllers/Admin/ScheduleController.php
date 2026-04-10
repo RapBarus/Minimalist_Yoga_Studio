@@ -47,22 +47,33 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'class_id'      => 'required|integer',
-            'coach_id'      => 'required|integer',
+            'class_id' => 'required|integer',
+            'coach_id' => 'required|integer',
             'schedule_date' => 'required|date|after_or_equal:today',
-            'start_time'    => 'required',
-            'end_time'      => 'required|after:start_time',
-            'capacity'      => 'required|integer|min:1',
+            'start_time' => 'required',
+            'end_time' => 'required|after:start_time',
+            'capacity' => 'required|integer|min:1|max:100',
         ], [
-            'class_id.required'      => 'Pilih kelas.',
-            'coach_id.required'      => 'Pilih coach.',
+            'class_id.required' => 'Pilih kelas.',
+            'coach_id.required' => 'Pilih coach.',
             'schedule_date.required' => 'Tanggal wajib diisi.',
             'schedule_date.after_or_equal' => 'Tanggal tidak boleh di masa lalu.',
-            'start_time.required'    => 'Waktu mulai wajib diisi.',
-            'end_time.required'      => 'Waktu selesai wajib diisi.',
-            'end_time.after'         => 'Waktu selesai harus setelah waktu mulai.',
-            'capacity.required'      => 'Kapasitas wajib diisi.',
+            'start_time.required' => 'Waktu mulai wajib diisi.',
+            'end_time.required' => 'Waktu selesai wajib diisi.',
+            'end_time.after' => 'Waktu selesai harus setelah waktu mulai.',
+            'capacity.required' => 'Kapasitas wajib diisi.',
+            'capacity.max' => 'Kapasitas maksimal 100 orang.',
         ]);
+
+        $start = \Carbon\Carbon::parse($request->start_time);
+        $end = \Carbon\Carbon::parse($request->end_time);
+        $duration = $start->diffInMinutes($end);
+
+        if ($duration > 240) {
+            return back()
+                ->withErrors(['end_time' => 'Durasi kelas maksimal 240 menit (4 jam).'])
+                ->withInput();
+        }
 
         DB::table('schedules')->insert([
             'class_id'        => $request->class_id,

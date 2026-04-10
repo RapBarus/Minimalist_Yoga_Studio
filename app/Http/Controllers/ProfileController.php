@@ -40,11 +40,24 @@ class ProfileController extends Controller
 
         // Validation
         $request->validate([
-            'name' => 'nullable|string|max:255',
-            'phone_number' => 'nullable|string|max:20',
-            'password' => 'nullable|min:6|confirmed',
+            'name' => 'nullable|string|max:50|regex:/^[a-zA-Z0-9_]+$/',
+            'phone_number' => 'nullable|string|regex:/^\+?[0-9]{8,15}$/',
+            'password' => [
+                'nullable',
+                'string',
+                'min:6',
+                'max:50',
+                'confirmed',
+                'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/',
+            ],
+        ], [
+            'name.regex' => 'Username hanya boleh huruf, angka, dan underscore.',
+            'phone_number.regex' => 'Nomor HP hanya boleh angka, 8–15 digit.',
+            'password.min' => 'Password minimal 6 karakter.',
+            'password.max' => 'Password maksimal 50 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'password.regex' => 'Password harus mengandung minimal 1 huruf dan 1 angka.',
         ]);
-
         $data = [];
 
         if ($request->filled('name')) {
@@ -60,9 +73,12 @@ class ProfileController extends Controller
         }
 
         if (!empty($data)) {
-            DB::table('users')
-                ->where('user_id', $userId)
-                ->update($data);
+            $data['updated_at'] = now();
+            DB::table('users')->where('user_id', $userId)->update($data);
+
+            if (isset($data['name'])) {
+                Session::put('user_name', $data['name']);
+            }
         }
 
         return redirect()

@@ -312,20 +312,47 @@
                 @method('PUT')
 
                 <div class="info-row-left">
-                    <div class="info-icon"><svg viewBox="0 0 24 24">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24">
                             <rect x="3" y="11" width="18" height="11" rx="2" />
                             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </svg></div>
-                    <div>
+                        </svg>
+                    </div>
+                    <div style="width:100%;">
                         <div class="info-label">Password</div>
 
-                        <input type="password" name="password" placeholder="Password baru" class="info-input" hidden>
-                        <input type="password" name="password_confirmation" placeholder="Konfirmasi password"
-                            class="info-input" hidden>
+                        {{-- password baru --}}
+                        <div class="input-wrap" style="position:relative;margin-bottom:6px;" hidden>
+                            <input type="password" name="password" placeholder="Password baru" class="info-input pw-field"
+                                id="pw-new">
+                            <button type="button" class="eye-btn" onclick="togglePw('pw-new', this)"
+                                style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:#9A8C82;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"
+                                    stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {{-- konfirmasi --}}
+                        <div class="input-wrap" style="position:relative;" hidden>
+                            <input type="password" name="password_confirmation" placeholder="Konfirmasi password"
+                                class="info-input pw-field" id="pw-confirm">
+                            <button type="button" class="eye-btn" onclick="togglePw('pw-confirm', this)"
+                                style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:#9A8C82;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"
+                                    stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
 
                         <div class="info-value value-text">••••••••</div>
                     </div>
                 </div>
+
                 <button type="button" class="edit-btn">
                     <svg viewBox="0 0 24 24" class="edit-icon">
                         <path d="M12 20h9" />
@@ -391,12 +418,26 @@
             </script>
             <script>
                 document.querySelectorAll('.editable').forEach(row => {
-                    row.addEventListener('click', () => {
-                        row.querySelectorAll('.info-input').forEach(i => i.hidden = false);
-                        row.querySelector('.value-text').hidden = true;
-                        row.querySelector('.save-btn').hidden = false;
+                    const editBtn = row.querySelector('.edit-btn');
+                    const saveBtn = row.querySelector('.save-btn');
+                    const valueText = row.querySelector('.value-text');
+
+                    if (!editBtn) return;
+
+                    editBtn.addEventListener('click', () => {
+                        row.classList.add('editing');
+                        row.querySelectorAll('.info-input, .input-wrap').forEach(el => el.hidden = false);
+                        if (valueText) valueText.hidden = true;
+                        if (saveBtn) saveBtn.hidden = false;
                     });
                 });
+            </script>
+            <script>
+                function togglePw(id, btn) {
+                    const input = document.getElementById(id);
+                    input.type = input.type === 'password' ? 'text' : 'password';
+                    btn.style.opacity = input.type === 'text' ? '1' : '.5';
+                }
             </script>
         @endpush
     </div>

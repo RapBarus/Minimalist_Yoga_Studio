@@ -33,7 +33,7 @@ class CoachController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'regex:/^[0-9]{8,13}$/'],
             'password' => 'required|string|min:6',
             'specialization' => 'required|string|max:100',
             'rate_per_class' => 'required|numeric|min:0',
@@ -41,6 +41,7 @@ class CoachController extends Controller
         ], [
             'name.required' => 'Nama wajib diisi.',
             'phone.required' => 'Nomor HP wajib diisi.',
+            'phone.regex' => 'Nomor HP hanya boleh angka, 8–13 digit (tanpa awalan 0).',
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal 6 karakter.',
             'specialization.required' => 'Spesialisasi wajib diisi.',
