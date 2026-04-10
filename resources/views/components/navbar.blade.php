@@ -17,7 +17,7 @@
         @endif
     </a>
 
-    <a href="#" class="nav-item {{ request()->routeIs('member*') ? 'active' : '' }}">
+    <a href="{{ route('member') }}" class="nav-item {{ request()->routeIs('member*') ? 'active' : '' }}">
         @if (request()->routeIs('member*'))
             <div class="nav-pill">
                 <svg viewBox="0 0 24 24">

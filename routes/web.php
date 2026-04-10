@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Coach\CoachDashboardController;
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\MemberController;
 
 // Welcome
 Route::get('/', function () {
@@ -38,6 +39,7 @@ Route::middleware('auth.session')->group(function () {
     Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])
         ->name('coach.profile');
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
+    Route::get('/member', [MemberController::class, 'index'])->name('member');
 
 });
 
