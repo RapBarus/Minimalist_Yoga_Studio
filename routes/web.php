@@ -5,21 +5,26 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\MemberController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CoachController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\Admin\ClassController;
-use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\MembershipController;
+use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Coach\CoachDashboardController;
-use App\Http\Controllers\ActivityController;
-use App\Http\Controllers\MemberController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\KeuanganController;
+
+
 
 // Welcome
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
-//Auth
+// Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -31,10 +36,8 @@ Route::middleware(['auth.session', 'coach.auth'])->prefix('coach')->name('coach.
     Route::get('/dashboard', [CoachDashboardController::class, 'index'])->name('dashboard');
 });
 
-
 // Admin pages
 Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.')->group(function () {
-    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Coaches
@@ -42,11 +45,15 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::post('/coaches', [CoachController::class, 'store'])->name('coaches.store');
     Route::post('/coaches/{coachId}/restore', [CoachController::class, 'restore'])->name('coaches.restore');
     Route::delete('/coaches/{coachId}', [CoachController::class, 'destroy'])->name('coaches.destroy');
+    Route::get('/coaches/{coachId}/detail', [CoachController::class, 'detail'])->name('coaches.detail');
+    Route::put('/coaches/{coachId}', [CoachController::class, 'update'])->name('coaches.update');
 
     // Schedules
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules');
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
     Route::post('/schedules/{scheduleId}/status', [ScheduleController::class, 'updateStatus'])->name('schedules.status');
+    Route::get('/schedules/{scheduleId}/view', [ScheduleController::class, 'viewJadwal'])->name('schedules.view');
+    Route::post('/schedules/{scheduleId}/peserta', [ScheduleController::class, 'addPeserta'])->name('schedules.peserta');
     Route::delete('/schedules/{scheduleId}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
 
     // Classes
@@ -54,25 +61,35 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::post('/classes', [ClassController::class, 'store'])->name('classes.store');
     Route::delete('/classes/{classId}', [ClassController::class, 'destroy'])->name('classes.destroy');
 
-    // Promotions
-    Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions');
-    Route::post('/promotions', [PromotionController::class, 'store'])->name('promotions.store');
-    Route::post('/promotions/{id}/toggle', [PromotionController::class, 'toggleActive'])->name('promotions.toggle');
-    Route::delete('/promotions/{id}', [PromotionController::class, 'destroy'])->name('promotions.destroy');
-});
+    // Membership packages
+    Route::get('/membership', [MembershipController::class, 'index'])->name('membership');
+    Route::post('/membership', [MembershipController::class, 'store'])->name('membership.store');
+    Route::post('/membership/{id}/toggle', [MembershipController::class, 'toggleActive'])->name('membership.toggle');
+    Route::delete('/membership/{id}', [MembershipController::class, 'destroy'])->name('membership.destroy');
 
+    // Promos (discount codes)
+    Route::get('/promos', [PromoController::class, 'index'])->name('promos');
+    Route::post('/promos', [PromoController::class, 'store'])->name('promos.store');
+    Route::post('/promos/{id}/toggle', [PromoController::class, 'toggleActive'])->name('promos.toggle');
+    Route::delete('/promos/{id}', [PromoController::class, 'destroy'])->name('promos.destroy');
+
+    // Customers
+    Route::get('/customers', [CustomerController::class, 'index'])->name('customers');
+    Route::get('/customers/{userId}/detail', [CustomerController::class, 'detail'])->name('customers.detail');
+
+    //Keuangan
+    Route::get('/keuangan', [KeuanganController::class, 'index'])->name('keuangan');
+
+});
 
 // Customer pages
 Route::middleware('auth.session')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::put('/profile/update', [ProfileController::class, 'update'])
-        ->name('profile.update');
+    Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/payment/{schedule_id}', [PaymentController::class, 'show'])->name('payment.show');
     Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
-    Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])
-        ->name('coach.profile');
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
     Route::get('/member', [MemberController::class, 'index'])->name('member');
-
+    Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])->name('coach.profile');
 });

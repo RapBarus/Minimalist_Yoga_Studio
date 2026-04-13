@@ -1,8 +1,11 @@
+{{-- ═══════════════════════════════════════════════════════════ --}}
+{{-- FILE 1: resources/views/admin/membership.blade.php          --}}
+{{-- ═══════════════════════════════════════════════════════════ --}}
 @extends('layouts.admin')
 
-@section('title', 'Kelola Kelas | Minimalist Studio')
-@section('page-title', 'Kelola Kelas')
-@section('page-sub', 'Tambah dan kelola jenis kelas')
+@section('title', 'Kelola Membership | Minimalist Studio')
+@section('page-title', 'Membership')
+@section('page-sub', 'Kelola paket membership studio')
 
 @push('styles')
     <style>
@@ -104,13 +107,18 @@
             color: var(--text);
             outline: none;
             transition: border-color .2s;
-            resize: vertical;
         }
 
         .modal-field input:focus,
         .modal-field select:focus,
         .modal-field textarea:focus {
             border-color: var(--clay);
+        }
+
+        .modal-field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
 
         .btn-modal-submit {
@@ -180,15 +188,14 @@
 
 @section('content')
     <div class="content">
-
         <div class="list-header">
-            <div class="list-title">Daftar Kelas ({{ $classes->count() }})</div>
+            <div class="list-title">Daftar Paket ({{ $packages->count() }})</div>
             <button class="btn-add" onclick="openModal('modal-add')">
                 <svg viewBox="0 0 24 24">
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Tambah Kelas
+                Tambah Paket
             </button>
         </div>
 
@@ -196,30 +203,38 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Nama</th>
-                        <th>Level</th>
-                        <th>Durasi</th>
+                        <th>Nama Paket</th>
+                        <th>Sesi</th>
+                        <th>Harga</th>
+                        <th>Masa Aktif</th>
+                        <th>Status</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($classes as $class)
+                    @forelse($packages as $package)
                         <tr>
                             <td>
-                                {{ $class->class_name }}<br>
+                                {{ $package->name }}<br>
                                 <span
-                                    style="font-size:.72rem;color:var(--text-muted)">{{ Str::limit($class->description, 40) }}</span>
+                                    style="font-size:.72rem;color:var(--text-muted)">{{ $package->description ? Str::limit($package->description, 40) : '—' }}</span>
+                            </td>
+                            <td>{{ $package->quota_amount }}x</td>
+                            <td>Rp {{ number_format($package->price, 0, ',', '.') }}</td>
+                            <td>{{ $package->validity_months }} bln</td>
+                            <td>
+                                <form action="{{ route('admin.membership.toggle', $package->package_id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                        class="badge {{ $package->is_active ? 'badge-confirmed' : 'badge-cancelled' }}"
+                                        style="border:none;cursor:pointer;">
+                                        {{ $package->is_active ? 'Aktif' : 'Nonaktif' }}
+                                    </button>
+                                </form>
                             </td>
                             <td>
-                                <span
-                                    class="badge badge-{{ $class->level === 'beginner' ? 'confirmed' : ($class->level === 'intermediate' ? 'attended' : 'pending') }}">
-                                    {{ $class->level }}
-                                </span>
-                            </td>
-                            <td>{{ $class->duration_minutes }} min</td>
-                            <td>
-                                <form action="{{ route('admin.classes.destroy', $class->class_id) }}" method="POST"
-                                    onsubmit="return confirm('Hapus kelas ini?')">
+                                <form action="{{ route('admin.membership.destroy', $package->package_id) }}" method="POST"
+                                    onsubmit="return confirm('Hapus paket ini?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn-danger-sm">Hapus</button>
                                 </form>
@@ -227,14 +242,13 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;">Belum ada
-                                kelas.</td>
+                            <td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">Belum ada
+                                paket.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
     </div>
 @endsection
 
@@ -264,41 +278,28 @@
 <div class="modal-overlay" id="modal-add">
     <div class="modal">
         <div class="modal-header">
-            <div class="modal-title">Tambah Kelas Baru</div>
-            <button class="modal-close" onclick="closeModal('modal-add')">
-                <svg viewBox="0 0 24 24">
+            <div class="modal-title">Tambah Paket Baru</div>
+            <button class="modal-close" onclick="closeModal('modal-add')"><svg viewBox="0 0 24 24">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-            </button>
+                </svg></button>
         </div>
-        <form action="{{ route('admin.classes.store') }}" method="POST" class="modal-form">
+        <form action="{{ route('admin.membership.store') }}" method="POST" class="modal-form">
             @csrf
-            <div class="modal-field">
-                <label>Nama Kelas</label>
-                <input type="text" name="class_name" placeholder="contoh: Yoga" value="{{ old('class_name') }}"
-                    required>
+            <div class="modal-field"><label>Nama Paket</label><input type="text" name="name"
+                    placeholder="contoh: Basic 4x" value="{{ old('name') }}" required></div>
+            <div class="modal-field-row">
+                <div class="modal-field"><label>Jumlah Sesi</label><input type="number" name="quota_amount"
+                        placeholder="8" value="{{ old('quota_amount') }}" min="1" required></div>
+                <div class="modal-field"><label>Masa Aktif (Bulan)</label><input type="number" name="validity_months"
+                        placeholder="2" value="{{ old('validity_months', 2) }}" min="1" required></div>
             </div>
-            <div class="modal-field">
-                <label>Deskripsi</label>
-                <textarea name="description" placeholder="Deskripsi kelas..." rows="3">{{ old('description') }}</textarea>
+            <div class="modal-field"><label>Harga (Rp)</label><input type="number" name="price" placeholder="150000"
+                    value="{{ old('price') }}" min="0" step="1000" required></div>
+            <div class="modal-field"><label>Deskripsi</label>
+                <textarea name="description" rows="3" placeholder="Deskripsi paket...">{{ old('description') }}</textarea>
             </div>
-            <div class="modal-field">
-                <label>Level</label>
-                <select name="level" required>
-                    <option value="">-- Pilih Level --</option>
-                    <option value="beginner" {{ old('level') === 'beginner' ? 'selected' : '' }}>Beginner</option>
-                    <option value="intermediate" {{ old('level') === 'intermediate' ? 'selected' : '' }}>Intermediate
-                    </option>
-                    <option value="advanced" {{ old('level') === 'advanced' ? 'selected' : '' }}>Advanced</option>
-                </select>
-            </div>
-            <div class="modal-field">
-                <label>Durasi (Menit)</label>
-                <input type="number" name="duration_minutes" placeholder="60" value="{{ old('duration_minutes') }}"
-                    min="1" required>
-            </div>
-            <button type="submit" class="btn-modal-submit">Tambah Kelas</button>
+            <button type="submit" class="btn-modal-submit">Tambah Paket</button>
         </form>
     </div>
 </div>

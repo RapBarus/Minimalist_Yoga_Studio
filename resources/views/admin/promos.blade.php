@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Kelola Kelas | Minimalist Studio')
-@section('page-title', 'Kelola Kelas')
-@section('page-sub', 'Tambah dan kelola jenis kelas')
+@section('title', 'Kelola Penawaran | Minimalist Studio')
+@section('page-title', 'Penawaran')
+@section('page-sub', 'Kelola kode diskon untuk customer')
 
 @push('styles')
     <style>
@@ -92,8 +92,7 @@
         }
 
         .modal-field input,
-        .modal-field select,
-        .modal-field textarea {
+        .modal-field select {
             width: 100%;
             padding: .72rem .9rem;
             background: #faf8f6;
@@ -104,13 +103,17 @@
             color: var(--text);
             outline: none;
             transition: border-color .2s;
-            resize: vertical;
         }
 
         .modal-field input:focus,
-        .modal-field select:focus,
-        .modal-field textarea:focus {
+        .modal-field select:focus {
             border-color: var(--clay);
+        }
+
+        .modal-field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
 
         .btn-modal-submit {
@@ -182,13 +185,13 @@
     <div class="content">
 
         <div class="list-header">
-            <div class="list-title">Daftar Kelas ({{ $classes->count() }})</div>
+            <div class="list-title">Daftar Kode Promo ({{ $promos->count() }})</div>
             <button class="btn-add" onclick="openModal('modal-add')">
                 <svg viewBox="0 0 24 24">
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Tambah Kelas
+                Tambah Promo
             </button>
         </div>
 
@@ -196,30 +199,50 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Nama</th>
-                        <th>Level</th>
-                        <th>Durasi</th>
+                        <th>Kode</th>
+                        <th>Diskon</th>
+                        <th>Penggunaan</th>
+                        <th>Berlaku</th>
+                        <th>Status</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($classes as $class)
+                    @forelse($promos as $promo)
+                        @php $isExpired = \Carbon\Carbon::parse($promo->valid_until)->isPast(); @endphp
                         <tr>
+                            <td><strong>{{ $promo->code }}</strong></td>
                             <td>
-                                {{ $class->class_name }}<br>
-                                <span
-                                    style="font-size:.72rem;color:var(--text-muted)">{{ Str::limit($class->description, 40) }}</span>
+                                @if ($promo->discount_type === 'percentage')
+                                    {{ $promo->discount_value }}%
+                                @else
+                                    Rp {{ number_format($promo->discount_value, 0, ',', '.') }}
+                                @endif
                             </td>
+                            <td>{{ $promo->used_count }}/{{ $promo->max_uses }}</td>
                             <td>
-                                <span
-                                    class="badge badge-{{ $class->level === 'beginner' ? 'confirmed' : ($class->level === 'intermediate' ? 'attended' : 'pending') }}">
-                                    {{ $class->level }}
+                                <span style="font-size:.75rem;">
+                                    {{ \Carbon\Carbon::parse($promo->valid_from)->format('d M Y') }}<br>
+                                    s/d {{ \Carbon\Carbon::parse($promo->valid_until)->format('d M Y') }}
                                 </span>
                             </td>
-                            <td>{{ $class->duration_minutes }} min</td>
                             <td>
-                                <form action="{{ route('admin.classes.destroy', $class->class_id) }}" method="POST"
-                                    onsubmit="return confirm('Hapus kelas ini?')">
+                                @if ($isExpired)
+                                    <span class="badge badge-cancelled">Expired</span>
+                                @else
+                                    <form action="{{ route('admin.promos.toggle', $promo->promo_id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit"
+                                            class="badge {{ $promo->is_active ? 'badge-confirmed' : 'badge-cancelled' }}"
+                                            style="border:none;cursor:pointer;">
+                                            {{ $promo->is_active ? 'Aktif' : 'Nonaktif' }}
+                                        </button>
+                                    </form>
+                                @endif
+                            </td>
+                            <td>
+                                <form action="{{ route('admin.promos.destroy', $promo->promo_id) }}" method="POST"
+                                    onsubmit="return confirm('Hapus promo ini?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn-danger-sm">Hapus</button>
                                 </form>
@@ -227,8 +250,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;">Belum ada
-                                kelas.</td>
+                            <td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">Belum ada
+                                kode promo.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -264,7 +287,7 @@
 <div class="modal-overlay" id="modal-add">
     <div class="modal">
         <div class="modal-header">
-            <div class="modal-title">Tambah Kelas Baru</div>
+            <div class="modal-title">Tambah Kode Promo</div>
             <button class="modal-close" onclick="closeModal('modal-add')">
                 <svg viewBox="0 0 24 24">
                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -272,33 +295,46 @@
                 </svg>
             </button>
         </div>
-        <form action="{{ route('admin.classes.store') }}" method="POST" class="modal-form">
+        <form action="{{ route('admin.promos.store') }}" method="POST" class="modal-form">
             @csrf
             <div class="modal-field">
-                <label>Nama Kelas</label>
-                <input type="text" name="class_name" placeholder="contoh: Yoga" value="{{ old('class_name') }}"
+                <label>Kode Promo</label>
+                <input type="text" name="code" placeholder="contoh: YOGA10" value="{{ old('code') }}"
+                    style="text-transform:uppercase;" required>
+            </div>
+            <div class="modal-field-row">
+                <div class="modal-field">
+                    <label>Tipe Diskon</label>
+                    <select name="discount_type" required>
+                        <option value="">-- Pilih --</option>
+                        <option value="percentage" {{ old('discount_type') === 'percentage' ? 'selected' : '' }}>
+                            Persentase (%)</option>
+                        <option value="fixed" {{ old('discount_type') === 'fixed' ? 'selected' : '' }}>Nominal (Rp)
+                        </option>
+                    </select>
+                </div>
+                <div class="modal-field">
+                    <label>Nilai Diskon</label>
+                    <input type="number" name="discount_value" placeholder="10" value="{{ old('discount_value') }}"
+                        min="1" required>
+                </div>
+            </div>
+            <div class="modal-field">
+                <label>Maks Penggunaan</label>
+                <input type="number" name="max_uses" placeholder="100" value="{{ old('max_uses') }}" min="1"
                     required>
             </div>
-            <div class="modal-field">
-                <label>Deskripsi</label>
-                <textarea name="description" placeholder="Deskripsi kelas..." rows="3">{{ old('description') }}</textarea>
+            <div class="modal-field-row">
+                <div class="modal-field">
+                    <label>Berlaku Dari</label>
+                    <input type="date" name="valid_from" value="{{ old('valid_from') }}" required>
+                </div>
+                <div class="modal-field">
+                    <label>Berlaku Sampai</label>
+                    <input type="date" name="valid_until" value="{{ old('valid_until') }}" required>
+                </div>
             </div>
-            <div class="modal-field">
-                <label>Level</label>
-                <select name="level" required>
-                    <option value="">-- Pilih Level --</option>
-                    <option value="beginner" {{ old('level') === 'beginner' ? 'selected' : '' }}>Beginner</option>
-                    <option value="intermediate" {{ old('level') === 'intermediate' ? 'selected' : '' }}>Intermediate
-                    </option>
-                    <option value="advanced" {{ old('level') === 'advanced' ? 'selected' : '' }}>Advanced</option>
-                </select>
-            </div>
-            <div class="modal-field">
-                <label>Durasi (Menit)</label>
-                <input type="number" name="duration_minutes" placeholder="60" value="{{ old('duration_minutes') }}"
-                    min="1" required>
-            </div>
-            <button type="submit" class="btn-modal-submit">Tambah Kelas</button>
+            <button type="submit" class="btn-modal-submit">Tambah Promo</button>
         </form>
     </div>
 </div>

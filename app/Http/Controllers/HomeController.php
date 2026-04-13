@@ -33,29 +33,23 @@ class HomeController extends Controller
             )
             ->get();
 
-        $promotions = DB::table('promotions')
-            ->join('coaches', 'promotions.coach_name', '=', DB::raw('(SELECT u.name FROM users u JOIN coaches c2 ON c2.user_id = u.user_id WHERE c2.coach_id = coaches.coach_id LIMIT 1)'))
-            ->where('promotions.is_active', 1)
-            ->orderBy('promotions.promo_id', 'asc')
-            ->select('promotions.*', 'coaches.coach_id')
-            ->get();
-
-
-        if ($promotions->isEmpty()) {
-            $promotions = DB::table('promotions')
-                ->where('is_active', 1)
-                ->orderBy('promo_id', 'asc')
-                ->get()
-                ->map(function ($promo) {
-                    $coach = DB::table('coaches')
-                        ->join('users', 'coaches.user_id', '=', 'users.user_id')
-                        ->where('users.name', $promo->coach_name)
-                        ->select('coaches.coach_id')
-                        ->first();
-                    $promo->coach_id = $coach ? $coach->coach_id : null;
-                    return $promo;
-                });
-        }
+        $promotions = DB::table('membership_packages')
+            ->where('is_active', 1)
+            ->orderBy('package_id', 'asc')
+            ->get()
+            ->map(function ($package) {
+                $package->title = $package->name;
+                $package->coach_name = null;
+                $package->coach_id = null;
+                $package->schedule_date = null;
+                $package->start_time = null;
+                $package->end_time = null;
+                $package->original_price = null;
+                $package->promo_price = 'Rp ' . number_format($package->price, 0, ',', '.');
+                $package->pertemuan = $package->quota_amount . 'x sesi';
+                $package->promo_id = $package->package_id;
+                return $package;
+            });
 
         return view('pages.home', [
             'schedules' => $schedules,
@@ -69,6 +63,7 @@ class HomeController extends Controller
         if (!is_numeric($coachId)) {
             abort(404);
         }
+
         $coach = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
             ->where('coaches.coach_id', $coachId)

@@ -11,55 +11,50 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $totalUsers = DB::table('users')->where('role', 'customer')->count();
-        $totalSchedules = DB::table('schedules')->where('status', 'upcoming')->count();
-        $totalBookings = DB::table('bookings')->count();
-        $totalClasses = DB::table('classes')->count();
-
-        $recentBookings = DB::table('bookings')
-            ->join('users', 'bookings.user_id', '=', 'users.user_id')
-            ->join('schedules', 'bookings.schedule_id', '=', 'schedules.schedule_id')
-            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
-            ->orderBy('bookings.created_at', 'desc')
-            ->limit(10)
-            ->select(
-                'bookings.booking_id',
-                'bookings.status',
-                'bookings.created_at',
-                'users.name as user_name',
-                'classes.class_name',
-                'schedules.schedule_date',
-                'schedules.start_time'
-            )
-            ->get();
-
-        $upcomingSchedules = DB::table('schedules')
+        $schedules = DB::table('schedules')
             ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
             ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
             ->where('schedules.status', 'upcoming')
             ->where('schedules.schedule_date', '>=', now()->toDateString())
             ->orderBy('schedules.schedule_date', 'asc')
-            ->limit(5)
+            ->orderBy('schedules.start_time', 'asc')
             ->select(
                 'schedules.schedule_id',
                 'schedules.schedule_date',
                 'schedules.start_time',
-                'schedules.available_slots',
+                'schedules.end_time',
                 'schedules.capacity',
+                'schedules.available_slots',
+                'schedules.status',
                 'classes.class_name',
+                'coaches.rate_per_class',
                 'users.name as coach_name'
             )
             ->get();
 
+        $classes = DB::table('classes')->orderBy('class_name')->get();
+
+        $coaches = DB::table('coaches')
+            ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->where('users.status', 'active')
+            ->select('coaches.coach_id', 'users.name', 'coaches.specialization')
+            ->get();
+
+        // Dates with schedules for calendar
+        $scheduleDates = DB::table('schedules')
+            ->where('status', 'upcoming')
+            ->pluck('schedule_date')
+            ->map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'))
+            ->unique()
+            ->values()
+            ->toArray();
+
         return view('admin.dashboard', [
-            'totalUsers' => $totalUsers,
-            'totalSchedules' => $totalSchedules,
-            'totalBookings' => $totalBookings,
-            'totalClasses' => $totalClasses,
-            'recentBookings' => $recentBookings,
-            'upcomingSchedules' => $upcomingSchedules,
-            'admin_name' => Session::get('user_name'),
+            'schedules' => $schedules,
+            'classes' => $classes,
+            'coaches' => $coaches,
+            'scheduleDates' => $scheduleDates,
         ]);
     }
 }

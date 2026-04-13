@@ -10,19 +10,23 @@ class MemberController extends Controller
 {
     public function index()
     {
-        $promotions = DB::table('promotions')
+        $promotions = DB::table('membership_packages')
             ->where('is_active', 1)
-            ->orderBy('promo_id', 'asc')
+            ->orderBy('package_id', 'asc')
             ->get()
-            ->map(function ($promo) {
-                // Resolve coach_id from coach_name
-                $coach = DB::table('coaches')
-                    ->join('users', 'coaches.user_id', '=', 'users.user_id')
-                    ->where('users.name', $promo->coach_name)
-                    ->select('coaches.coach_id')
-                    ->first();
-                $promo->coach_id = $coach ? $coach->coach_id : null;
-                return $promo;
+            ->map(function ($package) {
+                // Map to match member.blade.php expectations
+                $package->title = $package->name;
+                $package->coach_name = null;
+                $package->coach_id = null;
+                $package->schedule_date = null;
+                $package->start_time = null;
+                $package->end_time = null;
+                $package->original_price = null;
+                $package->promo_price = number_format($package->price, 0, ',', '.');
+                $package->pertemuan = $package->quota_amount . 'x sesi';
+                $package->promo_id = $package->package_id;
+                return $package;
             });
 
         return view('pages.member', compact('promotions'));

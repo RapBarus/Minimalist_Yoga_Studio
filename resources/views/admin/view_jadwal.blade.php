@@ -1,0 +1,466 @@
+@extends('layouts.admin')
+
+@section('title', 'View Jadwal | Minimalist Studio')
+@section('page-title', 'View Jadwal')
+@section('page-sub', $schedule->class_name . ' — ' . \Carbon\Carbon::parse($schedule->schedule_date)->format('d M Y'))
+
+@push('styles')
+    <style>
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--clay);
+            text-decoration: none;
+            font-size: .78rem;
+            font-weight: 600;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+        }
+
+        .back-btn svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .info-field {
+            margin-bottom: 12px;
+        }
+
+        .info-field label {
+            display: block;
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .info-field-value {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .7rem .9rem;
+            background: var(--bg-white);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: .85rem;
+            color: var(--text);
+        }
+
+        .info-field-value svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--clay);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            opacity: .5;
+        }
+
+        .peserta-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+            margin-bottom: 14px;
+        }
+
+        .peserta-title {
+            font-weight: 700;
+            font-size: .95rem;
+            color: var(--text);
+        }
+
+        .btn-input-peserta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .75rem;
+            font-weight: 600;
+            letter-spacing: .05em;
+            cursor: pointer;
+            transition: background .18s;
+        }
+
+        .btn-input-peserta:hover {
+            background: var(--clay-dark);
+        }
+
+        .btn-input-peserta svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+        }
+
+        .peserta-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .82rem;
+        }
+
+        .peserta-table thead tr {
+            background: var(--clay);
+            color: #fff;
+        }
+
+        .peserta-table th {
+            padding: 10px 14px;
+            text-align: left;
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .peserta-table th:first-child {
+            border-radius: 10px 0 0 10px;
+        }
+
+        .peserta-table th:last-child {
+            border-radius: 0 10px 10px 0;
+        }
+
+        .peserta-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .peserta-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .peserta-table tr:hover td {
+            background: #faf8f6;
+        }
+
+        .status-valid {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(39, 174, 96, .12);
+            color: #27AE60;
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+        }
+
+        .status-pending {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(243, 156, 18, .12);
+            color: #F39C12;
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 18px;
+            width: 100%;
+            max-width: 380px;
+            padding: 24px;
+            animation: modalIn .2s ease both;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--text-muted);
+            border-radius: 6px;
+        }
+
+        .modal-close svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .modal-field label {
+            display: block;
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: .35rem;
+        }
+
+        .modal-field input,
+        .modal-field select {
+            width: 100%;
+            padding: .72rem .9rem;
+            background: #faf8f6;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .85rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .modal-field input:focus,
+        .modal-field select:focus {
+            border-color: var(--clay);
+        }
+
+        .btn-modal-submit {
+            width: 100%;
+            padding: .85rem;
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .82rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: background .18s;
+        }
+
+        .btn-modal-submit:hover {
+            background: var(--clay-dark);
+        }
+    </style>
+@endpush
+
+@section('content')
+    <div class="content">
+
+        <a href="{{ route('admin.schedules') }}" class="back-btn">
+            <svg viewBox="0 0 24 24">
+                <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Kembali
+        </a>
+
+        <div class="info-field">
+            <label>Nama Kelas</label>
+            <div class="info-field-value">
+                {{ $schedule->class_name }}
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="info-field">
+            <label>Coach</label>
+            <div class="info-field-value">
+                {{ $schedule->coach_name }}
+                <svg viewBox="0 0 24 24">
+                    <polyline points="6 9 12 15 18 9" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="info-field">
+            <label>Jam Kelas</label>
+            <div class="info-field-value">
+                {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} –
+                {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="info-field">
+            <label>Harga</label>
+            <div class="info-field-value">
+                Rp {{ number_format($schedule->rate_per_class ?? 0, 0, ',', '.') }}
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="info-field">
+            <label>Kuota Kelas</label>
+            <div class="info-field-value">
+                {{ $schedule->available_slots }} / {{ $schedule->capacity }} tersedia
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+            </div>
+        </div>
+
+        {{-- Peserta --}}
+        <div class="peserta-header">
+            <div class="peserta-title">Peserta Kelas</div>
+            <button class="btn-input-peserta" onclick="openModal('modal-peserta')">
+                <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Input peserta
+            </button>
+        </div>
+
+        <div class="section-card" style="overflow:hidden;">
+            <table class="peserta-table">
+                <thead>
+                    <tr>
+                        <th>Peserta</th>
+                        <th>Metode Pembayaran</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($participants as $p)
+                        <tr>
+                            <td>{{ $p->name }}</td>
+                            <td>{{ strtoupper($p->payment_type ?? '—') }}</td>
+                            <td>
+                                @if (in_array($p->transaction_status, ['settlement', 'capture', 'cash_paid']))
+                                    <span class="status-valid">VALID</span>
+                                @else
+                                    <span class="status-pending">PENDING</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" style="text-align:center;color:var(--text-muted);padding:2rem;">Belum ada
+                                peserta.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+@endsection
+
+@push('scripts')
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        }));
+    </script>
+@endpush
+
+<div class="modal-overlay" id="modal-peserta">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Nama Peserta</div>
+            <button class="modal-close" onclick="closeModal('modal-peserta')"><svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg></button>
+        </div>
+        <form action="{{ route('admin.schedules.peserta', $schedule->schedule_id) }}" method="POST"
+            class="modal-form">
+            @csrf
+            <div class="modal-field">
+                <label>Nama Peserta</label>
+                <input type="text" name="name" placeholder="Masukan Nama Peserta" required>
+            </div>
+            <div class="modal-field">
+                <label>Metode Pembayaran</label>
+                <select name="payment_type" required>
+                    <option value="">Pilih Metode Pembayaran</option>
+                    <option value="cash">Cash</option>
+                    <option value="qris">QRIS</option>
+                    <option value="transfer">Transfer Bank</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Harga</label>
+                <input type="number" name="amount" placeholder="Masukan Harga"
+                    value="{{ $schedule->rate_per_class ?? 0 }}" min="0" step="1000" required>
+            </div>
+            <button type="submit" class="btn-modal-submit">Tambah Peserta</button>
+        </form>
+    </div>
+</div>
