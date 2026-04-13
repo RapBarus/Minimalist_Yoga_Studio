@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\RateLimiter;
+
 
 class AuthController extends Controller
 {
@@ -80,6 +82,17 @@ class AuthController extends Controller
     // Login
     public function login(Request $request)
     {
+        $key = 'login.' . str_replace(' ', '_', strtolower($request->username)) . '.' . $request->ip();
+
+        // Check if blocked
+        if (RateLimiter::tooManyAttempts($key, 10)) {
+            $seconds = RateLimiter::availableIn($key);
+            $minutes = ceil($seconds / 60);
+            return back()->withErrors([
+                'username' => "Terlalu banyak percobaan login. Coba lagi dalam {$minutes} menit.",
+            ])->withInput();
+        }
+
         $request->validate([
             'username' => [
                 'required',
@@ -129,9 +142,17 @@ class AuthController extends Controller
         }
 
         if (!$user || !Hash::check($request->password, $user->password_hash)) {
-            return back()
-                ->withErrors(['username' => 'Username atau password salah.'])
-                ->withInput();
+            RateLimiter::hit($key, 600);
+
+            $attempts = RateLimiter::attempts($key);
+            $remaining = 10 - $attempts;
+
+            $message = 'Username atau password salah.';
+            if ($remaining > 0 && $remaining <= 3) {
+                $message .= " Sisa percobaan: {$remaining}.";
+            }
+
+            return back()->withErrors(['username' => $message])->withInput();
         }
 
         if ($user->status === 'inactive') {

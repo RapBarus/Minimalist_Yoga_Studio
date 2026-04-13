@@ -274,11 +274,11 @@
             <p class="coach-bio">{{ $coach->bio ?? 'Belum ada deskripsi.' }}</p>
         </div>
 
-        {{-- Rate --}}
+        {{-- Rate
         <div class="coach-rate-box">
             <span class="rate-label">Rate per Sesi</span>
             <span class="rate-value">Rp {{ number_format($coach->rate_per_class ?? 0, 0, ',', '.') }}</span>
-        </div>
+        </div> --}}
 
         {{-- Upcoming schedules --}}
         <div>

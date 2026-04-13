@@ -182,7 +182,7 @@
 
                             <div class="field">
                                 <label>Kapasitas</label>
-                                <input type="number" name="capacity" placeholder="contoh: 15"
+                                <input type="number" name="capacity" placeholder="Maks: 100"
                                     value="{{ old('capacity') }}" min="1" required>
                             </div>
 
