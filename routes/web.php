@@ -34,6 +34,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Coach pages
 Route::middleware(['auth.session', 'coach.auth'])->prefix('coach')->name('coach.')->group(function () {
     Route::get('/dashboard', [CoachDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/schedule/{scheduleId}', [CoachDashboardController::class, 'scheduleDetail'])->name('schedule.detail');
+    Route::post('/schedule/{scheduleId}/update', [CoachDashboardController::class, 'updateSchedule'])->name('schedule.update');
+    Route::get('/profile', function () {
+        return 'Coming soon'; })->name('profile');
+
 });
 
 // Admin pages
