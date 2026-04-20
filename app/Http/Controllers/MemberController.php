@@ -17,11 +17,11 @@ class MemberController extends Controller
             ->map(function ($package) {
                 // Map to match member.blade.php expectations
                 $package->title = $package->name;
-                $package->coach_name = null;
-                $package->coach_id = null;
-                $package->schedule_date = null;
-                $package->start_time = null;
-                $package->end_time = null;
+                $package->coach_name = $package->coach_name ?? null;
+                $package->coach_id = $package->coach_id ?? null;
+                $package->schedule_date = $package->schedule_date ?? null;
+                $package->start_time = $package->start_time ?? null;
+                $package->end_time = $package->end_time ?? null;
                 $package->original_price = null;
                 $package->promo_price = number_format($package->price, 0, ',', '.');
                 $package->pertemuan = $package->quota_amount . 'x sesi';

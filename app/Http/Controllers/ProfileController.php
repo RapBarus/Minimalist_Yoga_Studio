@@ -38,6 +38,13 @@ class ProfileController extends Controller
             return redirect()->route('login');
         }
 
+        // If the password input is explicitly submitted as empty, show a field error.
+        if ($request->has('password') && trim((string) $request->input('password')) === '') {
+            return back()
+                ->withErrors(['password' => 'Password tidak diubah karena input kosong.'])
+                ->withInput();
+        }
+
         // Validation
         $request->validate([
             'name' => 'nullable|string|max:50|regex:/^[a-zA-Z0-9_]+$/',

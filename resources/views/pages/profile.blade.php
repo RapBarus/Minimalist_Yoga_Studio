@@ -263,6 +263,9 @@
                         <div class="info-label">Username</div>
 
                         <input type="text" name="name" value="{{ $user->name }}" class="info-input" hidden>
+                        @error('name')
+                            <div style="color:#c0392b;font-size:.72rem;margin-top:4px;">{{ $message }}</div>
+                        @enderror
 
                         <div class="info-value value-text">{{ $user->name }}</div>
                     </div>
@@ -292,6 +295,9 @@
 
                         <input type="text" name="phone_number" value="{{ $user->phone_number }}" class="info-input"
                             hidden>
+                        @error('phone_number')
+                            <div style="color:#c0392b;font-size:.72rem;margin-top:4px;">{{ $message }}</div>
+                        @enderror
 
                         <div class="info-value value-text">{{ $user->phone_number ?? '—' }}</div>
                     </div>
@@ -348,6 +354,9 @@
                                 </svg>
                             </button>
                         </div>
+                        @error('password')
+                            <div style="color:#c0392b;font-size:.72rem;margin-top:4px;">{{ $message }}</div>
+                        @enderror
 
                         <div class="info-value value-text">••••••••</div>
                     </div>
