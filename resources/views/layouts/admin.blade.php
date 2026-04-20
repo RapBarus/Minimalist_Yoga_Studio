@@ -16,6 +16,16 @@
         body {
             display: block;
             padding-bottom: 160px;
+            background: #E8E4DF;
+        }
+
+        .admin-frame {
+            position: relative;
+            max-width: 560px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: var(--bg);
+            overflow-x: hidden;
         }
 
         .main {
@@ -92,7 +102,7 @@
             stroke-linejoin: round;
         }
 
-        /* ── Hamburger button ── */
+        /* ── Hamburger ── */
         .btn-hamburger {
             display: inline-flex;
             align-items: center;
@@ -147,22 +157,22 @@
 
         /* ── Drawer ── */
         .drawer {
-            position: fixed;
+            position: absolute;
             top: 0;
-            right: 0;
             bottom: 0;
-            width: 260px;
+            right: -240px;
+            width: 240px;
+            height: 100%;
+            min-height: 100vh;
             background: var(--bg-white);
             z-index: 160;
             display: flex;
             flex-direction: column;
-            transform: translateX(100%);
-            transition: transform .25s ease;
             box-shadow: -8px 0 32px rgba(0, 0, 0, .12);
         }
 
         .drawer.open {
-            transform: translateX(0);
+            right: 0%;
         }
 
         .drawer-header {
@@ -338,33 +348,25 @@
             color: var(--clay);
         }
 
+        /* ── Mobile ── */
         @media (max-width: 600px) {
             .admin-header-name {
                 display: none;
             }
         }
 
+        /* ── Desktop: constrain to frame ── */
         @media (min-width: 600px) {
-            .admin-header {
-                padding: 14px 28px;
-            }
-
-            .page-titlebar {
-                padding: 20px 28px 0;
-            }
-
-            .content {
-                padding: 20px 28px 80px;
-            }
-
             .bottom-nav {
-                max-width: 600px;
+                max-width: 560px;
                 left: 50%;
                 transform: translateX(-50%);
                 border-radius: 16px 16px 0 0;
                 border-left: 1.5px solid var(--border);
                 border-right: 1.5px solid var(--border);
             }
+
+
         }
     </style>
     @stack('styles')
@@ -372,144 +374,151 @@
 
 <body>
 
-    {{-- Drawer overlay --}}
-    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="admin-frame">
 
-    {{-- Drawer --}}
-    <div class="drawer" id="drawer">
-        <div class="drawer-header">
-            <div class="drawer-header-title">Menu</div>
-            <button class="btn-drawer-close" onclick="closeDrawer()">
-                <svg viewBox="0 0 24 24">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-            </button>
-        </div>
-        <div class="drawer-body">
+        {{-- Drawer overlay --}}
+        <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 
-            <div class="drawer-section-label">Konten</div>
-
-            <a href="{{ route('admin.membership') }}"
-                class="drawer-link {{ request()->routeIs('admin.membership*') ? 'active' : '' }}"
-                onclick="closeDrawer()">
-                <svg viewBox="0 0 24 24">
-                    <path d="M20 12V22H4V12" />
-                    <path d="M22 7H2v5h20V7z" />
-                    <path d="M12 22V7" />
-                    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-                </svg>
-                Membership
-            </a>
-
-            <a href="{{ route('admin.promos') }}"
-                class="drawer-link {{ request()->routeIs('admin.promos*') ? 'active' : '' }}" onclick="closeDrawer()">
-                <svg viewBox="0 0 24 24">
-                    <polygon
-                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                Penawaran
-            </a>
-
-            <a href="{{ route('admin.classes') }}"
-                class="drawer-link {{ request()->routeIs('admin.classes*') ? 'active' : '' }}" onclick="closeDrawer()">
-                <svg viewBox="0 0 24 24">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-                Kelas
-            </a>
-
-        </div>
-    </div>
-
-    {{-- Top header --}}
-    <div class="admin-header">
-        <div class="admin-header-logo">
-            <img src="{{ asset('images/minimalist-logo-2.png') }}" alt="Minimalist Studio">
-        </div>
-        <div class="admin-header-right">
-
-            <button class="btn-hamburger" onclick="openDrawer()">
-                <svg viewBox="0 0 24 24">
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <line x1="3" y1="12" x2="21" y2="12" />
-                    <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
-            </button>
-            <form action="{{ route('logout') }}" method="POST" style="margin:0;">
-                @csrf
-                <button type="submit" class="btn-header-logout">
+        {{-- Drawer --}}
+        <div class="drawer" id="drawer">
+            <div class="drawer-header">
+                <div class="drawer-header-title">Menu</div>
+                <button class="btn-drawer-close" onclick="closeDrawer()">
                     <svg viewBox="0 0 24 24">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <polyline points="16 17 21 12 16 7" />
-                        <line x1="21" y1="12" x2="9" y2="12" />
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
-                    Keluar
                 </button>
-            </form>
+            </div>
+            <div class="drawer-body">
+                <div class="drawer-section-label">Konten</div>
+
+                <a href="{{ route('admin.membership') }}"
+                    class="drawer-link {{ request()->routeIs('admin.membership*') ? 'active' : '' }}"
+                    onclick="closeDrawer()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 12V22H4V12" />
+                        <path d="M22 7H2v5h20V7z" />
+                        <path d="M12 22V7" />
+                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                    </svg>
+                    Membership
+                </a>
+
+                <a href="{{ route('admin.promos') }}"
+                    class="drawer-link {{ request()->routeIs('admin.promos*') ? 'active' : '' }}"
+                    onclick="closeDrawer()">
+                    <svg viewBox="0 0 24 24">
+                        <polygon
+                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    Penawaran
+                </a>
+
+                <a href="{{ route('admin.classes') }}"
+                    class="drawer-link {{ request()->routeIs('admin.classes*') ? 'active' : '' }}"
+                    onclick="closeDrawer()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                    </svg>
+                    Kelas
+                </a>
+            </div>
         </div>
+
+        {{-- Top header --}}
+        <div class="admin-header">
+            <div class="admin-header-logo">
+                <img src="{{ asset('images/minimalist-logo-2.png') }}" alt="Minimalist Studio">
+            </div>
+            <div class="admin-header-right">
+                <div class="admin-header-name">
+                    Admin Panel
+                    <strong>{{ Session::get('user_name') }}</strong>
+                </div>
+                <button class="btn-hamburger" onclick="openDrawer()">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                </button>
+                <form action="{{ route('logout') }}" method="POST" style="margin:0;">
+                    @csrf
+                    <button type="submit" class="btn-header-logout">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Keluar
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {{-- Main --}}
+        <div class="main">
+            <div class="page-titlebar">
+                <div class="page-titlebar-title">@yield('page-title')</div>
+                <div class="page-titlebar-sub">@yield('page-sub')</div>
+            </div>
+
+            <div style="padding: 0 20px; margin-top: 14px;">
+                @if (session('success'))
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
+                @if ($errors->any())
+                    <div class="alert alert-error">{{ $errors->first() }}</div>
+                @endif
+            </div>
+
+            @yield('content')
+        </div>
+
+        {{-- Bottom navbar --}}
+        <nav class="bottom-nav">
+            <a href="{{ route('admin.dashboard') }}"
+                class="bottom-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                Home
+            </a>
+
+            <a href="{{ route('admin.coaches') }}"
+                class="bottom-nav-item {{ request()->routeIs('admin.coaches*') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Coach
+            </a>
+
+            <a href="{{ route('admin.customers') }}"
+                class="bottom-nav-item {{ request()->routeIs('admin.customers*') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                Pelanggan
+            </a>
+
+            <a href="{{ route('admin.keuangan') }}"
+                class="bottom-nav-item {{ request()->routeIs('admin.keuangan*') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                Keuangan
+            </a>
+        </nav>
+
     </div>
-
-    {{-- Main --}}
-    <div class="main">
-        <div class="page-titlebar">
-            <div class="page-titlebar-title">@yield('page-title')</div>
-            <div class="page-titlebar-sub">@yield('page-sub')</div>
-        </div>
-
-        <div style="padding: 0 20px; margin-top: 14px;">
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            @if ($errors->any())
-                <div class="alert alert-error">{{ $errors->first() }}</div>
-            @endif
-        </div>
-
-        @yield('content')
-    </div>
-
-    {{-- Bottom navbar --}}
-    <nav class="bottom-nav">
-        <a href="{{ route('admin.dashboard') }}"
-            class="bottom-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-            <svg viewBox="0 0 24 24">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-            Home
-        </a>
-
-        <a href="{{ route('admin.coaches') }}"
-            class="bottom-nav-item {{ request()->routeIs('admin.coaches*') ? 'active' : '' }}">
-            <svg viewBox="0 0 24 24">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            Coach
-        </a>
-
-        <a href="{{ route('admin.customers') }}"
-            class="bottom-nav-item {{ request()->routeIs('admin.customers*') ? 'active' : '' }}">
-            <svg viewBox="0 0 24 24">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-            </svg>
-            Pelanggan
-        </a>
-
-        <a href="{{ route('admin.keuangan') }}"
-            class="bottom-nav-item {{ request()->routeIs('admin.keuangan*') ? 'active' : '' }}">
-            <svg viewBox="0 0 24 24">
-                <line x1="12" y1="1" x2="12" y2="23" />
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-            Keuangan
-        </a>
-    </nav>
 
     <script>
         function openDrawer() {
