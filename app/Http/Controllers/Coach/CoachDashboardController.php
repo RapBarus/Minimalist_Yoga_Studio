@@ -114,7 +114,7 @@ class CoachDashboardController extends Controller
                     ->where('booking_id', $bookingId)
                     ->update([
                         'status' => $bookingStatus,
-                        'updated_at' => now(),
+                        // 'updated_at' => now(),
                     ]);
             }
         }
@@ -130,7 +130,7 @@ class CoachDashboardController extends Controller
             ->where('schedule_id', $scheduleId)
             ->update([
                 'status' => 'completed',
-                'updated_at' => now(),
+                // 'updated_at' => now(),
             ]);
 
         return redirect()->route('coach.dashboard')

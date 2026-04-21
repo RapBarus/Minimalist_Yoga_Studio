@@ -15,8 +15,13 @@ class DashboardController extends Controller
             ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
             ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
-            ->where('schedules.status', 'upcoming')
-            ->where('schedules.schedule_date', '>=', now()->toDateString())
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->where('schedules.status', 'upcoming')
+                        ->where('schedules.schedule_date', '>=', now()->toDateString());
+                })->orWhere('schedules.status', 'completed');
+            })
+            ->orWhere('schedules.status', 'completed')
             ->orderBy('schedules.schedule_date', 'asc')
             ->orderBy('schedules.start_time', 'asc')
             ->select(

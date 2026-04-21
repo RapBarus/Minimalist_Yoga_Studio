@@ -488,6 +488,14 @@
             @php $initial = strtoupper(substr($schedule->coach_name, 0, 1)); @endphp
             <div class="schedule-card">
                 <div class="sc-title">{{ $schedule->class_name }}</div>
+                @if ($schedule->status === 'completed')
+                    <span
+                        style="display:inline-block;padding:2px 10px;background:rgba(255,255,255,.2);
+                 border:1px solid rgba(255,255,255,.4);border-radius:20px;
+                 font-size:.65rem;font-weight:600;letter-spacing:.06em;
+                 margin-bottom:8px;">✓
+                        SELESAI</span>
+                @endif
 
                 <div class="sc-coach">
                     <div class="sc-coach-avatar">{{ $initial }}</div>

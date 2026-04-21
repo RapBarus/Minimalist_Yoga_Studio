@@ -102,7 +102,7 @@ class ScheduleController extends Controller
             'created_at' => now(),
         ]);
 
-        return redirect()->route('admin.schedules')
+        return redirect()->route('admin.dashboard')
             ->with('success', 'Jadwal berhasil ditambahkan!');
     }
 
@@ -228,13 +228,13 @@ class ScheduleController extends Controller
     {
         $hasBookings = DB::table('bookings')->where('schedule_id', $scheduleId)->exists();
         if ($hasBookings) {
-            return redirect()->route('admin.schedules')
+            return redirect()->route('admin.dashboard')
                 ->withErrors(['error' => 'Jadwal tidak bisa dihapus karena sudah ada booking.']);
         }
 
         DB::table('schedules')->where('schedule_id', $scheduleId)->delete();
 
-        return redirect()->route('admin.schedules')
+        return redirect()->route('admin.dashboard')
             ->with('success', 'Jadwal berhasil dihapus.');
     }
 
