@@ -41,20 +41,27 @@
         }
 
         .coach-header-logo img {
-            height: 44px;
+            height: 110px;
             width: auto;
             object-fit: contain;
         }
 
         .coach-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .coach-header-name {
             font-size: .72rem;
             color: var(--text-muted);
+            font-weight: 500;
             text-align: right;
         }
 
-        .coach-header-right strong {
-            display: block;
+        .coach-header-name strong {
             color: var(--text);
+            display: block;
             font-size: .82rem;
         }
 
@@ -161,6 +168,37 @@
             text-transform: uppercase;
             padding: 16px 20px 0;
         }
+
+        .btn-coach-logout {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1.5px solid var(--danger);
+            color: var(--danger);
+            border-radius: 8px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .18s, color .18s;
+        }
+
+        .btn-coach-logout:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-coach-logout svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
     </style>
     @stack('styles')
 </head>
@@ -174,8 +212,21 @@
                 <img src="{{ asset('images/minimalist-logo-2.png') }}" alt="Minimalist Studio">
             </div>
             <div class="coach-header-right">
-                Coach
-                <strong>{{ Session::get('user_name') }}</strong>
+                <div class="coach-header-name">
+                    Coach
+                    <strong>{{ Session::get('user_name') }}</strong>
+                </div>
+                <form action="{{ route('logout') }}" method="POST" style="margin:0;">
+                    @csrf
+                    <button type="submit" class="btn-coach-logout">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Keluar
+                    </button>
+                </form>
             </div>
         </div>
 

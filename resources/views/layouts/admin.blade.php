@@ -47,7 +47,7 @@
         }
 
         .admin-header-logo img {
-            height: 48px;
+            height: 110px;
             width: auto;
             object-fit: contain;
         }
