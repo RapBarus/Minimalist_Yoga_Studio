@@ -55,7 +55,7 @@ class PromoController extends Controller
             'valid_until' => $request->valid_until,
             'is_active' => 1,
             'created_at' => now(),
-            'updated_at' => now(),
+            // 'updated_at' => now(),
         ]);
 
         return redirect()->route('admin.promos')
@@ -68,7 +68,7 @@ class PromoController extends Controller
         if ($promo) {
             DB::table('promos')->where('promo_id', $id)->update([
                 'is_active' => $promo->is_active ? 0 : 1,
-                'updated_at' => now(),
+                // 'updated_at' => now(),
             ]);
         }
 
