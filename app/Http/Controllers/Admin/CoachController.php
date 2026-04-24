@@ -42,6 +42,7 @@ class CoachController extends Controller
                 'coaches.rate_per_class',
                 'coaches.years_experience',
                 'users.name',
+                'users.phone_number',
                 'users.status'
             )
             ->first();
@@ -90,26 +91,33 @@ class CoachController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100',
+            'phone' => ['nullable', 'string', 'regex:/^\+?[0-9]{8,15}$/'],
             'specialization' => 'nullable|string|max:100',
             'bio' => 'nullable|string',
         ], [
             'name.required' => 'Nama coach wajib diisi.',
+            'phone.regex' => 'Format nomor HP tidak valid.',
         ]);
 
         $coach = DB::table('coaches')->where('coach_id', $coachId)->first();
         abort_if(!$coach, 404);
 
-        // Update users table
-        DB::table('users')->where('user_id', $coach->user_id)->update([
-            'name' => $request->name,
-            'updated_at' => now(),
-        ]);
+        $updateData = ['name' => $request->name, 'updated_at' => now()];
 
-        // Update coaches table
+        if ($request->filled('phone')) {
+            $phone = $request->phone;
+            if (str_starts_with($phone, '0')) {
+                $phone = '+62' . substr($phone, 1);
+            } elseif (!str_starts_with($phone, '+')) {
+                $phone = '+' . $phone;
+            }
+            $updateData['phone_number'] = $phone;
+        }
+
+        DB::table('users')->where('user_id', $coach->user_id)->update($updateData);
         DB::table('coaches')->where('coach_id', $coachId)->update([
             'specialization' => $request->specialization,
             'bio' => $request->bio,
-            'updated_at' => now(),
         ]);
 
         return redirect()->route('admin.coaches.detail', $coachId)

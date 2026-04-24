@@ -394,6 +394,12 @@
             </div>
 
             <div class="modal-field">
+                <label>Nomor HP</label>
+                <input type="text" name="phone" placeholder="contoh: +628123456789"
+                    value="{{ old('phone') }}" required>
+            </div>
+
+            <div class="modal-field">
                 <label>Deskripsi</label>
                 <textarea name="bio" rows="3" placeholder="Masukan Deskripsi">{{ old('bio') }}</textarea>
             </div>

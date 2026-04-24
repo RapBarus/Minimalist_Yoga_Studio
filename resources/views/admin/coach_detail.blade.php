@@ -275,6 +275,20 @@
             </div>
 
             <div class="info-field">
+                <label>Nomor HP</label>
+                <div class="info-field-wrap">
+                    <input type="text" name="phone" value="{{ $coach->phone_number }}"
+                        placeholder="contoh: 08123456789 atau +628123456789">
+                    <button type="button" class="btn-field-edit">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-field">
                 <label>Keahlian</label>
                 <div class="info-field-wrap">
                     <select name="specialization">

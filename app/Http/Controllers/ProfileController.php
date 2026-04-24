@@ -59,7 +59,7 @@ class ProfileController extends Controller
             ],
         ], [
             'name.regex' => 'Username hanya boleh huruf, angka, dan underscore.',
-            'phone_number.regex' => 'Nomor HP hanya boleh angka, 8–15 digit.',
+            'phone_number.regex' => 'Format nomor HP tidak valid. Contoh: +628123456789 atau 08123456789',
             'password.min' => 'Password minimal 6 karakter.',
             'password.max' => 'Password maksimal 50 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
@@ -72,7 +72,13 @@ class ProfileController extends Controller
         }
 
         if ($request->filled('phone_number')) {
-            $data['phone_number'] = $request->phone_number;
+            $phone = $request->phone_number;
+            if (str_starts_with($phone, '0')) {
+                $phone = '+62' . substr($phone, 1);
+            } elseif (!str_starts_with($phone, '+')) {
+                $phone = '+' . $phone;
+            }
+            $data['phone_number'] = $phone;
         }
 
         if ($request->filled('password')) {
