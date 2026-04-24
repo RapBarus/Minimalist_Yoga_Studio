@@ -63,7 +63,7 @@ class ErrorHandlingTest extends TestCase
 			]);
 
 		$response->assertStatus(200);
-		$response->assertSeeText('Nomor HP hanya boleh angka, 8–15 digit.');
+		$response->assertSeeText('Format nomor HP tidak valid.');
 	}
 
 	public function test_profile_update_shows_password_error_when_null_input_is_submitted(): void
