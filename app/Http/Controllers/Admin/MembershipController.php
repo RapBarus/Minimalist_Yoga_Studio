@@ -14,7 +14,12 @@ class MembershipController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('admin.membership', compact('packages'));
+        $coaches = DB::table('coaches')
+            ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->where('users.status', 'active')
+            ->select('coaches.coach_id', 'users.name')
+            ->get();
+        return view('admin.membership', compact('packages', 'coaches'));
     }
 
     public function store(Request $request)

@@ -772,6 +772,11 @@
                 <input type="number" name="validity_months" placeholder="2"
                     value="{{ old('validity_months', 2) }}" min="1" required>
             </div>
+            <div class="modal-field">
+                <label>Deskripsi</label>
+                <textarea name="description" rows="3" placeholder="Deskripsi paket..."
+                    style="width:100%;padding:.72rem .9rem;background:#faf8f6;border:1.5px solid var(--border);border-radius:10px;font-family:'Raleway',sans-serif;font-size:.85rem;color:var(--text);outline:none;resize:vertical;">{{ old('description') }}</textarea>
+            </div>
             <button type="submit" class="btn-modal-submit">Tambah Kelas</button>
         </form>
     </div>

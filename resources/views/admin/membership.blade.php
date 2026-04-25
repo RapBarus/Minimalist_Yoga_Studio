@@ -1,6 +1,3 @@
-{{-- ═══════════════════════════════════════════════════════════ --}}
-{{-- FILE 1: resources/views/admin/membership.blade.php          --}}
-{{-- ═══════════════════════════════════════════════════════════ --}}
 @extends('layouts.admin')
 
 @section('title', 'Kelola Membership | Minimalist Studio')
@@ -183,11 +180,81 @@
             font-size: .95rem;
             color: var(--text);
         }
+
+        /* ── Package cards ── */
+        .packages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .package-card {
+            background: var(--bg-white);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .package-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .package-name {
+            font-weight: 700;
+            font-size: .9rem;
+            color: var(--text);
+        }
+
+        .package-desc {
+            font-size: .72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .package-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .package-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: .72rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .package-price {
+            font-weight: 700;
+            font-size: .9rem;
+            color: var(--clay);
+        }
+
+        .package-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
     </style>
 @endpush
 
 @section('content')
     <div class="content">
+
         <div class="list-header">
             <div class="list-title">Daftar Paket ({{ $packages->count() }})</div>
             <button class="btn-add" onclick="openModal('modal-add')">
@@ -195,60 +262,50 @@
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Tambah Paket
+                Tambah Member
             </button>
         </div>
 
-        <div class="section-card">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nama Paket</th>
-                        <th>Sesi</th>
-                        <th>Harga</th>
-                        <th>Masa Aktif</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($packages as $package)
-                        <tr>
-                            <td>
-                                {{ $package->name }}<br>
-                                <span
-                                    style="font-size:.72rem;color:var(--text-muted)">{{ $package->description ? Str::limit($package->description, 40) : '—' }}</span>
-                            </td>
-                            <td>{{ $package->quota_amount }}x</td>
-                            <td>Rp {{ number_format($package->price, 0, ',', '.') }}</td>
-                            <td>{{ $package->validity_months }} bln</td>
-                            <td>
-                                <form action="{{ route('admin.membership.toggle', $package->package_id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit"
-                                        class="badge {{ $package->is_active ? 'badge-confirmed' : 'badge-cancelled' }}"
-                                        style="border:none;cursor:pointer;">
-                                        {{ $package->is_active ? 'Aktif' : 'Nonaktif' }}
-                                    </button>
-                                </form>
-                            </td>
-                            <td>
-                                <form action="{{ route('admin.membership.destroy', $package->package_id) }}" method="POST"
-                                    onsubmit="return confirm('Hapus paket ini?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-danger-sm">Hapus</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">Belum ada
-                                paket.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+        <div class="packages-list">
+            @forelse($packages as $package)
+                <div class="package-card">
+                    <div class="package-card-top">
+                        <div>
+                            <div class="package-name">{{ $package->name }}</div>
+                            @if ($package->description)
+                                <div class="package-desc">{{ $package->description }}</div>
+                            @endif
+                        </div>
+                        <div class="package-actions">
+                            <form action="{{ route('admin.membership.toggle', $package->package_id) }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                    class="badge {{ $package->is_active ? 'badge-confirmed' : 'badge-cancelled' }}"
+                                    style="border:none;cursor:pointer;">
+                                    {{ $package->is_active ? 'Aktif' : 'Nonaktif' }}
+                                </button>
+                            </form>
+                            <form action="{{ route('admin.membership.destroy', $package->package_id) }}" method="POST"
+                                onsubmit="return confirm('Hapus paket ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-danger-sm">Hapus</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="package-meta">
+                        <span class="package-tag">{{ $package->quota_amount }}x sesi</span>
+                        <span class="package-tag">{{ $package->validity_months }} bulan</span>
+                        <span class="package-price">Rp {{ number_format($package->price, 0, ',', '.') }}</span>
+                    </div>
+                </div>
+            @empty
+                <div style="text-align:center;color:var(--text-muted);padding:2rem;font-size:.85rem;">
+                    Belum ada paket.
+                </div>
+            @endforelse
         </div>
+
     </div>
 @endsection
 
@@ -263,12 +320,14 @@
             document.getElementById(id).classList.remove('open');
             document.body.style.overflow = '';
         }
+
         document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e) {
             if (e.target === this) {
                 this.classList.remove('open');
                 document.body.style.overflow = '';
             }
         }));
+
         @if ($errors->any())
             openModal('modal-add');
         @endif
@@ -279,26 +338,76 @@
     <div class="modal">
         <div class="modal-header">
             <div class="modal-title">Tambah Paket Baru</div>
-            <button class="modal-close" onclick="closeModal('modal-add')"><svg viewBox="0 0 24 24">
+            <button class="modal-close" onclick="closeModal('modal-add')">
+                <svg viewBox="0 0 24 24">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
-                </svg></button>
+                </svg>
+            </button>
         </div>
         <form action="{{ route('admin.membership.store') }}" method="POST" class="modal-form">
             @csrf
-            <div class="modal-field"><label>Nama Paket</label><input type="text" name="name"
-                    placeholder="contoh: Basic 4x" value="{{ old('name') }}" required></div>
-            <div class="modal-field-row">
-                <div class="modal-field"><label>Jumlah Sesi</label><input type="number" name="quota_amount"
-                        placeholder="8" value="{{ old('quota_amount') }}" min="1" required></div>
-                <div class="modal-field"><label>Masa Aktif (Bulan)</label><input type="number" name="validity_months"
-                        placeholder="2" value="{{ old('validity_months', 2) }}" min="1" required></div>
+
+            <div class="modal-field">
+                <label>Nama Membership</label>
+                <input type="text" name="name" placeholder="contoh: Member Yoga With Nima"
+                    value="{{ old('name') }}" required>
             </div>
-            <div class="modal-field"><label>Harga (Rp)</label><input type="number" name="price" placeholder="150000"
-                    value="{{ old('price') }}" min="0" step="1000" required></div>
-            <div class="modal-field"><label>Deskripsi</label>
+
+            <div class="modal-field">
+                <label>Coach</label>
+                <select name="coach_id">
+                    <option value="">Pilih Coach</option>
+                    @foreach ($coaches as $coach)
+                        <option value="{{ $coach->coach_id }}"
+                            {{ old('coach_id') == $coach->coach_id ? 'selected' : '' }}>
+                            {{ $coach->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="modal-field-row">
+                <div class="modal-field">
+                    <label>Jam Mulai</label>
+                    <input type="time" name="start_time" value="{{ old('start_time') }}">
+                </div>
+                <div class="modal-field">
+                    <label>Jam Selesai</label>
+                    <input type="time" name="end_time" value="{{ old('end_time') }}">
+                </div>
+            </div>
+
+            <div class="modal-field-row">
+                <div class="modal-field">
+                    <label>Harga Asli (Rp)</label>
+                    <input type="number" name="original_price" placeholder="150000"
+                        value="{{ old('original_price') }}" min="0" step="1000">
+                </div>
+                <div class="modal-field">
+                    <label>Harga Diskon (Rp)</label>
+                    <input type="number" name="price" placeholder="120000" value="{{ old('price') }}"
+                        min="0" step="1000" required>
+                </div>
+            </div>
+
+            <div class="modal-field">
+                <label>Kuota Kelas (Jumlah Sesi)</label>
+                <input type="number" name="quota_amount" placeholder="8" value="{{ old('quota_amount') }}"
+                    min="1" required>
+            </div>
+
+            <div class="modal-field">
+                <label>Masa Aktif (Bulan)</label>
+                <input type="number" name="validity_months" placeholder="2" value="{{ old('validity_months', 2) }}"
+                    min="1" required>
+            </div>
+
+            <div class="modal-field">
+                <label>Deskripsi</label>
                 <textarea name="description" rows="3" placeholder="Deskripsi paket...">{{ old('description') }}</textarea>
             </div>
+
             <button type="submit" class="btn-modal-submit">Tambah Paket</button>
         </form>
     </div>
