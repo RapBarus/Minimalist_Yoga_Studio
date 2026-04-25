@@ -25,6 +25,7 @@ class MembershipController extends Controller
             'price' => 'required|numeric|min:0',
             'validity_months' => 'required|integer|min:1',
             'description' => 'nullable|string',
+            'original_price' => 'required|numeric|min:0',
         ], [
             'name.required' => 'Nama paket wajib diisi.',
             'quota_amount.required' => 'Jumlah sesi wajib diisi.',
@@ -34,6 +35,12 @@ class MembershipController extends Controller
             'validity_months.required' => 'Masa aktif wajib diisi.',
             'validity_months.min' => 'Masa aktif minimal 1 bulan.',
         ]);
+
+        if ($request->price > $request->original_price) {
+            return back()
+                ->withErrors(['price' => 'Harga diskon tidak boleh lebih besar dari harga asli.'])
+                ->withInput();
+        }
 
         DB::table('membership_packages')->insert([
             'name' => $request->name,

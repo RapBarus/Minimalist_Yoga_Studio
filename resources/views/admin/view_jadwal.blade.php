@@ -380,6 +380,7 @@
                 <thead>
                     <tr>
                         <th>Peserta</th>
+                        <th>Nomor HP</th>
                         <th>Metode Pembayaran</th>
                         <th>Status</th>
                     </tr>
@@ -388,6 +389,7 @@
                     @forelse($participants as $p)
                         <tr>
                             <td>{{ $p->name }}</td>
+                            <td>{{ $p->phone_number ?? '—' }}</td>
                             <td>{{ strtoupper($p->payment_type ?? '—') }}</td>
                             <td>
                                 @if (in_array($p->transaction_status, ['settlement', 'capture', 'cash_paid']))
@@ -445,6 +447,10 @@
             <div class="modal-field">
                 <label>Nama Peserta</label>
                 <input type="text" name="name" placeholder="Masukan Nama Peserta" required>
+            </div>
+            <div class="modal-field">
+                <label>Nomor HP</label>
+                <input type="text" name="phone_number" placeholder="contoh: 08123456789 atau +628123456789">
             </div>
             <div class="modal-field">
                 <label>Metode Pembayaran</label>

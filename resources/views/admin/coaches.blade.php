@@ -395,7 +395,7 @@
 
             <div class="modal-field">
                 <label>Nomor HP</label>
-                <input type="text" name="phone" placeholder="contoh: +628123456789"
+                <input type="text" name="phone" placeholder="contoh: +628123456789 atau +628123456789"
                     value="{{ old('phone') }}" required>
             </div>
 

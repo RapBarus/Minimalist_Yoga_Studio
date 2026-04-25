@@ -136,6 +136,7 @@ class ScheduleController extends Controller
             ->where('bookings.schedule_id', $scheduleId)
             ->select(
                 'users.name',
+                'users.phone_number',
                 'transactions.payment_type',
                 'transactions.status as transaction_status',
                 'transactions.amount'
@@ -150,6 +151,7 @@ class ScheduleController extends Controller
         $request->validate([
             'name' => 'required|string|max:100',
             'payment_type' => 'required|in:cash,qris,transfer',
+            'phone_number' => 'required|string|regex:/^\+?[0-9]{8,15}$/',
             'amount' => 'required|numeric|min:0',
         ], [
             'name.required' => 'Nama peserta wajib diisi.',
@@ -171,6 +173,13 @@ class ScheduleController extends Controller
             // Create a walk-in customer account
             $userId = DB::table('users')->insertGetId([
                 'name' => $request->name,
+                'phone_number' => $request->filled('phone_number')
+                    ? (str_starts_with($request->phone_number, '0')
+                        ? '+62' . substr($request->phone_number, 1)
+                        : (str_starts_with($request->phone_number, '+')
+                            ? $request->phone_number
+                            : '+' . $request->phone_number))
+                    : null,
                 'email' => null,
                 'password_hash' => bcrypt('walkin' . time()),
                 'role' => 'customer',

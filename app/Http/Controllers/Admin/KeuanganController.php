@@ -13,6 +13,10 @@ class KeuanganController extends Controller
         $from = $request->get('from', now()->startOfMonth()->format('Y-m-d'));
         $to = $request->get('to', now()->endOfMonth()->format('Y-m-d'));
 
+        if ($from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+
         // Total kelas (schedules with at least 1 booking in period)
         $totalKelas = DB::table('schedules')
             ->whereBetween('schedule_date', [$from, $to])
