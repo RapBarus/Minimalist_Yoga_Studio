@@ -486,14 +486,14 @@
         {{-- Schedule Cards Container --}}
         <div class="schedule-container" style="display: flex; flex-direction: column; gap: 16px;">
             @forelse($schedules as $schedule)
-                @php 
+                @php
                     // Mengambil inisial nama coach
-                    $initial = strtoupper(substr($schedule->coach_name ?? 'C', 0, 1)); 
+                    $initial = strtoupper(substr($schedule->coach_name ?? 'C', 0, 1));
                 @endphp
 
                 <div class="schedule-card">
                     <div class="sc-title">{{ $schedule->class_name }}</div>
-                    
+
                     <div class="sc-coach">
                         <div class="sc-coach-avatar">{{ $initial }}</div>
                         {{ $schedule->coach_name }}
@@ -518,8 +518,8 @@
                             {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
                         </div>
                     </div>
-
                     <div class="sc-footer">
+                        {{-- UBAH: $coaches->rate_per_class MENJADI $schedule->rate_per_class --}}
                         <span class="sc-price">Rp {{ number_format($schedule->rate_per_class ?? 0, 0, ',', '.') }}</span>
                         <span class="sc-quota">
                             @if ($schedule->available_slots > 0)
@@ -529,13 +529,13 @@
                             @endif
                         </span>
                     </div>
-
                     <div class="sc-buttons">
-                        <a href="{{ route('admin.schedules.view', $schedule->schedule_id) }}" class="btn-view-jadwal">View Jadwal</a>
-                        
+                        <a href="{{ route('admin.schedules.view', $schedule->schedule_id) }}" class="btn-view-jadwal">View
+                            Jadwal</a>
+
                         <form action="{{ route('admin.schedules.destroy', $schedule->schedule_id) }}" method="POST"
                             style="flex:1;" onsubmit="return confirm('Hapus jadwal ini?')">
-                            @csrf 
+                            @csrf
                             @method('DELETE')
                             <button type="submit" class="btn-hapus-jadwal" style="width:100%;">Hapus Jadwal</button>
                         </form>
@@ -547,7 +547,7 @@
         </div>
 
     </div>
-@endsection 
+@endsection
 
 @push('scripts')
     <script>
