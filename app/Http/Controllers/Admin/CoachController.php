@@ -133,26 +133,21 @@ class CoachController extends Controller
             'specialization' => 'nullable|string|max:100',
             'rate_per_class' => 'required|numeric|min:0',
             'years_experience' => 'required|integer|min:0',
-        ], [
-            'name.required' => 'Nama wajib diisi.',
-            'phone.required' => 'Nomor HP wajib diisi.',
-            'phone.regex' => 'Nomor HP hanya boleh angka, 8–13 digit.',
-            'password.required' => 'Password wajib diisi.',
-            'password.min' => 'Password minimal 6 karakter.',
-            'rate_per_class.required' => 'Tarif per kelas wajib diisi.',
-            'years_experience.required' => 'Pengalaman wajib diisi.',
         ]);
 
-        $exists = DB::table('users')->where('name', $request->name)->exists();
+        $username = strtolower(str_replace(' ', '', $request->name)) . rand(10,99);
+
+        $exists = DB::table('users')->where('username', $username)->exists();
         if ($exists) {
-            return back()->withErrors(['name' => 'Username sudah digunakan.'])->withInput();
+            return back()->withErrors(['name' => 'Nama terlalu umum, tambahkan karakter lain.'])->withInput();
         }
 
         $userId = DB::table('users')->insertGetId([
+            'username' => $username, // Fixed: Inserts required username
             'name' => $request->name,
             'phone_number' => '+62' . ltrim($request->phone, '0'),
             'email' => null,
-            'password_hash' => Hash::make($request->password),
+            'password_hash' => Hash::make($request->password), // Fixed column
             'role' => 'coach',
             'status' => 'active',
             'created_at' => now(),
@@ -169,7 +164,7 @@ class CoachController extends Controller
         ]);
 
         return redirect()->route('admin.coaches')
-            ->with('success', 'Coach ' . $request->name . ' berhasil ditambahkan! Login: ' . $request->name . '@coach.com');
+            ->with('success', 'Coach berhasil ditambahkan! Login: ' . $username . '@coach.com');
     }
 
     public function restore($coachId)
