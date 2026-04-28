@@ -170,22 +170,25 @@ class ScheduleController extends Controller
         $user = DB::table('users')->where('name', $request->name)->first();
 
         if (!$user) {
-            // Create a walk-in customer account
+            // Generate a unique username for this walk-in account
+            $username = 'walkin_' . time() . '_' . rand(100, 999);
+
             $userId = DB::table('users')->insertGetId([
-                'name' => $request->name,
-                'phone_number' => $request->filled('phone_number')
+                'username'      => $username,
+                'name'          => $request->name,
+                'phone_number'  => $request->filled('phone_number')
                     ? (str_starts_with($request->phone_number, '0')
                         ? '+62' . substr($request->phone_number, 1)
                         : (str_starts_with($request->phone_number, '+')
                             ? $request->phone_number
                             : '+' . $request->phone_number))
                     : null,
-                'email' => null,
+                'email'         => null,
                 'password_hash' => bcrypt('walkin' . time()),
-                'role' => 'customer',
-                'status' => 'active',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'role'          => 'customer',
+                'status'        => 'active',
+                'created_at'    => now(),
+                'updated_at'    => now(),
             ]);
         } else {
             $userId = $user->user_id;
