@@ -401,7 +401,7 @@
             </div>
 
             {{-- Order summary --}}
-            <div class="section-title" style="margin-top: 16px;">Rincian Pesanan</div>
+            {{-- <div class="section-title" style="margin-top: 16px;">Rincian Pesanan</div>
 
             <div class="summary-card">
                 <div class="summary-row">
@@ -416,17 +416,37 @@
                     <span>Total</span>
                     <span>Rp {{ number_format(($schedule->price ?? 50000) + 5000, 0, ',', '.') }}</span>
                 </div>
+            </div> --}}
+            {{-- Order summary --}}
+            <div class="section-title" style="margin-top: 16px;">Rincian Pesanan</div>
+
+            <div class="summary-card">
+                <div class="summary-row">
+                    <span>{{ $schedule->class_name ?? 'Kelas Yoga' }}</span>
+                    <span>Rp {{ number_format($schedule->price ?? 50000, 0, ',', '.') }}</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span>Rp {{ number_format($schedule->price ?? 50000, 0, ',', '.') }}</span>
+                </div>
             </div>
 
         </div>
     </div>
 
     {{-- Fixed pay button --}}
-    <div class="pay-bar">
+    {{-- <div class="pay-bar">
         <button class="pay-btn" id="pay-btn" onclick="handlePayment()">
             <span>Bayar</span>
             <div class="pay-divider"></div>
             <span id="pay-amount">Rp {{ number_format(($schedule->price ?? 50000) + 5000, 0, ',', '.') }}</span>
+        </button>
+    </div> --}}
+    <div class="pay-bar">
+        <button class="pay-btn" id="pay-btn" onclick="handlePayment()">
+            <span>Bayar</span>
+            <div class="pay-divider"></div>
+            <span id="pay-amount">Rp {{ number_format($schedule->price ?? 50000, 0, ',', '.') }}</span>
         </button>
     </div>
 

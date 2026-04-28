@@ -14,35 +14,21 @@ class CoachDashboardController extends Controller
     {
         $userId = Session::get('user_id');
         $coach = DB::table('coaches')->where('user_id', $userId)->first();
-        if (!$coach)
-            return redirect()->route('login');
+        if (!$coach) return redirect()->route('login');
 
         $coachId = $coach->coach_id;
         $filter = $request->get('filter', 'all');
 
-        $query = DB::table('schedules')
-            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
-            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
-            ->where('schedules.coach_id', $coachId)
-            ->where('schedules.status', 'upcoming')
-            ->where('schedules.schedule_date', '>=', now()->toDateString())
-            ->orderBy('schedules.schedule_date', 'asc')
-            ->select(
-                'schedules.schedule_id',
-                'schedules.schedule_date',
-                'schedules.start_time',
-                'schedules.end_time',
-                'schedules.available_slots',
-                'schedules.capacity',
-                'classes.class_name',
-                'coaches.rate_per_class'
-            );
+        $query = DB::table('vw_coach_schedule')
+            ->where('coach_id', $coachId)
+            ->where('schedule_date', '>=', now()->toDateString())
+            ->orderBy('schedule_date', 'asc');
 
         // Apply filter
         if ($filter === 'week') {
-            $query->where('schedules.schedule_date', '<=', now()->endOfWeek()->toDateString());
+            $query->where('schedule_date', '<=', now()->endOfWeek()->toDateString());
         } elseif ($filter === 'month') {
-            $query->where('schedules.schedule_date', '<=', now()->endOfMonth()->toDateString());
+            $query->where('schedule_date', '<=', now()->endOfMonth()->toDateString());
         }
 
         $schedules = $query->get();

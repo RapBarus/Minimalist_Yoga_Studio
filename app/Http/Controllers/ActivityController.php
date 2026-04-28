@@ -12,40 +12,35 @@ class ActivityController extends Controller
     {
         $userId = Session::get('user_id');
 
-        $baseQuery = DB::table('bookings')
-            ->join('schedules', 'bookings.schedule_id', '=', 'schedules.schedule_id')
-            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
-            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
-            ->join('users', 'coaches.user_id', '=', 'users.user_id')
-            ->join('transactions', 'bookings.booking_id', '=', 'transactions.booking_id')
-            ->where('bookings.user_id', $userId)
+        $baseQuery = DB::table('vw_customer_booking_history')
+            ->where('user_id', $userId)
             ->select(
-                'bookings.booking_id',
-                'bookings.status as booking_status',
-                'schedules.schedule_date',
-                'schedules.start_time',
-                'schedules.end_time',
-                'classes.class_name',
-                'coaches.coach_id',
-                'coaches.rate_per_class',
-                'users.name as coach_name',
-                'transactions.amount'
+                'booking_id',
+                'booking_status',
+                'schedule_date',
+                'start_time',
+                'end_time',
+                'class_name',
+                'coach_id',
+                'rate_per_class',
+                'coach_name',
+                'amount'
             );
 
         // Active: upcoming schedules that are confirmed/pending
         $activeBookings = (clone $baseQuery)
-            ->where('schedules.schedule_date', '>=', now()->toDateString())
-            ->whereIn('bookings.status', ['confirmed', 'pending'])
-            ->orderBy('schedules.schedule_date', 'asc')
+            ->where('schedule_date', '>=', now()->toDateString())
+            ->whereIn('booking_status', ['confirmed'])   // Remove 'pending' if not used
+            ->orderBy('schedule_date', 'asc')
             ->get();
 
         // History: past schedules or cancelled
         $historyBookings = (clone $baseQuery)
             ->where(function ($q) {
-                $q->where('schedules.schedule_date', '<', now()->toDateString())
-                    ->orWhere('bookings.status', 'cancelled');
+                $q->where('schedule_date', '<', now()->toDateString())
+                    ->orWhere('booking_status', 'cancelled');
             })
-            ->orderBy('schedules.schedule_date', 'desc')
+            ->orderBy('schedule_date', 'desc')
             ->get();
 
         return view('pages.activity', compact('activeBookings', 'historyBookings'));

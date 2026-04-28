@@ -15,7 +15,6 @@ class MemberController extends Controller
             ->orderBy('package_id', 'asc')
             ->get()
             ->map(function ($package) {
-                // Map to match member.blade.php expectations
                 $package->title = $package->name;
                 $package->coach_name = $package->coach_name ?? null;
                 $package->coach_id = $package->coach_id ?? null;
