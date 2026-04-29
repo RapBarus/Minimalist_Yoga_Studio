@@ -365,7 +365,7 @@
                     {{-- Coach badge --}}
                     @if ($promo->coach_name)
                         @if (!empty($promo->coach_id))
-                            <a href="{{ route('coach.profile', $promo->coach_id) }}" class="coach-badge-link">
+                            <a href="{{ route('coach.show', $promo->coach_id) }}" class="coach-badge-link">
                                 <div class="coach-avatar">{{ strtoupper(substr($promo->coach_name, 0, 1)) }}</div>
                                 <span style="font-size:.78rem;opacity:.9;">{{ $promo->coach_name }}</span>
                             </a>
@@ -498,7 +498,7 @@
                     <div class="card-class-title">{{ $schedule->class_name }}</div>
 
                     {{-- Coach badge --}}
-                    <a href="{{ route('coach.profile', $schedule->coach_id) }}" class="coach-badge-link">
+                    <a href="{{ route('coach.show', $schedule->coach_id) }}" class="coach-badge-link">
                         <div class="coach-avatar">{{ $initial }}</div>
                         <span style="font-size:.78rem;opacity:.9;">{{ $schedule->coach_name }}</span>
                     </a>

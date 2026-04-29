@@ -464,9 +464,9 @@
         </div>
 
         {{-- Section label + action buttons --}}
-        <div class="section-label-page">Jadwal Kelas</div>
+        <div class="section-label-page" style="margin-top: 25px; margin-bottom: 15px;">Jadwal Kelas</div>
 
-        <div class="action-row">
+        <div class="action-row" style="margin-bottom: 20px;">
             <button class="btn-action btn-tambah-member" onclick="openModal('modal-member')">
                 <svg viewBox="0 0 24 24">
                     <line x1="12" y1="5" x2="12" y2="19" />
@@ -483,69 +483,68 @@
             </button>
         </div>
 
-        {{-- Schedule cards --}}
-        @forelse($schedules as $schedule)
-            @php $initial = strtoupper(substr($schedule->coach_name, 0, 1)); @endphp
-            <div class="schedule-card">
-                <div class="sc-title">{{ $schedule->class_name }}</div>
-                @if ($schedule->status === 'completed')
-                    <span
-                        style="display:inline-block;padding:2px 10px;background:rgba(255,255,255,.2);
-                 border:1px solid rgba(255,255,255,.4);border-radius:20px;
-                 font-size:.65rem;font-weight:600;letter-spacing:.06em;
-                 margin-bottom:8px;">✓
-                        SELESAI</span>
-                @endif
+        {{-- Schedule Cards Container --}}
+        <div class="schedule-container" style="display: flex; flex-direction: column; gap: 16px;">
+            @forelse($schedules as $schedule)
+                @php
+                    // Mengambil inisial nama coach
+                    $initial = strtoupper(substr($schedule->coach_name ?? 'C', 0, 1));
+                @endphp
 
-                <div class="sc-coach">
-                    <div class="sc-coach-avatar">{{ $initial }}</div>
-                    {{ $schedule->coach_name }}
-                </div>
+                <div class="schedule-card">
+                    <div class="sc-title">{{ $schedule->class_name }}</div>
 
-                <div class="sc-meta">
-                    <div class="sc-meta-row">
-                        <svg viewBox="0 0 24 24">
-                            <rect x="3" y="4" width="18" height="18" rx="2" />
-                            <line x1="16" y1="2" x2="16" y2="6" />
-                            <line x1="8" y1="2" x2="8" y2="6" />
-                            <line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                        {{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l, d F Y') }}
+                    <div class="sc-coach">
+                        <div class="sc-coach-avatar">{{ $initial }}</div>
+                        {{ $schedule->coach_name }}
                     </div>
-                    <div class="sc-meta-row">
-                        <svg viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="12 6 12 12 16 14" />
-                        </svg>
-                        {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} –
-                        {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
+
+                    <div class="sc-meta">
+                        <div class="sc-meta-row">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            {{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l, d F Y') }}
+                        </div>
+                        <div class="sc-meta-row">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} –
+                            {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
+                        </div>
+                    </div>
+                    <div class="sc-footer">
+                        {{-- UBAH: $coaches->rate_per_class MENJADI $schedule->rate_per_class --}}
+                        <span class="sc-price">Rp {{ number_format($schedule->rate_per_class ?? 0, 0, ',', '.') }}</span>
+                        <span class="sc-quota">
+                            @if ($schedule->available_slots > 0)
+                                Kuota tersedia: {{ $schedule->available_slots }} / {{ $schedule->capacity }}
+                            @else
+                                <span style="color: #fee2e2; font-weight: bold;">Kuota penuh</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="sc-buttons">
+                        <a href="{{ route('admin.schedules.view', $schedule->schedule_id) }}" class="btn-view-jadwal">View
+                            Jadwal</a>
+
+                        <form action="{{ route('admin.schedules.destroy', $schedule->schedule_id) }}" method="POST"
+                            style="flex:1;" onsubmit="return confirm('Hapus jadwal ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-hapus-jadwal" style="width:100%;">Hapus Jadwal</button>
+                        </form>
                     </div>
                 </div>
-
-                <div class="sc-footer">
-                    <span class="sc-price">Rp {{ number_format($schedule->rate_per_class ?? 0, 0, ',', '.') }}</span>
-                    <span class="sc-quota">
-                        @if ($schedule->available_slots > 0)
-                            Kuota tersedia: {{ $schedule->available_slots }}
-                        @else
-                            Kuota penuh
-                        @endif
-                    </span>
-                </div>
-
-                <div class="sc-buttons">
-                    <a href="{{ route('admin.schedules.view', $schedule->schedule_id) }}" class="btn-view-jadwal">View
-                        Jadwal</a>
-                    <form action="{{ route('admin.schedules.destroy', $schedule->schedule_id) }}" method="POST"
-                        style="flex:1;" onsubmit="return confirm('Hapus jadwal ini?')">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="btn-hapus-jadwal" style="width:100%;">Hapus Jadwal</button>
-                    </form>
-                </div>
-            </div>
-        @empty
-            <div class="empty-schedule">Belum ada jadwal kelas.</div>
-        @endforelse
+            @empty
+                <div class="empty-schedule">Belum ada jadwal kelas untuk ditampilkan.</div>
+            @endforelse
+        </div>
 
     </div>
 @endsection

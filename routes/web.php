@@ -96,5 +96,5 @@ Route::middleware('auth.session')->group(function () {
     Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
     Route::get('/member', [MemberController::class, 'index'])->name('member');
-    Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])->name('coach.profile');
+    Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])->name('coach.show');
 });

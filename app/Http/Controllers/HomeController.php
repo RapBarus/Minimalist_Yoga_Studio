@@ -10,27 +10,10 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $schedules = DB::table('schedules')
-            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
-            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
-            ->join('users', 'coaches.user_id', '=', 'users.user_id')
-            ->where('schedules.status', 'upcoming')
-            ->where('schedules.schedule_date', '>=', now()->toDateString())
-            ->orderBy('schedules.schedule_date', 'asc')
-            ->orderBy('schedules.start_time', 'asc')
-            ->select(
-                'schedules.schedule_id',
-                'schedules.schedule_date',
-                'schedules.start_time',
-                'schedules.end_time',
-                'schedules.available_slots',
-                'schedules.capacity',
-                'classes.class_name',
-                'classes.description',
-                'coaches.coach_id',
-                'coaches.rate_per_class',
-                'users.name as coach_name'
-            )
+        $schedules = DB::table('vw_available_schedules')
+            ->where('schedule_date', '>=', now()->toDateString())
+            ->orderBy('schedule_date', 'asc')
+            ->orderBy('start_time', 'asc')
             ->get();
 
         $promotions = DB::table('membership_packages')
@@ -52,9 +35,9 @@ class HomeController extends Controller
             });
 
         return view('pages.home', [
-            'schedules' => $schedules,
+            'schedules'  => $schedules,
             'promotions' => $promotions,
-            'user_name' => Session::get('user_name', 'Member'),
+            'user_name'  => Session::get('user_name', 'Member'),
         ]);
     }
 
