@@ -60,6 +60,7 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::get('/schedules/{scheduleId}/view', [ScheduleController::class, 'viewJadwal'])->name('schedules.view');
     Route::post('/schedules/{scheduleId}/peserta', [ScheduleController::class, 'addPeserta'])->name('schedules.peserta');
     Route::delete('/schedules/{scheduleId}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
+    Route::post('/schedules/{scheduleId}/confirm-booking/{bookingId}', [ScheduleController::class, 'confirmBooking'])->name('schedules.confirm-booking');
 
     // Classes
     Route::get('/classes', [ClassController::class, 'index'])->name('classes');
@@ -92,9 +93,13 @@ Route::middleware('auth.session')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/payment/success/{bookingId}', [PaymentController::class, 'success'])->name('payment.success');
+    Route::get('/payment/failed/{bookingId}', [PaymentController::class, 'failed'])->name('payment.failed');
     Route::get('/payment/{schedule_id}', [PaymentController::class, 'show'])->name('payment.show');
     Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
     Route::get('/member', [MemberController::class, 'index'])->name('member');
     Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])->name('coach.show');
+
 });
+Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook')->withoutMiddleware(['auth.session']);

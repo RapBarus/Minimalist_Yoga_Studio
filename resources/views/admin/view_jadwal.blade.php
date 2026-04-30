@@ -383,6 +383,7 @@
                         <th>Nomor HP</th>
                         <th>Metode Pembayaran</th>
                         <th>Status</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -392,10 +393,26 @@
                             <td>{{ $p->phone_number ?? '—' }}</td>
                             <td>{{ strtoupper($p->payment_type ?? '—') }}</td>
                             <td>
-                                @if (in_array($p->transaction_status, ['settlement', 'capture', 'cash_paid']))
+                               @if (!in_array($p->transaction_status, ['settlement', 'settled', 'capture', 'cash_paid']))
                                     <span class="status-valid">VALID</span>
                                 @else
                                     <span class="status-pending">PENDING</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if (!in_array($p->transaction_status, ['settlement', 'capture', 'cash_paid']))
+                                    <form
+                                        action="{{ route('admin.schedules.confirm-booking', [$schedule->schedule_id, $p->booking_id]) }}"
+                                        method="POST" style="display:inline;">
+                                        @csrf
+                                        <button type="submit" class="btn-input-peserta"
+                                            style="padding:5px 12px;font-size:.7rem;"
+                                            onclick="return confirm('Konfirmasi pembayaran ini?')">
+                                            Konfirmasi
+                                        </button>
+                                    </form>
+                                @else
+                                    —
                                 @endif
                             </td>
                         </tr>

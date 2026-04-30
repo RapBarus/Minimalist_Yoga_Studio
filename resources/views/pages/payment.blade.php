@@ -25,6 +25,7 @@
         :root {
             --clay: #A0522D;
             --clay-dark: #8B4513;
+            --clay-pale: #F0E6DF;
             --bg: #F2EFEB;
             --bg-white: #FFFFFF;
             --text: #3A2E28;
@@ -32,25 +33,25 @@
             --border: #E0D8D0;
         }
 
-        html,
-        body {
-            height: 100%;
-        }
-
         body {
             font-family: 'Raleway', sans-serif;
-            background: var(--bg);
+            background: #E8E4DF;
             color: var(--text);
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
 
         .page {
-            max-width: 680px;
-            margin: 0 auto;
+            max-width: 560px;
+            width: 100%;
             min-height: 100vh;
+            background: var(--bg);
             display: flex;
             flex-direction: column;
             animation: fadeUp .45s ease both;
+            box-shadow: 0 0 40px rgba(0, 0, 0, .08);
         }
 
         /* ── Top bar ── */
@@ -99,13 +100,13 @@
             color: var(--text);
         }
 
-        /* ── Scrollable content ── */
+        /* ── Content ── */
         .content {
             flex: 1;
-            padding: 20px 18px 160px;
+            padding: 24px 18px 160px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 16px;
         }
 
         .section-title {
@@ -114,121 +115,68 @@
             letter-spacing: .12em;
             text-transform: uppercase;
             color: var(--text-muted);
-            margin-bottom: 4px;
-            margin-top: 8px;
         }
 
-        /* ── Payment method card ── */
-        .method-card {
-            background: var(--bg-white);
-            border: 1.5px solid var(--border);
-            border-radius: 14px;
-            padding: 14px 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: border-color .18s, box-shadow .18s;
+        /* ── Class info card ── */
+        .class-card {
+            background: var(--clay);
+            border-radius: 16px;
+            padding: 18px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
         }
 
-        .method-card:hover {
-            border-color: var(--clay);
-            box-shadow: 0 2px 12px rgba(160, 82, 45, .10);
-        }
-
-        .method-card.selected {
-            border-color: var(--clay);
-            box-shadow: 0 2px 16px rgba(160, 82, 45, .15);
-        }
-
-        .method-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .method-logo {
-            width: 72px;
-            height: 32px;
-            object-fit: contain;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Inline SVG logos */
-        .logo-qris {
-            font-weight: 900;
-            font-size: 1.1rem;
-            letter-spacing: .06em;
-            color: #1a1a1a;
-            font-family: 'Raleway', sans-serif;
-        }
-
-        .logo-gopay {
-            color: #00AED6;
-            font-weight: 700;
-            font-size: .95rem;
-        }
-
-        .logo-dana {
-            color: #108BE3;
-            font-weight: 700;
-            font-size: .95rem;
-        }
-
-        .logo-ovo {
-            color: #4C3494;
-            font-weight: 900;
-            font-size: 1.1rem;
-            letter-spacing: -.02em;
-        }
-
-        .logo-shopeepay {
-            color: #EE4D2D;
-            font-weight: 700;
-            font-size: .85rem;
-        }
-
-        /* Radio button */
-        .radio {
-            width: 20px;
-            height: 20px;
+        .class-card::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, .08);
             border-radius: 50%;
-            border: 2px solid var(--border);
+        }
+
+        .class-name {
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .class-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .class-meta-row {
             display: flex;
             align-items: center;
-            justify-content: center;
-            transition: border-color .18s;
+            gap: 7px;
+            font-size: .78rem;
+            opacity: .9;
+        }
+
+        .class-meta-row svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
             flex-shrink: 0;
         }
 
-        .method-card.selected .radio {
-            border-color: var(--clay);
-        }
-
-        .radio-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--clay);
-            opacity: 0;
-            transform: scale(0);
-            transition: opacity .18s, transform .18s;
-        }
-
-        .method-card.selected .radio-dot {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        /* ── Order summary ── */
+        /* ── Summary card ── */
         .summary-card {
             background: var(--bg-white);
             border: 1.5px solid var(--border);
             border-radius: 14px;
             padding: 16px 18px;
-            margin-top: 8px;
         }
 
         .summary-row {
@@ -237,35 +185,59 @@
             align-items: center;
             font-size: .82rem;
             color: var(--text-muted);
-            padding: 5px 0;
-        }
-
-        .summary-row.total {
-            font-weight: 700;
-            font-size: .9rem;
-            color: var(--text);
-            border-top: 1px solid var(--border);
-            margin-top: 6px;
-            padding-top: 10px;
+            padding: 6px 0;
         }
 
         .summary-row span:last-child {
             color: var(--text);
         }
 
+        .summary-row.total {
+            font-weight: 700;
+            font-size: .95rem;
+            color: var(--text);
+            border-top: 1px solid var(--border);
+            margin-top: 6px;
+            padding-top: 12px;
+        }
+
         .summary-row.total span:last-child {
             color: var(--clay);
         }
 
-        /* ── Fixed bottom pay button ── */
+        /* ── Xendit notice ── */
+        .xendit-notice {
+            background: var(--clay-pale);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: .78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.5;
+        }
+
+        .xendit-notice svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--clay);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ── Pay button ── */
         .pay-bar {
             position: fixed;
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
             width: 100%;
-            max-width: 680px;
-            padding: 16px 18px 24px;
+            max-width: 560px;
+            padding: 16px 18px 28px;
             background: var(--bg);
             border-top: 1px solid var(--border);
             box-shadow: 0 -4px 20px rgba(0, 0, 0, .07);
@@ -285,7 +257,7 @@
             text-transform: uppercase;
             cursor: pointer;
             box-shadow: 0 4px 18px rgba(160, 82, 45, .28);
-            transition: background .18s, transform .18s, box-shadow .18s;
+            transition: background .18s, transform .18s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -295,17 +267,29 @@
         .pay-btn:hover {
             background: var(--clay-dark);
             transform: translateY(-1px);
-            box-shadow: 0 6px 22px rgba(160, 82, 45, .36);
         }
 
-        .pay-btn:active {
-            transform: translateY(0);
+        .pay-btn:disabled {
+            opacity: .7;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .pay-divider {
             width: 1px;
             height: 18px;
             background: rgba(255, 255, 255, .35);
+        }
+
+        /* ── Alert ── */
+        .alert-error {
+            background: #fdecea;
+            color: #C0392B;
+            border: 1px solid #f5c6c2;
+            border-radius: 10px;
+            padding: .7rem .9rem;
+            font-size: .78rem;
+            text-align: center;
         }
 
         @keyframes fadeUp {
@@ -323,7 +307,6 @@
 </head>
 
 <body>
-
     <div class="page">
 
         {{-- Top bar --}}
@@ -333,138 +316,92 @@
                     <polyline points="15 18 9 12 15 6" />
                 </svg>
             </button>
-            <span class="topbar-title">Metode Pembayaran</span>
+            <span class="topbar-title">Konfirmasi Pembayaran</span>
         </div>
 
         <div class="content">
 
-            <div class="section-title">Pilih Metode</div>
+            @if ($errors->any())
+                <div class="alert-error">{{ $errors->first() }}</div>
+            @endif
 
-            {{-- QRIS --}}
-            <div class="method-card selected" onclick="selectMethod(this, 'QRIS')">
-                <div class="method-left">
-                    <div class="method-logo">
-                        <span class="logo-qris">&#9646;QRIS</span>
-                    </div>
-                </div>
-                <div class="radio">
-                    <div class="radio-dot"></div>
-                </div>
-            </div>
+            {{-- Class info --}}
+            <div class="section-title">Detail Kelas</div>
 
-            {{-- GoPay --}}
-            <div class="method-card" onclick="selectMethod(this, 'GoPay')">
-                <div class="method-left">
-                    <div class="method-logo">
-                        <span class="logo-gopay">● gopay</span>
+            <div class="class-card">
+                <div class="class-name">{{ $schedule->class_name }}</div>
+                <div class="class-meta">
+                    <div class="class-meta-row">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                        </svg>
+                        {{ $schedule->coach_name }}
                     </div>
-                </div>
-                <div class="radio">
-                    <div class="radio-dot"></div>
-                </div>
-            </div>
-
-            {{-- DANA --}}
-            <div class="method-card" onclick="selectMethod(this, 'DANA')">
-                <div class="method-left">
-                    <div class="method-logo">
-                        <span class="logo-dana">⊙ DANA</span>
+                    <div class="class-meta-row">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        {{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l, d F Y') }}
                     </div>
-                </div>
-                <div class="radio">
-                    <div class="radio-dot"></div>
-                </div>
-            </div>
-
-            {{-- OVO --}}
-            <div class="method-card" onclick="selectMethod(this, 'OVO')">
-                <div class="method-left">
-                    <div class="method-logo">
-                        <span class="logo-ovo">OVO</span>
+                    <div class="class-meta-row">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} –
+                        {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
                     </div>
-                </div>
-                <div class="radio">
-                    <div class="radio-dot"></div>
-                </div>
-            </div>
-
-            {{-- ShopeePay --}}
-            <div class="method-card" onclick="selectMethod(this, 'ShopeePay')">
-                <div class="method-left">
-                    <div class="method-logo">
-                        <span class="logo-shopeepay">🛍 ShopeePay</span>
-                    </div>
-                </div>
-                <div class="radio">
-                    <div class="radio-dot"></div>
                 </div>
             </div>
 
             {{-- Order summary --}}
-            {{-- <div class="section-title" style="margin-top: 16px;">Rincian Pesanan</div>
+            <div class="section-title">Rincian Pembayaran</div>
 
             <div class="summary-card">
                 <div class="summary-row">
-                    <span>{{ $schedule->class_name ?? 'Kelas Yoga' }}</span>
-                    <span>Rp {{ number_format($schedule->price ?? 50000, 0, ',', '.') }}</span>
-                </div>
-                <div class="summary-row">
-                    <span>Biaya Admin</span>
-                    <span>Rp 5.000</span>
+                    <span>{{ $schedule->class_name }}</span>
+                    <span>Rp {{ number_format($schedule->price, 0, ',', '.') }}</span>
                 </div>
                 <div class="summary-row total">
                     <span>Total</span>
-                    <span>Rp {{ number_format(($schedule->price ?? 50000) + 5000, 0, ',', '.') }}</span>
+                    <span>Rp {{ number_format($schedule->price, 0, ',', '.') }}</span>
                 </div>
-            </div> --}}
-            {{-- Order summary --}}
-            <div class="section-title" style="margin-top: 16px;">Rincian Pesanan</div>
+            </div>
 
-            <div class="summary-card">
-                <div class="summary-row">
-                    <span>{{ $schedule->class_name ?? 'Kelas Yoga' }}</span>
-                    <span>Rp {{ number_format($schedule->price ?? 50000, 0, ',', '.') }}</span>
-                </div>
-                <div class="summary-row total">
-                    <span>Total</span>
-                    <span>Rp {{ number_format($schedule->price ?? 50000, 0, ',', '.') }}</span>
-                </div>
+            {{-- Xendit notice --}}
+            <div class="xendit-notice">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                Anda akan diarahkan ke halaman pembayaran Xendit. Pilih metode pembayaran (QRIS, Virtual Account, GoPay,
+                OVO, DANA, ShopeePay) di sana.
             </div>
 
         </div>
-    </div>
 
-    {{-- Fixed pay button --}}
-    {{-- <div class="pay-bar">
-        <button class="pay-btn" id="pay-btn" onclick="handlePayment()">
-            <span>Bayar</span>
-            <div class="pay-divider"></div>
-            <span id="pay-amount">Rp {{ number_format(($schedule->price ?? 50000) + 5000, 0, ',', '.') }}</span>
-        </button>
-    </div> --}}
-    <div class="pay-bar">
-        <button class="pay-btn" id="pay-btn" onclick="handlePayment()">
-            <span>Bayar</span>
-            <div class="pay-divider"></div>
-            <span id="pay-amount">Rp {{ number_format($schedule->price ?? 50000, 0, ',', '.') }}</span>
-        </button>
+        {{-- Pay button --}}
+        <div class="pay-bar">
+            <button class="pay-btn" id="pay-btn" onclick="handlePayment()">
+                <span>Lanjut Pembayaran</span>
+                <div class="pay-divider"></div>
+                <span>Rp {{ number_format($schedule->price, 0, ',', '.') }}</span>
+            </button>
+        </div>
+
     </div>
 
     <script>
-        function selectMethod(el, name) {
-            document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            window.selectedMethod = name;
-        }
-
         function handlePayment() {
-            const method = window.selectedMethod || 'QRIS';
             const btn = document.getElementById('pay-btn');
-            btn.textContent = 'Memproses...';
             btn.disabled = true;
-            btn.style.opacity = '.7';
+            btn.innerHTML = '<span>Memproses...</span>';
 
-            // Submit to backend
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '{{ route('payment.process') }}';
@@ -474,24 +411,16 @@
             csrf.name = '_token';
             csrf.value = '{{ csrf_token() }}';
 
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = 'payment_method';
-            methodInput.value = method;
-
             const scheduleInput = document.createElement('input');
             scheduleInput.type = 'hidden';
             scheduleInput.name = 'schedule_id';
-            scheduleInput.value = '{{ $schedule->schedule_id ?? '' }}';
+            scheduleInput.value = '{{ $schedule->schedule_id }}';
 
             form.appendChild(csrf);
-            form.appendChild(methodInput);
             form.appendChild(scheduleInput);
             document.body.appendChild(form);
             form.submit();
         }
-
-        window.selectedMethod = 'QRIS';
     </script>
 
 </body>

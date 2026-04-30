@@ -135,6 +135,7 @@ class ScheduleController extends Controller
             ->leftJoin('transactions', 'bookings.booking_id', '=', 'transactions.booking_id')
             ->where('bookings.schedule_id', $scheduleId)
             ->select(
+                'bookings.booking_id',
                 'users.name',
                 'users.phone_number',
                 'transactions.payment_type',
@@ -260,5 +261,24 @@ class ScheduleController extends Controller
 
         return redirect()->route('admin.schedules')
             ->with('success', 'Status jadwal berhasil diperbarui.');
+    }
+    public function confirmBooking($scheduleId, $bookingId)
+    {
+        $booking = DB::table('bookings')->where('booking_id', $bookingId)->first();
+
+        if (!$booking) {
+            return back()->withErrors(['error' => 'Booking tidak ditemukan.']);
+        }
+
+        DB::table('bookings')
+            ->where('booking_id', $bookingId)
+            ->update(['status' => 'confirmed', 'updated_at' => now()]);
+
+        DB::table('transactions')
+            ->where('booking_id', $bookingId)
+            ->update(['status' => 'settlement', 'updated_at' => now()]);
+
+        return redirect()->route('admin.schedules.view', $scheduleId)
+            ->with('success', 'Pembayaran berhasil dikonfirmasi.');
     }
 }
