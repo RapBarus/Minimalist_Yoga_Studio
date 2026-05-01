@@ -135,19 +135,21 @@ class CoachController extends Controller
             'years_experience' => 'required|integer|min:0',
         ]);
 
-        $username = strtolower(str_replace(' ', '', $request->name)) . rand(10,99);
+        $baseName = strtolower(str_replace(' ', '', $request->name));
+        $username = $baseName;
 
-        $exists = DB::table('users')->where('username', $username)->exists();
-        if ($exists) {
-            return back()->withErrors(['name' => 'Nama terlalu umum, tambahkan karakter lain.'])->withInput();
+        $counter = 1;
+        while (DB::table('users')->where('username', $username)->exists()) {
+            $username = $baseName . $counter;
+            $counter++;
         }
 
         $userId = DB::table('users')->insertGetId([
-            'username' => $username, // Fixed: Inserts required username
+            'username' => $username,
             'name' => $request->name,
             'phone_number' => '+62' . ltrim($request->phone, '0'),
             'email' => null,
-            'password_hash' => Hash::make($request->password), // Fixed column
+            'password_hash' => Hash::make($request->password),
             'role' => 'coach',
             'status' => 'active',
             'created_at' => now(),
