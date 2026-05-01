@@ -304,6 +304,14 @@
 
         <form action="{{ route('register.post') }}" method="POST">
             @csrf
+            <div class="field">
+                <label for="name">Nama Lengkap</label>
+                <div class="input-wrap">
+                    <input type="text" id="name" name="name" placeholder="Masukan Nama Lengkap Anda"
+                        value="{{ old('name') }}" autocomplete="name"
+                        class="{{ $errors->has('name') ? 'is-error' : '' }}">
+                </div>
+            </div>
 
             <div class="field">
                 <label for="username">Username</label>

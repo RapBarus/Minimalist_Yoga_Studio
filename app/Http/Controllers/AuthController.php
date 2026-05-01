@@ -18,6 +18,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
+            'name' => ['required', 'string', 'max:100'],
             'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9_]+$/'],
             'phone' => ['required', 'string', 'regex:/^[0-9]{8,13}$/'],
             'password' => ['required', 'string', 'min:6', 'max:50', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
@@ -30,11 +31,11 @@ class AuthController extends Controller
         }
 
         DB::table('users')->insert([
-            'username' => $request->username, // FIX: Required by DB
-            'name' => $request->username,
+            'username' => $request->username,
+            'name' => $request->name,
             'phone_number' => '+62' . ltrim($request->phone, '0'),
             'email' => null,
-            'password_hash' => Hash::make($request->password), // FIX: Renamed column
+            'password_hash' => Hash::make($request->password),
             'role' => 'customer',
             'status' => 'active',
             'created_at' => now(),
