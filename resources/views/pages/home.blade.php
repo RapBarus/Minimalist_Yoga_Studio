@@ -435,7 +435,7 @@
                 </button>
                 <div class="dropdown-menu" id="menu-kelas">
                     <div class="dropdown-label">Filter Kelas</div>
-                    @foreach ($schedules->pluck('class_name')->unique() as $className)
+                    @foreach ($schedules->pluck('class_name')->unique()->sortBy(fn($n) => strtolower($n))->values() as $className)
                         <label class="dropdown-item">
                             <input type="checkbox" class="filter-check" data-type="kelas" value="{{ $className }}">
                             {{ $className }}
@@ -453,9 +453,11 @@
                 <div class="dropdown-menu" id="menu-waktu">
                     <div class="dropdown-label">Filter Hari</div>
                     @php
+                        $dayOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
                         $days = $schedules
                             ->map(fn($s) => \Carbon\Carbon::parse($s->schedule_date)->translatedFormat('l'))
                             ->unique()
+                            ->sortBy(fn($day) => array_search($day, $dayOrder))
                             ->values();
                     @endphp
                     @foreach ($days as $day)
@@ -475,7 +477,7 @@
                 </button>
                 <div class="dropdown-menu" id="menu-coach">
                     <div class="dropdown-label">Filter Coach</div>
-                    @foreach ($schedules->pluck('coach_name')->unique() as $coachName)
+                    @foreach ($schedules->pluck('coach_name')->unique()->sortBy(fn($n) => strtolower($n))->values() as $coachName)
                         <label class="dropdown-item">
                             <input type="checkbox" class="filter-check" data-type="coach" value="{{ $coachName }}">
                             {{ $coachName }}
