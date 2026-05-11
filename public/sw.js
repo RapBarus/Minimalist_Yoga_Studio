@@ -5,8 +5,6 @@ const DYNAMIC_CACHE = "minimalist-dynamic-v1";
 // ── Static assets — Cache-First ──
 const STATIC_ASSETS = [
     "/",
-    "/login",
-    "/register",
     "/offline",
     "/images/minimalist-logo.png",
     "/images/minimalist-logo-2.png",
@@ -91,6 +89,9 @@ self.addEventListener("fetch", (event) => {
     // Skip webhook
     if (url.pathname === "/payment/webhook") return;
 
+    const authRoutes = ["/login", "/register"];
+    if (authRoutes.includes(url.pathname)) return;
+
     const isDynamic = DYNAMIC_ROUTES.some((route) =>
         url.pathname.startsWith(route),
     );
@@ -103,6 +104,7 @@ self.addEventListener("fetch", (event) => {
         event.respondWith(cacheFirst(request));
     }
 });
+
 
 // ── Cache-First strategy ──
 async function cacheFirst(request) {
