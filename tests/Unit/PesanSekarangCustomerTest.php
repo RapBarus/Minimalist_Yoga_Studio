@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use Mockery;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -13,6 +14,8 @@ class PesanSekarangCustomerTest extends TestCase
 	{
 		parent::setUp();
 
+		Schema::dropIfExists('transactions');
+		Schema::dropIfExists('bookings');
 		Schema::dropIfExists('schedules');
 		Schema::dropIfExists('classes');
 		Schema::dropIfExists('coaches');
@@ -21,6 +24,7 @@ class PesanSekarangCustomerTest extends TestCase
 
 		Schema::create('users', function (Blueprint $table) {
 			$table->increments('user_id');
+			$table->string('username')->nullable();
 			$table->string('name');
 			$table->string('email')->nullable();
 			$table->string('phone_number')->nullable();
@@ -58,6 +62,33 @@ class PesanSekarangCustomerTest extends TestCase
 			$table->integer('available_slots')->default(0);
 			$table->integer('capacity')->default(0);
 			$table->string('status')->default('upcoming');
+			$table->timestamp('created_at')->nullable();
+			$table->timestamp('updated_at')->nullable();
+		});
+
+		Schema::create('bookings', function (Blueprint $table) {
+			$table->increments('booking_id');
+			$table->unsignedInteger('user_id');
+			$table->unsignedInteger('schedule_id');
+			$table->dateTime('booking_date');
+			$table->string('status');
+			$table->timestamp('created_at')->nullable();
+			$table->timestamp('updated_at')->nullable();
+		});
+
+		Schema::create('transactions', function (Blueprint $table) {
+			$table->increments('transaction_id');
+			$table->unsignedInteger('user_id');
+			$table->unsignedInteger('booking_id');
+			$table->unsignedInteger('recorded_by')->nullable();
+			$table->integer('amount');
+			$table->string('payment_type')->nullable();
+			$table->string('payment_channel')->nullable();
+			$table->string('xendit_external_id')->nullable();
+			$table->string('xendit_invoice_url')->nullable();
+			$table->string('xendit_id')->nullable();
+			$table->string('status')->nullable();
+			$table->dateTime('transaction_date')->nullable();
 			$table->timestamp('created_at')->nullable();
 			$table->timestamp('updated_at')->nullable();
 		});
@@ -100,6 +131,33 @@ class PesanSekarangCustomerTest extends TestCase
 				'updated_at' => now(),
 			],
 		]);
+
+		DB::statement('DROP VIEW IF EXISTS vw_available_schedules');
+		DB::statement(
+			'CREATE VIEW vw_available_schedules AS
+			 SELECT schedules.schedule_id,
+			        schedules.class_id,
+			        schedules.coach_id,
+			        schedules.schedule_date,
+			        schedules.start_time,
+			        schedules.end_time,
+			        schedules.available_slots,
+			        schedules.capacity,
+			        schedules.status,
+			        classes.class_name,
+			        users.name as coach_name,
+			        coaches.rate_per_class
+			 FROM schedules
+			 INNER JOIN classes ON schedules.class_id = classes.class_id
+			 INNER JOIN coaches ON schedules.coach_id = coaches.coach_id
+			 INNER JOIN users ON coaches.user_id = users.user_id'
+		);
+	}
+
+	protected function tearDown(): void
+	{
+		Mockery::close();
+		parent::tearDown();
 	}
 
 	public function test_pesan_sekarang_from_home_navigates_user_to_payment_page(): void
@@ -120,26 +178,47 @@ class PesanSekarangCustomerTest extends TestCase
 		])->get(route('payment.show', 321));
 
 		$paymentResponse->assertStatus(200);
-		$paymentResponse->assertSeeText('Metode Pembayaran');
-		$paymentResponse->assertSeeText('Bayar');
+		$paymentResponse->assertSeeText('Konfirmasi Pembayaran');
+		$paymentResponse->assertSeeText('Lanjut Pembayaran');
 	}
 
 	public function test_each_payment_method_redirects_user_back_to_home_for_now(): void
 	{
-		$methods = ['QRIS', 'GoPay', 'DANA', 'OVO', 'ShopeePay'];
+		$invoiceUrl = 'https://checkout.xendit.test/invoice/booking-1';
+		$mock = Mockery::mock('overload:Xendit\\Invoice\\InvoiceApi');
+		$mock->shouldReceive('createInvoice')
+			->once()
+			->andReturn(new class($invoiceUrl) {
+				public function __construct(private string $invoiceUrl)
+				{
+				}
 
-		foreach ($methods as $method) {
-			$response = $this->withSession([
-				'user_id' => 1,
-				'user_name' => 'Customer',
-				'user_role' => 'customer',
-			])->post('/payment/process', [
-				'payment_method' => $method,
-				'schedule_id' => 321,
-			]);
+				public function getInvoiceUrl(): string
+				{
+					return $this->invoiceUrl;
+				}
+			});
 
-			$response->assertRedirect('/home');
-			$response->assertSessionHas('success', 'Pembayaran sedang diproses!');
-		}
+		$response = $this->withSession([
+			'user_id' => 1,
+			'user_name' => 'Customer',
+			'user_role' => 'customer',
+		])->post('/payment/process', [
+			'schedule_id' => 321,
+		]);
+
+		$response->assertRedirect($invoiceUrl);
+		$this->assertDatabaseHas('bookings', [
+			'user_id' => 1,
+			'schedule_id' => 321,
+			'status' => 'pending',
+		]);
+		$this->assertDatabaseHas('transactions', [
+			'user_id' => 1,
+			'amount' => 70000,
+			'payment_type' => 'xendit',
+			'status' => 'pending',
+			'xendit_invoice_url' => $invoiceUrl,
+		]);
 	}
 }

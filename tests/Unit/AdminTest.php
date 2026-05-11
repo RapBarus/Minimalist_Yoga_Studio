@@ -25,6 +25,7 @@ class AdminTest extends TestCase
 
 		Schema::create('users', function (Blueprint $table) {
 			$table->increments('user_id');
+			$table->string('username')->nullable();
 			$table->string('name');
 			$table->string('email')->nullable();
 			$table->string('phone_number')->nullable();
@@ -87,6 +88,10 @@ class AdminTest extends TestCase
 			$table->unsignedInteger('recorded_by')->nullable();
 			$table->integer('amount');
 			$table->string('payment_type')->nullable();
+			$table->string('payment_channel')->nullable();
+			$table->string('xendit_external_id')->nullable();
+			$table->string('xendit_invoice_url')->nullable();
+			$table->string('xendit_id')->nullable();
 			$table->string('status')->nullable();
 			$table->dateTime('transaction_date')->nullable();
 			$table->timestamp('created_at')->nullable();
@@ -118,6 +123,7 @@ class AdminTest extends TestCase
 		// seed admin user
 		DB::table('users')->insert([
 			'user_id' => 1,
+			'username' => 'admin',
 			'name' => 'Admin',
 			'role' => 'admin',
 			'status' => 'active',
@@ -511,6 +517,7 @@ class AdminTest extends TestCase
 		$name = 'login_coach_' . rand(1000,9999);
 		$password = 'Secret1';
 		$userId = DB::table('users')->insertGetId([
+			'username' => $name,
 			'name' => $name,
 			'phone_number' => '+6281234567890',
 			'email' => null,
@@ -544,6 +551,7 @@ class AdminTest extends TestCase
 		// create coach and class and schedule
 		$name = 'nonactive_coach_' . rand(1000,9999);
 		$userId = DB::table('users')->insertGetId([
+			'username' => $name,
 			'name' => $name,
 			'phone_number' => '+6281234567890',
 			'email' => null,
@@ -583,21 +591,46 @@ class AdminTest extends TestCase
 			'created_at' => now(),
 		]);
 
-		// deactivate coach
-		DB::table('users')->where('user_id', $userId)->update(['status' => 'inactive']);
+		$inactiveName = 'inactive_coach_' . rand(1000,9999);
+		$inactiveUserId = DB::table('users')->insertGetId([
+			'username' => $inactiveName,
+			'name' => $inactiveName,
+			'phone_number' => '+6281234567890',
+			'email' => null,
+			'password_hash' => Hash::make('pw'),
+			'role' => 'coach',
+			'status' => 'inactive',
+			'created_at' => now(),
+			'updated_at' => now(),
+		]);
 
-		// as customer, view home schedules
-		$response = $this->withSession(['user_id' => 200, 'user_role' => 'customer'])
-			->get('/home');
+		DB::table('coaches')->insert([
+			'user_id' => $inactiveUserId,
+			'specialization' => 'spec',
+			'rate_per_class' => 50000,
+			'years_experience' => 1,
+			'created_at' => now(),
+		]);
+
+		// as admin, view the schedule form and ensure inactive coaches are filtered out
+		$response = $this->withSession(['user_id' => 1, 'user_role' => 'admin'])
+			->get('/admin/schedules');
 
 		$response->assertStatus(200);
-		$response->assertSee('CoachClass');
+		$html = $response->getContent();
+		preg_match('/<select name="coach_id">(.*?)<\/select>/s', $html, $matches);
+		$coachSelect = $matches[1] ?? '';
+
+		$this->assertStringContainsString($name, $coachSelect);
+		$this->assertStringNotContainsString($inactiveName, $coachSelect);
 
 		// cleanup
 		DB::table('schedules')->where('schedule_id', $scheduleId)->delete();
 		DB::table('classes')->where('class_id', $classId)->delete();
 		DB::table('coaches')->where('coach_id', $coachId)->delete();
 		DB::table('users')->where('user_id', $userId)->delete();
+		DB::table('coaches')->where('user_id', $inactiveUserId)->delete();
+		DB::table('users')->where('user_id', $inactiveUserId)->delete();
 	}
 
 	public function test_keuangan_calendar_filter_by_date(): void

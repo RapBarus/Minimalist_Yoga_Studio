@@ -22,6 +22,7 @@ class JadwalKelasFilterTest extends TestCase
 
 		Schema::create('users', function (Blueprint $table) {
 			$table->increments('user_id');
+			$table->string('username')->nullable();
 			$table->string('name');
 			$table->string('email')->nullable();
 			$table->string('phone_number')->nullable();
@@ -143,6 +144,27 @@ class JadwalKelasFilterTest extends TestCase
 				'updated_at' => now(),
 			],
 		]);
+
+		DB::statement('DROP VIEW IF EXISTS vw_available_schedules');
+		DB::statement(
+			'CREATE VIEW vw_available_schedules AS
+			 SELECT schedules.schedule_id,
+			        schedules.class_id,
+			        schedules.coach_id,
+			        schedules.schedule_date,
+			        schedules.start_time,
+			        schedules.end_time,
+			        schedules.available_slots,
+			        schedules.capacity,
+			        schedules.status,
+			        classes.class_name,
+			        users.name as coach_name,
+			        coaches.rate_per_class
+			 FROM schedules
+			 INNER JOIN classes ON schedules.class_id = classes.class_id
+			 INNER JOIN coaches ON schedules.coach_id = coaches.coach_id
+			 INNER JOIN users ON coaches.user_id = users.user_id'
+		);
 	}
 
 	public function test_home_filters_are_available_and_combination_data_is_correct(): void
