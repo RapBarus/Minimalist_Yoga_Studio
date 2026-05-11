@@ -12,6 +12,7 @@
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Raleway:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <link rel="manifest" href="/manifest.json">
     <style>
         body {
             display: block;
@@ -531,6 +532,16 @@
             document.getElementById('drawer').classList.remove('open');
             document.getElementById('drawer-overlay').classList.remove('open');
             document.body.style.overflow = '';
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW failed:', err));
+            });
         }
     </script>
 

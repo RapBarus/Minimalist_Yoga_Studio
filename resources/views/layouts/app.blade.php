@@ -14,6 +14,7 @@
         rel="stylesheet">
 
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="manifest" href="/manifest.json">
 
     @stack('styles')
 </head>
@@ -36,6 +37,16 @@
     </div>
 
     <x-navbar />
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW failed:', err));
+            });
+        }
+    </script>
 
     @stack('scripts')
 

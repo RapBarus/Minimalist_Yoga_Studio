@@ -1,0 +1,30 @@
+{
+    "name": "Minimalist Studio",
+    "short_name": "Minimalist",
+    "description": "Minimalist Yoga Studio — Book your yoga classes anytime, anywhere.",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#F2EFEB",
+    "theme_color": "#A0522D",
+    "icons": [
+        {
+            "src": "/images/minimalist-logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/images/minimalist-logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "health",
+        "fitness",
+        "lifestyle"
+    ],
+    "lang": "id"
+}

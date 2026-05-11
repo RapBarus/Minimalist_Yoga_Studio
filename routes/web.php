@@ -24,6 +24,11 @@ Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
+// Offline page
+Route::get('/offline', function () {
+    return view('pages.offline');
+})->name('offline');
+
 // Auth
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
