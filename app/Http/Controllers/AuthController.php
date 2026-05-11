@@ -34,7 +34,6 @@ class AuthController extends Controller
             'username' => $request->username,
             'name' => $request->name,
             'phone_number' => '+62' . ltrim($request->phone, '0'),
-            'email' => null,
             'password_hash' => Hash::make($request->password),
             'role' => 'customer',
             'status' => 'active',
@@ -94,8 +93,7 @@ class AuthController extends Controller
         return match ($user->role) {
             'admin' => redirect()->route('admin.dashboard'),
             'coach' => redirect()->route('coach.dashboard'),
-            default => redirect()->route('home')->with('success', 'Selamat datang, ' . $user->name . '!'),
-        };
+            default => redirect()->route('home')->with('show_splash', true)->with('success', 'Selamat datang, ' . $user->name . '!'),        };
     }
 
     public function logout()

@@ -142,17 +142,77 @@
 </head>
 
 <body>
-
     <div class="card">
         <div class="logo">
             <img src="{{ asset('images/minimalist-logo.png') }}" alt="Minimalist Studio">
         </div>
-
         <div class="btn-group">
             <a href="{{ route('login') }}" class="btn btn-primary">Log In</a>
             <a href="{{ route('register') }}" class="btn btn-secondary">Register</a>
         </div>
     </div>
+
+    <div id="splash"
+        style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;overflow:hidden;background:transparent;">
+        <div id="splash-spinner"
+            style="width:40px;height:40px;border:3px solid rgba(160,82,45,0.2);border-top-color:#A0522D;border-radius:50%;animation:spin 0.8s linear infinite;">
+        </div>
+        <div id="splash-circle"
+            style="position:absolute;width:0;height:0;border-radius:50%;background:#A0522D;transition:none;"></div>
+        <img src="{{ asset('images/minimalist-logo.png') }}" id="splash-logo"
+            style="position:absolute;width:80px;height:80px;object-fit:contain;opacity:0;filter:brightness(0) invert(1);transition:none;z-index:1;">
+    </div>
+
+    <style>
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+
+    <script>
+        (function() {
+            const splash = document.getElementById('splash');
+            const circle = document.getElementById('splash-circle');
+            const logo = document.getElementById('splash-logo');
+            const spinner = document.getElementById('splash-spinner');
+
+            // Only show splash once per browser session
+            if (sessionStorage.getItem('splashShown')) {
+                splash.style.display = 'none';
+                return;
+            }
+
+            sessionStorage.setItem('splashShown', '1');
+
+            setTimeout(() => {
+                spinner.style.transition = 'opacity 0.2s ease';
+                spinner.style.opacity = '0';
+                setTimeout(() => spinner.style.display = 'none', 200);
+
+                circle.style.transition =
+                    'width 1.2s cubic-bezier(0.2,0,0.4,1), height 1.2s cubic-bezier(0.2,0,0.4,1)';
+                circle.style.width = '250vh';
+                circle.style.height = '250vh';
+            }, 800);
+
+            setTimeout(() => {
+                logo.style.transition = 'opacity 0.4s ease';
+                logo.style.opacity = '1';
+            }, 1800);
+
+            setTimeout(() => {
+                splash.style.transition = 'opacity 0.5s ease';
+                splash.style.opacity = '0';
+            }, 2600);
+
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 3200);
+        })();
+    </script>
 
 </body>
 

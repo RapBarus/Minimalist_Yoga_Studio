@@ -4,7 +4,6 @@ const DYNAMIC_CACHE = "minimalist-dynamic-v1";
 
 // ── Static assets — Cache-First ──
 const STATIC_ASSETS = [
-    "/",
     "/offline",
     "/images/minimalist-logo.png",
     "/images/minimalist-logo-2.png",
@@ -91,6 +90,8 @@ self.addEventListener("fetch", (event) => {
 
     const authRoutes = ["/login", "/register"];
     if (authRoutes.includes(url.pathname)) return;
+    if (url.pathname === "/") return;
+
 
     const isDynamic = DYNAMIC_ROUTES.some((route) =>
         url.pathname.startsWith(route),

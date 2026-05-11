@@ -447,6 +447,12 @@
         .btn-modal-submit:hover {
             background: var(--clay-dark);
         }
+
+        .cal-day.selected {
+            background: var(--clay-dark);
+            color: #fff;
+            font-weight: 700;
+        }
     </style>
 @endpush
 
@@ -487,11 +493,10 @@
         <div class="schedule-container" style="display: flex; flex-direction: column; gap: 16px;">
             @forelse($schedules as $schedule)
                 @php
-                    // Mengambil inisial nama coach
                     $initial = strtoupper(substr($schedule->coach_name ?? 'C', 0, 1));
                 @endphp
 
-                <div class="schedule-card">
+                <div class="schedule-card" data-date="{{ $schedule->schedule_date }}">
                     <div class="sc-title">{{ $schedule->class_name }}</div>
 
                     <div class="sc-coach">
@@ -614,6 +619,11 @@
                     el.appendChild(dot);
                 }
                 el.insertBefore(document.createTextNode(d), el.firstChild);
+                el.dataset.date = dateStr;
+                if (scheduleDates.includes(dateStr)) {
+                    el.style.cursor = 'pointer';
+                    el.addEventListener('click', () => filterByDate(dateStr));
+                }
                 grid.appendChild(el);
             }
 
@@ -648,6 +658,32 @@
         @if ($errors->has('name') || $errors->has('quota_amount') || $errors->has('price'))
             openModal('modal-member');
         @endif
+
+
+        let activeDate = null;
+
+        function filterByDate(dateStr) {
+            const cards = document.querySelectorAll('.schedule-card');
+
+            // Toggle
+            if (activeDate === dateStr) {
+                activeDate = null;
+                cards.forEach(card => card.style.display = '');
+                document.querySelectorAll('.cal-day.selected').forEach(el => el.classList.remove('selected'));
+                return;
+            }
+
+            activeDate = dateStr;
+
+            // Highlight selected date
+            document.querySelectorAll('.cal-day.selected').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`.cal-day[data-date="${dateStr}"]`)?.classList.add('selected');
+
+            // Filter cards
+            cards.forEach(card => {
+                card.style.display = card.dataset.date === dateStr ? '' : 'none';
+            });
+        }
     </script>
 @endpush
 

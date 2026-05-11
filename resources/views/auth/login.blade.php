@@ -256,6 +256,35 @@
                 width: 280px;
             }
         }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-80px);
+            background: #fff;
+            border: 1.5px solid #a9dfbf;
+            border-radius: 12px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: .82rem;
+            color: var(--success);
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+            z-index: 999;
+            transition: transform .4s cubic-bezier(0.2, 0, 0, 1);
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-icon {
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 
@@ -273,7 +302,14 @@
         <p class="subtitle">Belum punya akun? <a href="{{ route('register') }}">Register</a></p>
 
         @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="toast" id="toast">
+                <span class="toast-icon">✅</span>
+                {{ session('success') }}
+            </div>
+            <script>
+                setTimeout(() => document.getElementById('toast').classList.add('show'), 100);
+                setTimeout(() => document.getElementById('toast').classList.remove('show'), 3500);
+            </script>
         @endif
 
         @if ($errors->any())
