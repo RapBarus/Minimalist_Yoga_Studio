@@ -153,7 +153,6 @@ class CoachController extends Controller
             'username' => $username,
             'name' => $request->name,
             'phone_number' => '+62' . ltrim($request->phone, '0'),
-            'email' => null,
             'password_hash' => Hash::make($request->password),
             'role' => 'coach',
             'status' => 'active',
