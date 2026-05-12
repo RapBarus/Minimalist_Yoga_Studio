@@ -37,8 +37,9 @@ class ScheduleController extends Controller
 
         $coaches = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->join('classes', 'coaches.class_id', '=', 'classes.class_id') // ← add this
             ->where('users.status', 'active')
-            ->select('coaches.coach_id', 'users.name', 'coaches.specialization')
+            ->select('coaches.coach_id', 'users.name', 'classes.class_name') // ← not specialization
             ->get();
 
         // Dates that have schedules for calendar highlighting

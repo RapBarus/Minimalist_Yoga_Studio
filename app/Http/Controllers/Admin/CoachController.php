@@ -13,9 +13,10 @@ class CoachController extends Controller
     {
         $coaches = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->join('classes', 'coaches.class_id', '=', 'classes.class_id') // ← add
             ->select(
                 'coaches.coach_id',
-                'coaches.specialization',
+                'classes.class_name',            // ← was coaches.specialization
                 'coaches.rate_per_class',
                 'coaches.years_experience',
                 'coaches.created_at',
@@ -26,18 +27,22 @@ class CoachController extends Controller
             ->orderBy('coaches.created_at', 'desc')
             ->get();
 
-        return view('admin.coaches', ['coaches' => $coaches]);
+        $classes = DB::table('classes')->orderBy('class_name')->get(); // ← needed for modal
+
+        return view('admin.coaches', compact('coaches', 'classes'));
     }
 
     public function detail(Request $request, $coachId)
     {
         $coach = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->join('classes', 'coaches.class_id', '=', 'classes.class_id') // ← add
             ->where('coaches.coach_id', $coachId)
             ->select(
                 'coaches.coach_id',
                 'coaches.user_id',
-                'coaches.specialization',
+                'classes.class_name',    // ← was coaches.specialization
+                'classes.class_id',      // ← add so the edit form can pre-select it
                 'coaches.bio',
                 'coaches.rate_per_class',
                 'coaches.years_experience',
@@ -90,10 +95,10 @@ class CoachController extends Controller
     public function update(Request $request, $coachId)
     {
         $request->validate([
-            'name' => 'required|string|max:100',
-            'phone' => ['nullable', 'string', 'regex:/^\+?[0-9]{8,15}$/'],
-            'specialization' => 'nullable|string|max:100',
-            'bio' => 'nullable|string',
+            'name'    => 'required|string|max:100',
+            'phone'   => ['nullable', 'string', 'regex:/^(0|62)[0-9]{8,13}/'],
+            'class_id' => 'required|integer|exists:classes,class_id', // ← was specialization
+            'bio'     => 'nullable|string',
         ], [
             'name.required' => 'Nama coach wajib diisi.',
             'phone.regex' => 'Format nomor HP tidak valid.',
@@ -116,8 +121,8 @@ class CoachController extends Controller
 
         DB::table('users')->where('user_id', $coach->user_id)->update($updateData);
         DB::table('coaches')->where('coach_id', $coachId)->update([
-            'specialization' => $request->specialization,
-            'bio' => $request->bio,
+            'class_id'   => $request->class_id, // ← was specialization => $request->specialization
+            'bio'        => $request->bio,
         ]);
 
         return redirect()->route('admin.coaches.detail', $coachId)
@@ -127,11 +132,11 @@ class CoachController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:100',
-            'phone' => ['required', 'string', 'regex:/^[0-9]{8,13}$/'],
-            'password' => 'required|string|min:6',
-            'specialization' => 'nullable|string|max:100',
-            'rate_per_class' => 'required|numeric|min:0',
+            'name'             => 'required|string|max:100',
+            'phone'            => ['required', 'string', 'regex:/^(0|62)[0-9]{8,13}/'],
+            'password'         => 'required|string|min:6',
+            'class_id'         => 'required|integer|exists:classes,class_id', // ← was specialization
+            'rate_per_class'   => 'required|numeric|min:0',
             'years_experience' => 'required|integer|min:0',
         ]);
 
@@ -157,12 +162,12 @@ class CoachController extends Controller
         ]);
 
         DB::table('coaches')->insert([
-            'user_id' => $userId,
-            'specialization' => $request->specialization,
-            'bio' => $request->bio ?? null,
-            'rate_per_class' => $request->rate_per_class,
+            'user_id'          => $userId,
+            'class_id'         => $request->class_id, // ← was specialization
+            'bio'              => $request->bio ?? null,
+            'rate_per_class'   => $request->rate_per_class,
             'years_experience' => $request->years_experience,
-            'created_at' => now(),
+            'created_at'       => now(),
         ]);
 
         return redirect()->route('admin.coaches')

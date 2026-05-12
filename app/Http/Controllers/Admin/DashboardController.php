@@ -10,7 +10,6 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Use the SQL view instead of manual joins!
         $schedules = DB::table('vw_available_schedules')
             ->where('schedule_date', '>=', now()->toDateString())
             ->orderBy('schedule_date', 'asc')
@@ -21,8 +20,9 @@ class DashboardController extends Controller
 
         $coaches = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->join('classes', 'coaches.class_id', '=', 'classes.class_id') // ← add this
             ->where('users.status', 'active')
-            ->select('coaches.coach_id', 'users.name', 'coaches.specialization')
+            ->select('coaches.coach_id', 'users.name', 'classes.class_name') // ← not specialization
             ->get();
 
         $scheduleDates = DB::table('schedules')

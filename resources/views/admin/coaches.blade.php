@@ -305,7 +305,7 @@
                         <div class="coach-avatar">{{ strtoupper(substr($coach->name, 0, 1)) }}</div>
                         <div>
                             <div class="coach-name">{{ $coach->name }}</div>
-                            <div class="coach-spec">{{ $coach->specialization ?? '—' }}</div>
+                            <div class="coach-spec">{{ $coach->class_name ?? '-' }}</div>
                         </div>
                     </div>
                     <div class="coach-row-actions">
@@ -402,8 +402,12 @@
 
             <div class="modal-field">
                 <label>Keahlian (Specialization)</literal>
-                    <input type="text" name="specialization" placeholder="contoh: Yoga, Zumba"
-                        value="{{ old('specialization') }}">
+                    <select name="class_id" required>
+                        <option value="">-- Pilih Kelas --</option>
+                        @foreach ($classes as $class)
+                            <option value="{{ $class->class_id }}">{{ $class->class_name }}</option>
+                        @endforeach
+                    </select>
             </div>
 
             <div class="modal-field">

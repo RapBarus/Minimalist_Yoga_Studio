@@ -257,15 +257,8 @@
 
         </div>
 
-        @if ($coach->specialization)
-            <div>
-                <div class="section-heading">Spesialis</div>
-                <div class="spec-tags">
-                    @foreach (explode(',', $coach->specialization) as $spec)
-                        <span class="spec-tag">{{ trim($spec) }}</span>
-                    @endforeach
-                </div>
-            </div>
+        @if ($coach->class_name)
+            <span class="spec-tag">{{ $coach->class_name }}</span>
         @endif
 
         {{-- Bio --}}
