@@ -92,7 +92,6 @@ self.addEventListener("fetch", (event) => {
     if (authRoutes.includes(url.pathname)) return;
     if (url.pathname === "/") return;
 
-
     const isDynamic = DYNAMIC_ROUTES.some((route) =>
         url.pathname.startsWith(route),
     );
@@ -105,7 +104,6 @@ self.addEventListener("fetch", (event) => {
         event.respondWith(cacheFirst(request));
     }
 });
-
 
 // ── Cache-First strategy ──
 async function cacheFirst(request) {
@@ -120,9 +118,9 @@ async function cacheFirst(request) {
         }
         return response;
     } catch {
-        return (
-            caches.match("/offline") || new Response("Offline", { status: 503 })
-        );
+        const offlinePage = await caches.match("/offline");
+        if (offlinePage) return offlinePage;
+        return new Response("Offline", { status: 503 });
     }
 }
 
@@ -130,16 +128,27 @@ async function cacheFirst(request) {
 async function networkFirst(request) {
     try {
         const response = await fetch(request);
-        if (response.ok) {
-            const cache = await caches.open(DYNAMIC_CACHE);
-            cache.put(request, response.clone());
+        // Only cache if response has content and is not a redirect
+        if (response.ok && response.status === 200) {
+            const clone = response.clone();
+            const text = await clone.text();
+            if (text.length > 500) {
+                // Only cache if has actual content
+                const cache = await caches.open(DYNAMIC_CACHE);
+                const newResponse = new Response(text, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: response.headers,
+                });
+                cache.put(request, newResponse);
+            }
         }
         return response;
     } catch {
         const cached = await caches.match(request);
         if (cached) return cached;
-        return (
-            caches.match("/offline") || new Response("Offline", { status: 503 })
-        );
+        const offlinePage = await caches.match("/offline");
+        if (offlinePage) return offlinePage;
+        return new Response("Offline", { status: 503 });
     }
 }
