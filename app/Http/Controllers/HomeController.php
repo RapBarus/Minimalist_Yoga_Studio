@@ -49,15 +49,15 @@ class HomeController extends Controller
 
         $coach = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->join('classes', 'coaches.class_id', '=', 'classes.class_id')
             ->where('coaches.coach_id', $coachId)
             ->select(
                 'coaches.coach_id',
-                'coaches.specialization',
+                'classes.class_name as specialization',
                 'coaches.rate_per_class',
                 'users.name as coach_name'
             )
             ->first();
-
         abort_if(!$coach, 404);
 
         $coachSchedules = DB::table('schedules')

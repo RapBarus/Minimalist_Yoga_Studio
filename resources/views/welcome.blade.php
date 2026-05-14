@@ -138,6 +138,10 @@
                 max-width: 360px;
             }
         }
+
+        .card {
+            opacity: 0;
+        }
     </style>
 </head>
 
@@ -182,6 +186,7 @@
             // Only show splash once per browser session
             if (sessionStorage.getItem('splashShown')) {
                 splash.style.display = 'none';
+                document.querySelector('.card').style.opacity = '1';
                 return;
             }
 
@@ -210,6 +215,9 @@
 
             setTimeout(() => {
                 splash.style.display = 'none';
+                const card = document.querySelector('.card');
+                card.style.transition = 'opacity 0.3s ease';
+                card.style.opacity = '1';
             }, 3200);
         })();
     </script>

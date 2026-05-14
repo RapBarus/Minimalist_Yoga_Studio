@@ -47,7 +47,7 @@ class ProfileController extends Controller
 
         // Validation
         $request->validate([
-            'name' => 'nullable|string|max:50|regex:/^[a-zA-Z0-9_]+$/',
+            'name' => 'nullable|string|max:100',
             'phone_number' => 'nullable|string|regex:/^\+?[0-9]{8,15}$/',
             'password' => [
                 'nullable',
@@ -58,7 +58,6 @@ class ProfileController extends Controller
                 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/',
             ],
         ], [
-            'name.regex' => 'Username hanya boleh huruf, angka, dan underscore.',
             'phone_number.regex' => 'Format nomor HP tidak valid. Contoh: +628123456789 atau 08123456789',
             'password.min' => 'Password minimal 6 karakter.',
             'password.max' => 'Password maksimal 50 karakter.',

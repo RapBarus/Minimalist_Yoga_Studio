@@ -247,10 +247,8 @@
         <div class="info-card">
             <div class="info-card-title">Informasi Akun</div>
 
-            <form action="{{ route('profile.update') }}" method="POST" class="info-row editable">
-                @csrf
-                @method('PUT')
-
+            {{-- Username — read only --}}
+            <div class="info-row">
                 <div class="info-row-left">
                     <div class="info-icon">
                         <svg viewBox="0 0 24 24">
@@ -258,26 +256,39 @@
                             <circle cx="12" cy="7" r="4" />
                         </svg>
                     </div>
-
                     <div>
                         <div class="info-label">Username</div>
+                        <div class="info-value">{{ $user->username }}</div>
+                    </div>
+                </div>
+            </div>
 
+            {{-- Nama Lengkap — editable --}}
+            <form action="{{ route('profile.update') }}" method="POST" class="info-row editable">
+                @csrf
+                @method('PUT')
+                <div class="info-row-left">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="info-label">Nama Lengkap</div>
                         <input type="text" name="name" value="{{ $user->name }}" class="info-input" hidden>
                         @error('name')
                             <div style="color:#c0392b;font-size:.72rem;margin-top:4px;">{{ $message }}</div>
                         @enderror
-
                         <div class="info-value value-text">{{ $user->name }}</div>
                     </div>
                 </div>
-
                 <button type="button" class="edit-btn">
                     <svg viewBox="0 0 24 24" class="edit-icon">
                         <path d="M12 20h9" />
                         <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
                     </svg>
                 </button>
-
                 <button type="submit" class="save-btn" hidden>✔</button>
             </form>
 
@@ -347,8 +358,9 @@
                                 class="info-input pw-field" id="pw-confirm">
                             <button type="button" class="eye-btn" onclick="togglePw('pw-confirm', this)"
                                 style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:#9A8C82;">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"
-                                    stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                <svg width="16" height="16" fill="none" stroke="currentColor"
+                                    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+                                    viewBox="0 0 24 24">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                     <circle cx="12" cy="12" r="3" />
                                 </svg>

@@ -257,8 +257,8 @@
 
         </div>
 
-        @if ($coach->class_name)
-            <span class="spec-tag">{{ $coach->class_name }}</span>
+        @if ($coach->specialization)
+            <span class="spec-tag">{{ $coach->specialization }}</span>
         @endif
 
         {{-- Bio --}}
