@@ -16,6 +16,21 @@ class HomeController extends Controller
             ->orderBy('start_time', 'asc')
             ->get();
 
+        $userId = Session::get('user_id');
+
+        // Get schedules the user already booked
+        $bookedScheduleIds = DB::table('bookings')
+            ->where('user_id', $userId)
+            ->whereIn('status', ['pending', 'confirmed', 'attended'])
+            ->pluck('schedule_id')
+            ->toArray();
+
+        // Mark each schedule as booked
+        $schedules = $schedules->map(function ($schedule) use ($bookedScheduleIds) {
+            $schedule->already_booked = in_array($schedule->schedule_id, $bookedScheduleIds);
+            return $schedule;
+        });
+
         $promotions = DB::table('membership_packages')
             ->where('is_active', 1)
             ->orderBy('package_id', 'asc')

@@ -379,8 +379,7 @@
                     <line x1="12" y1="8" x2="12" y2="12" />
                     <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
-                Anda akan diarahkan ke halaman pembayaran Xendit. Pilih metode pembayaran (QRIS, Virtual Account, GoPay,
-                OVO, DANA, ShopeePay) di sana.
+                Pilih metode pembayaran di langkah berikutnya. Tersedia QRIS, GoPay, OVO, DANA, dan ShopeePay.
             </div>
 
         </div>
@@ -398,28 +397,7 @@
 
     <script>
         function handlePayment() {
-            const btn = document.getElementById('pay-btn');
-            btn.disabled = true;
-            btn.innerHTML = '<span>Memproses...</span>';
-
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ route('payment.process') }}';
-
-            const csrf = document.createElement('input');
-            csrf.type = 'hidden';
-            csrf.name = '_token';
-            csrf.value = '{{ csrf_token() }}';
-
-            const scheduleInput = document.createElement('input');
-            scheduleInput.type = 'hidden';
-            scheduleInput.name = 'schedule_id';
-            scheduleInput.value = '{{ $schedule->schedule_id }}';
-
-            form.appendChild(csrf);
-            form.appendChild(scheduleInput);
-            document.body.appendChild(form);
-            form.submit();
+            window.location.href = '{{ route('payment.method', $schedule->schedule_id) }}';
         }
     </script>
 

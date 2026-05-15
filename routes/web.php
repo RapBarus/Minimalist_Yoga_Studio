@@ -17,54 +17,42 @@ use App\Http\Controllers\Coach\CoachDashboardController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\KeuanganController;
 
+// ── Welcome ──
+Route::get('/', fn() => view('welcome'))->name('welcome');
 
+// ── Offline ──
+Route::get('/offline', fn() => view('pages.offline'))->name('offline');
 
-// Welcome
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome');
-
-// Offline page
-Route::get('/offline', function () {
-    return view('pages.offline');
-})->name('offline');
-
-// Auth
+// ── Auth ──
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Coach pages
-Route::middleware(['auth.session', 'coach.auth'])->prefix('coach')->name('coach.')->group(function () {
-    Route::get('/dashboard', [CoachDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/schedule/{scheduleId}', [CoachDashboardController::class, 'scheduleDetail'])->name('schedule.detail');
-    Route::post('/schedule/{scheduleId}/update', [CoachDashboardController::class, 'updateSchedule'])->name('schedule.update');
-    Route::get('/profile', function () {
-        return 'Coming soon'; })->name('profile');
+// ── Webhook (outside auth) ──
+Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
-});
-
-// Admin pages
+// ── Admin ──
 Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.')->group(function () {
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Coaches
     Route::get('/coaches', [CoachController::class, 'index'])->name('coaches');
     Route::post('/coaches', [CoachController::class, 'store'])->name('coaches.store');
-    Route::post('/coaches/{coachId}/restore', [CoachController::class, 'restore'])->name('coaches.restore');
+    Route::put('/coaches/{coachId}', [CoachController::class, 'update'])->name('coaches.update');
     Route::delete('/coaches/{coachId}', [CoachController::class, 'destroy'])->name('coaches.destroy');
     Route::get('/coaches/{coachId}/detail', [CoachController::class, 'detail'])->name('coaches.detail');
-    Route::put('/coaches/{coachId}', [CoachController::class, 'update'])->name('coaches.update');
+    Route::post('/coaches/{coachId}/restore', [CoachController::class, 'restore'])->name('coaches.restore');
 
     // Schedules
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules');
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
-    Route::post('/schedules/{scheduleId}/status', [ScheduleController::class, 'updateStatus'])->name('schedules.status');
-    Route::get('/schedules/{scheduleId}/view', [ScheduleController::class, 'viewJadwal'])->name('schedules.view');
-    Route::post('/schedules/{scheduleId}/peserta', [ScheduleController::class, 'addPeserta'])->name('schedules.peserta');
     Route::delete('/schedules/{scheduleId}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
+    Route::get('/schedules/{scheduleId}/view', [ScheduleController::class, 'viewJadwal'])->name('schedules.view');
+    Route::post('/schedules/{scheduleId}/status', [ScheduleController::class, 'updateStatus'])->name('schedules.status');
+    Route::post('/schedules/{scheduleId}/peserta', [ScheduleController::class, 'addPeserta'])->name('schedules.peserta');
     Route::post('/schedules/{scheduleId}/confirm-booking/{bookingId}', [ScheduleController::class, 'confirmBooking'])->name('schedules.confirm-booking');
 
     // Classes
@@ -72,13 +60,13 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::post('/classes', [ClassController::class, 'store'])->name('classes.store');
     Route::delete('/classes/{classId}', [ClassController::class, 'destroy'])->name('classes.destroy');
 
-    // Membership packages
+    // Membership
     Route::get('/membership', [MembershipController::class, 'index'])->name('membership');
     Route::post('/membership', [MembershipController::class, 'store'])->name('membership.store');
     Route::post('/membership/{id}/toggle', [MembershipController::class, 'toggleActive'])->name('membership.toggle');
     Route::delete('/membership/{id}', [MembershipController::class, 'destroy'])->name('membership.destroy');
 
-    // Promos (discount codes)
+    // Promos
     Route::get('/promos', [PromoController::class, 'index'])->name('promos');
     Route::post('/promos', [PromoController::class, 'store'])->name('promos.store');
     Route::post('/promos/{id}/toggle', [PromoController::class, 'toggleActive'])->name('promos.toggle');
@@ -88,23 +76,41 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers');
     Route::get('/customers/{userId}/detail', [CustomerController::class, 'detail'])->name('customers.detail');
 
-    //Keuangan
+    // Keuangan
     Route::get('/keuangan', [KeuanganController::class, 'index'])->name('keuangan');
-
 });
 
-// Customer pages
+// ── Coach ──
+Route::middleware(['auth.session', 'coach.auth'])->prefix('coach')->name('coach.')->group(function () {
+
+    Route::get('/dashboard', [CoachDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/schedule/{scheduleId}', [CoachDashboardController::class, 'scheduleDetail'])->name('schedule.detail');
+    Route::post('/schedule/{scheduleId}/update', [CoachDashboardController::class, 'updateSchedule'])->name('schedule.update');
+    Route::get('/profile', fn() => 'Coming soon')->name('profile');
+});
+
+// ── Customer ──
 Route::middleware('auth.session')->group(function () {
+
+    // Main pages
     Route::get('/home', [HomeController::class, 'index'])->name('home');
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/payment/success/{bookingId}', [PaymentController::class, 'success'])->name('payment.success');
-    Route::get('/payment/failed/{bookingId}', [PaymentController::class, 'failed'])->name('payment.failed');
-    Route::get('/payment/{schedule_id}', [PaymentController::class, 'show'])->name('payment.show');
-    Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity');
     Route::get('/member', [MemberController::class, 'index'])->name('member');
     Route::get('/coach/{coachId}', [HomeController::class, 'coachProfile'])->name('coach.show');
 
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Payment
+    Route::get('/payment/success/{bookingId}', [PaymentController::class, 'success'])->name('payment.success');
+    Route::get('/payment/failed/{bookingId}', [PaymentController::class, 'failed'])->name('payment.failed');
+    Route::get('/payment/receipt/{bookingId}', [PaymentController::class, 'receipt'])->name('payment.receipt');
+    Route::get('/payment/instructions/{transactionId}', [PaymentController::class, 'instructions'])->name('payment.instructions');
+    Route::get('/payment/check/{transactionId}', [PaymentController::class, 'check'])->name('payment.check');
+    Route::get('/payment/cancel/{bookingId}', [PaymentController::class, 'cancel'])->name('payment.cancel');
+    Route::get('/payment/method/{schedule_id}', [PaymentController::class, 'showMethod'])->name('payment.method');
+    Route::post('/payment/method/{schedule_id}', [PaymentController::class, 'processMethod'])->name('payment.method.process');
+    Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
+    Route::get('/payment/{schedule_id}', [PaymentController::class, 'show'])->name('payment.show');
 });
-Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook')->withoutMiddleware(['auth.session']);

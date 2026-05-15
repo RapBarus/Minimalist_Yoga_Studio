@@ -537,7 +537,9 @@
                         </span>
                     </div>
 
-                    @if ($schedule->available_slots > 0)
+                    @if ($schedule->already_booked)
+                        <button class="btn-pesan" disabled>Sudah Terdaftar</button>
+                    @elseif ($schedule->available_slots > 0)
                         <a href="{{ route('payment.show', $schedule->schedule_id) }}" class="btn-pesan">Pesan
                             Sekarang</a>
                     @else
