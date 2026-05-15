@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Coach\CoachDashboardController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\KeuanganController;
+use App\Http\Controllers\MembershipPaymentController;
 
 // ── Welcome ──
 Route::get('/', fn() => view('welcome'))->name('welcome');
@@ -32,6 +33,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // ── Webhook (outside auth) ──
 Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
+Route::post('/membership/payment/webhook', [MembershipPaymentController::class, 'webhook'])->name('membership.payment.webhook');
+Route::get('/membership/payment/success', [MembershipPaymentController::class, 'success'])->name('membership.payment.success');
+
 
 // ── Admin ──
 Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.')->group(function () {
@@ -113,4 +117,10 @@ Route::middleware('auth.session')->group(function () {
     Route::post('/payment/method/{schedule_id}', [PaymentController::class, 'processMethod'])->name('payment.method.process');
     Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
     Route::get('/payment/{schedule_id}', [PaymentController::class, 'show'])->name('payment.show');
+
+    // Membership payment
+    Route::get('/membership/payment/{package_id}', [MembershipPaymentController::class, 'show'])->name('membership.payment.show');
+    Route::get('/membership/payment/{package_id}/method', [MembershipPaymentController::class, 'showMethod'])->name('membership.payment.method');
+    Route::post('/membership/payment/{package_id}/method', [MembershipPaymentController::class, 'processMethod'])->name('membership.payment.method.process');
+    Route::get('/membership/payment/{package_id}/failed', [MembershipPaymentController::class, 'failed'])->name('membership.payment.failed');
 });

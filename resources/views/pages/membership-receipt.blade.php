@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#F2EFEB">
-    <title>Receipt | Minimalist Studio</title>
+    <title>Receipt Membership | Minimalist Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -276,25 +276,38 @@
                 </svg>
             </div>
 
-            <div class="success-title">Pembayaran Berhasil</div>
+            <div class="success-title">Membership Aktif!</div>
 
             <div class="receipt-card">
                 <div class="receipt-top">
                     <div class="receipt-top-row">
                         <span class="receipt-top-label">Jumlah</span>
                         <span class="receipt-top-amount">IDR
-                            {{ number_format($transaction->amount, 0, ',', '.') }}</span>
+                            {{ number_format($transaction->amount ?? $package->price, 0, ',', '.') }}</span>
                     </div>
                     <div class="receipt-top-row" style="margin-top:8px;">
                         <span class="receipt-top-label">Status Pembayaran</span>
                         <span class="status-badge">Success</span>
                     </div>
                 </div>
-
                 <div class="receipt-bottom">
                     <div class="receipt-row">
-                        <span class="receipt-label">Nama Kelas</span>
-                        <span class="receipt-value">{{ strtoupper($schedule->class_name) }}</span>
+                        <span class="receipt-label">Nama Paket</span>
+                        <span class="receipt-value">{{ strtoupper($package->name) }}</span>
+                    </div>
+                    @if ($package->class_name)
+                        <div class="receipt-row">
+                            <span class="receipt-label">Kelas</span>
+                            <span class="receipt-value">{{ $package->class_name }}</span>
+                        </div>
+                    @endif
+                    <div class="receipt-row">
+                        <span class="receipt-label">Pertemuan</span>
+                        <span class="receipt-value">{{ $package->quota_amount }}x Sesi</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Masa Aktif</span>
+                        <span class="receipt-value">{{ $package->validity_months * 30 }} Hari</span>
                     </div>
                     <div class="receipt-row">
                         <span class="receipt-label">Nama</span>
@@ -302,19 +315,19 @@
                     </div>
                     <div class="receipt-row">
                         <span class="receipt-label">Pembayaran</span>
-                        <span class="receipt-value">{{ $transaction->payment_channel ?? 'QRIS' }}</span>
+                        <span class="receipt-value">{{ $transaction->payment_channel ?? '-' }}</span>
                     </div>
                     <div class="receipt-row">
-                        <span class="receipt-label">Waktu Pembayaran</span>
+                        <span class="receipt-label">Waktu</span>
                         <span
-                            class="receipt-value">{{ \Carbon\Carbon::parse($transaction->updated_at)->format('d M Y, H:i') }}</span>
+                            class="receipt-value">{{ \Carbon\Carbon::parse($transaction->updated_at ?? now())->format('d M Y, H:i') }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="bottom-bar">
-            <a href="{{ route('activity') }}" class="btn-selesai">Selesai</a>
+            <a href="{{ route('member') }}" class="btn-selesai">Selesai</a>
         </div>
     </div>
 </body>

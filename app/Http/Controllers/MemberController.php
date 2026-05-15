@@ -11,19 +11,20 @@ class MemberController extends Controller
     public function index()
     {
         $promotions = DB::table('membership_packages')
-            ->where('is_active', 1)
-            ->orderBy('package_id', 'asc')
+            ->leftJoin('classes', 'membership_packages.class_id', '=', 'classes.class_id')
+            ->where('membership_packages.is_active', 1)
+            ->orderBy('membership_packages.package_id', 'asc')
+            ->select(
+                'membership_packages.*',
+                'classes.class_name'
+            )
             ->get()
             ->map(function ($package) {
                 $package->title = $package->name;
-                $package->coach_name = $package->coach_name ?? null;
-                $package->coach_id = $package->coach_id ?? null;
-                $package->schedule_date = $package->schedule_date ?? null;
-                $package->start_time = $package->start_time ?? null;
-                $package->end_time = $package->end_time ?? null;
-                $package->original_price = null;
                 $package->promo_price = number_format($package->price, 0, ',', '.');
+                $package->original_price = null;
                 $package->pertemuan = $package->quota_amount . 'x sesi';
+                $package->masa_aktif = $package->validity_months * 30 . ' Hari';
                 $package->promo_id = $package->package_id;
                 return $package;
             });

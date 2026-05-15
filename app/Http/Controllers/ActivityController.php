@@ -28,14 +28,12 @@ class ActivityController extends Controller
                 'amount'
             );
 
-        // Active: upcoming schedules that are confirmed/pending
         $activeBookings = (clone $baseQuery)
             ->where('schedule_date', '>=', now()->toDateString())
-            ->whereIn('booking_status', ['confirmed'])   // Remove 'pending' if not used
+            ->whereIn('booking_status', ['confirmed'])
             ->orderBy('schedule_date', 'asc')
             ->get();
 
-        // History: past schedules or cancelled
         $historyBookings = (clone $baseQuery)
             ->where(function ($q) {
                 $q->where('schedule_date', '<', now()->toDateString())
@@ -44,7 +42,31 @@ class ActivityController extends Controller
             ->orderBy('schedule_date', 'desc')
             ->get();
 
-        return view('pages.activity', compact('activeBookings', 'historyBookings'));
+        $membershipPurchases = DB::table('transactions')
+            ->join('membership_quotas', 'transactions.quota_id', '=', 'membership_quotas.quota_id')
+            ->join('membership_packages', 'membership_quotas.package_id', '=', 'membership_packages.package_id')
+            ->leftJoin('classes', 'membership_packages.class_id', '=', 'classes.class_id')
+            ->where('membership_quotas.user_id', $userId)
+            ->whereIn('transactions.status', ['settlement', 'paid'])
+            ->select(
+                'transactions.transaction_id',
+                'transactions.amount',
+                'transactions.created_at',
+                'transactions.xendit_external_id',
+                'membership_packages.name as package_name',
+                'membership_packages.validity_months',
+                'classes.class_name',
+                'membership_quotas.is_active',
+                'membership_quotas.start_date',
+                'membership_quotas.reset_date',
+                'membership_quotas.total_quota',
+                'membership_quotas.used_quota',
+                'membership_quotas.package_id'
+            )
+            ->orderBy('transactions.created_at', 'desc')
+            ->get();
+
+        return view('pages.activity', compact('activeBookings', 'historyBookings', 'membershipPurchases'));
     }
     private function checkPendingPayments($userId)
     {

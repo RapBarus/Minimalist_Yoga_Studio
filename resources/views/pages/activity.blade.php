@@ -316,6 +316,54 @@
             </div>
         @endforelse
 
+        {{-- ── Membership Purchases ── --}}
+        @if (isset($membershipPurchases) && $membershipPurchases->isNotEmpty())
+            <div class="section-label" style="margin-top:8px;">Membership Aktif</div>
+
+            @foreach ($membershipPurchases as $mp)
+                <div class="card-activity">
+                    <div class="card-activity-title">{{ $mp->package_name }}</div>
+
+                    <div class="coach-badge-link" style="pointer-events:none;">
+                        <div class="coach-avatar">M</div>
+                        <span style="font-size:.75rem;">{{ $mp->class_name }}</span>
+                    </div>
+
+                    <div class="card-activity-meta">
+                        <div class="card-activity-meta-row">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            {{ \Carbon\Carbon::parse($mp->start_date)->translatedFormat('d F Y') }} –
+                            {{ \Carbon\Carbon::parse($mp->reset_date)->translatedFormat('d F Y') }}
+                        </div>
+                    </div>
+
+                    <div class="card-activity-footer">
+                        <span class="card-activity-price">Rp {{ number_format($mp->amount, 0, ',', '.') }}</span>
+                        <span class="pertemuan-badge">
+                            Sisa: {{ $mp->total_quota - $mp->used_quota }} / {{ $mp->total_quota }}
+                        </span>
+                    </div>
+
+                    <a href="{{ route('membership.payment.success') }}?external_id={{ $mp->xendit_external_id }}&package_id={{ $mp->package_id ?? '' }}"
+                        class="btn-receipt">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                            <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        Receipt
+                    </a>
+                </div>
+            @endforeach
+        @endif
+
         {{-- ── History ── --}}
         <div class="section-label" style="margin-top:8px;">Riwayat Aktivitas</div>
 

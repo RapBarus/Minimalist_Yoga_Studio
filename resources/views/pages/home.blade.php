@@ -412,7 +412,8 @@
                         @endif
                     </div>
 
-                    <a href="#" class="btn btn-white">Pesan Sekarang</a>
+                    <a href="{{ route('membership.payment.show', $promo->promo_id) }}" class="btn btn-white">Pesan
+                        Sekarang</a>
                 </div>
             @empty
                 <p style="color:var(--text-muted);font-size:.85rem;padding:1rem 0;">Tidak ada penawaran saat ini.</p>

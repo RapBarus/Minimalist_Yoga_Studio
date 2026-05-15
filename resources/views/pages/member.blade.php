@@ -312,53 +312,10 @@
                 </button>
                 <div class="dropdown-menu" id="menu-kelas">
                     <div class="dropdown-label">Filter Kelas</div>
-                    @foreach ($promotions->pluck('title')->unique() as $title)
+                    @foreach ($promotions->pluck('class_name')->filter()->unique() as $title)
                         <label class="dropdown-item">
                             <input type="checkbox" class="filter-check" data-type="kelas" value="{{ $title }}">
                             {{ $title }}
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Waktu --}}
-            <div class="dropdown-wrap">
-                <button class="dropdown-btn" id="btn-waktu" onclick="toggleDropdown('waktu')">
-                    Waktu <svg viewBox="0 0 24 24">
-                        <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                </button>
-                <div class="dropdown-menu" id="menu-waktu">
-                    <div class="dropdown-label">Filter Hari</div>
-                    @php
-                        $days = $promotions
-                            ->filter(fn($p) => $p->schedule_date)
-                            ->map(fn($p) => \Carbon\Carbon::parse($p->schedule_date)->translatedFormat('l'))
-                            ->unique()
-                            ->values();
-                    @endphp
-                    @foreach ($days as $day)
-                        <label class="dropdown-item">
-                            <input type="checkbox" class="filter-check" data-type="waktu" value="{{ $day }}">
-                            {{ $day }}
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Coach --}}
-            <div class="dropdown-wrap">
-                <button class="dropdown-btn" id="btn-coach" onclick="toggleDropdown('coach')">
-                    Coach <svg viewBox="0 0 24 24">
-                        <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                </button>
-                <div class="dropdown-menu" id="menu-coach">
-                    <div class="dropdown-label">Filter Coach</div>
-                    @foreach ($promotions->pluck('coach_name')->filter()->unique() as $coachName)
-                        <label class="dropdown-item">
-                            <input type="checkbox" class="filter-check" data-type="coach" value="{{ $coachName }}">
-                            {{ $coachName }}
                         </label>
                     @endforeach
                 </div>
@@ -369,71 +326,35 @@
         {{-- Member package cards --}}
         <div id="cards-grid" style="display:flex;flex-direction:column;gap:14px;">
             @forelse ($promotions as $promo)
-                @php
-                    $dayName = $promo->schedule_date
-                        ? \Carbon\Carbon::parse($promo->schedule_date)->translatedFormat('l')
-                        : '';
-                @endphp
-                <div class="card-member" data-kelas="{{ $promo->title }}" data-waktu="{{ $dayName }}"
-                    data-coach="{{ $promo->coach_name }}">
+                <div class="card-member" data-kelas="{{ $promo->class_name }}">
 
                     <div class="card-member-title">{{ $promo->title }}</div>
 
-                    {{-- Coach badge --}}
-                    @if ($promo->coach_name)
-                        @if (!empty($promo->coach_id))
-                            <a href="{{ route('coach.profile', $promo->coach_id) }}" class="coach-badge-link">
-                                <div class="coach-avatar">{{ strtoupper(substr($promo->coach_name, 0, 1)) }}</div>
-                                <span style="font-size:.75rem;">{{ $promo->coach_name }}</span>
-                            </a>
-                        @else
-                            <div
-                                style="display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;background:rgba(255,255,255,.15);border-radius:20px;padding:3px 10px 3px 3px;">
-                                <div class="coach-avatar">{{ strtoupper(substr($promo->coach_name, 0, 1)) }}</div>
-                                <span style="font-size:.75rem;">{{ $promo->coach_name }}</span>
-                            </div>
-                        @endif
+                    {{-- Class tag --}}
+                    @if ($promo->class_name)
+                        <span
+                            style="display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:3px 14px;font-size:.75rem;font-weight:600;margin-bottom:10px;">
+                            {{ $promo->class_name }}
+                        </span>
                     @endif
 
-                    {{-- Date & time --}}
-                    <div class="card-member-meta">
-                        @if ($promo->schedule_date)
-                            <div class="card-member-meta-row">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                </svg>
-                                {{ \Carbon\Carbon::parse($promo->schedule_date)->translatedFormat('l, d F Y') }}
-                            </div>
-                        @endif
-                        @if ($promo->start_time)
-                            <div class="card-member-meta-row">
-                                <svg viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="12 6 12 12 16 14" />
-                                </svg>
-                                {{ \Carbon\Carbon::parse($promo->start_time)->format('H:i') }} –
-                                {{ \Carbon\Carbon::parse($promo->end_time)->format('H:i') }} WIB
-                            </div>
-                        @endif
+                    {{-- Masa Aktif & Pertemuan --}}
+                    <div class="card-member-footer">
+                        <div style="font-size:.78rem;opacity:.85;">Masa Aktif : {{ $promo->masa_aktif }}</div>
+                        <span class="pertemuan-pill">pertemuan : {{ $promo->quota_amount }}</span>
                     </div>
 
-                    {{-- Price & pertemuan --}}
-                    <div class="card-member-footer">
+                    {{-- Price --}}
+                    <div class="card-member-footer" style="margin-bottom:12px;">
                         <div class="price-group">
                             @if ($promo->original_price)
-                                <span class="price-old">Rp {{ $promo->original_price }}</span>
+                                <span class="price-old">Rp {{ number_format($promo->original_price, 0, ',', '.') }}</span>
                             @endif
                             <span class="price-new">Rp {{ $promo->promo_price }}</span>
                         </div>
-                        @if ($promo->pertemuan)
-                            <span class="pertemuan-pill">pertemuan : {{ $promo->pertemuan }}</span>
-                        @endif
                     </div>
 
-                    <a href="{{ route('payment.show', $promo->promo_id) }}" class="btn-pesan">Pesan Sekarang</a>
+                    <a href="{{ route('membership.payment.show', $promo->promo_id) }}" class="btn-pesan">Pesan Sekarang</a>
                 </div>
             @empty
                 <div class="empty-state">Tidak ada paket membership tersedia saat ini.</div>
