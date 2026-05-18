@@ -27,6 +27,7 @@ class ScheduleController extends Controller
                 'schedules.capacity',
                 'schedules.available_slots',
                 'schedules.status',
+                'schedules.title',
                 'classes.class_name',
                 'coaches.rate_per_class',
                 'users.name as coach_name'
@@ -94,6 +95,7 @@ class ScheduleController extends Controller
         DB::table('schedules')->insert([
             'class_id' => $request->class_id,
             'coach_id' => $request->coach_id,
+            'title' => $request->custom_name ?: null,
             'schedule_date' => $request->schedule_date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,

@@ -283,7 +283,7 @@
                     <div class="receipt-top-row">
                         <span class="receipt-top-label">Jumlah</span>
                         <span class="receipt-top-amount">IDR
-                            {{ number_format($transaction->amount, 0, ',', '.') }}</span>
+                            {{ $transaction ? number_format($transaction->amount, 0, ',', '.') : '0' }}</span>
                     </div>
                     <div class="receipt-top-row" style="margin-top:8px;">
                         <span class="receipt-top-label">Status Pembayaran</span>
@@ -302,12 +302,12 @@
                     </div>
                     <div class="receipt-row">
                         <span class="receipt-label">Pembayaran</span>
-                        <span class="receipt-value">{{ $transaction->payment_channel ?? 'QRIS' }}</span>
+                        <span class="receipt-value">{{ $transaction ? ($transaction->payment_channel ?? 'Membership Quota') : 'Membership Quota' }}</span>
                     </div>
                     <div class="receipt-row">
                         <span class="receipt-label">Waktu Pembayaran</span>
                         <span
-                            class="receipt-value">{{ \Carbon\Carbon::parse($transaction->updated_at)->format('d M Y, H:i') }}</span>
+                            class="receipt-value">{{ $transaction ? \Carbon\Carbon::parse($transaction->updated_at)->format('d M Y, H:i') : now()->format('d M Y, H:i') }}</span>
                     </div>
                 </div>
             </div>

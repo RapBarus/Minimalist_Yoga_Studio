@@ -19,18 +19,21 @@ class MembershipController extends Controller
             ->where('users.status', 'active')
             ->select('coaches.coach_id', 'users.name')
             ->get();
-        return view('admin.membership', compact('packages', 'coaches'));
+
+        $classes = DB::table('classes')->orderBy('class_name')->get();
+        return view('admin.membership', compact('packages', 'coaches', 'classes'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:100',
+            'class_id' => 'required|integer',
             'quota_amount' => 'required|integer|min:1',
             'price' => 'required|numeric|min:0',
             'validity_months' => 'required|integer|min:1',
             'description' => 'nullable|string',
-            'original_price' => 'required|numeric|min:0',
+            'original_price' => 'nullable|numeric|min:0',
         ], [
             'name.required' => 'Nama paket wajib diisi.',
             'quota_amount.required' => 'Jumlah sesi wajib diisi.',
@@ -41,7 +44,7 @@ class MembershipController extends Controller
             'validity_months.min' => 'Masa aktif minimal 1 bulan.',
         ]);
 
-        if ($request->price > $request->original_price) {
+        if ($request->original_price && $request->price > $request->original_price) {
             return back()
                 ->withErrors(['price' => 'Harga diskon tidak boleh lebih besar dari harga asli.'])
                 ->withInput();
@@ -49,8 +52,10 @@ class MembershipController extends Controller
 
         DB::table('membership_packages')->insert([
             'name' => $request->name,
+            'class_id' => $request->class_id,
             'quota_amount' => $request->quota_amount,
             'price' => $request->price,
+            'original_price' => $request->original_price ?: null,
             'validity_months' => $request->validity_months,
             'description' => $request->description,
             'is_active' => 1,

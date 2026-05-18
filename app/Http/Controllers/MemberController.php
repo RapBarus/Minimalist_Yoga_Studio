@@ -22,7 +22,6 @@ class MemberController extends Controller
             ->map(function ($package) {
                 $package->title = $package->name;
                 $package->promo_price = number_format($package->price, 0, ',', '.');
-                $package->original_price = null;
                 $package->pertemuan = $package->quota_amount . 'x sesi';
                 $package->masa_aktif = $package->validity_months * 30 . ' Hari';
                 $package->promo_id = $package->package_id;

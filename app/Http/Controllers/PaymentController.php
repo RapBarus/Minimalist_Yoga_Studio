@@ -68,6 +68,7 @@ class PaymentController extends Controller
                 'schedules.start_time',
                 'schedules.end_time',
                 'schedules.available_slots',
+                'schedules.class_id',
                 'classes.class_name',
                 'users.name as coach_name',
                 'coaches.rate_per_class as price'
@@ -87,8 +88,19 @@ class PaymentController extends Controller
         if ($alreadyBooked) {
             return redirect()->route('home')->withErrors(['error' => 'Anda sudah terdaftar di kelas ini.']);
         }
+        $activeQuota = DB::table('membership_quotas')
+            ->join('membership_packages', 'membership_quotas.package_id', '=', 'membership_packages.package_id')
+            ->join('transactions', 'transactions.quota_id', '=', 'membership_quotas.quota_id')
+            ->where('membership_quotas.user_id', $userId)
+            ->where('membership_quotas.class_id', $schedule->class_id)
+            ->where('membership_quotas.is_active', 1)
+            ->where('membership_quotas.reset_date', '>=', now()->toDateString())
+            ->whereRaw('membership_quotas.used_quota < membership_quotas.total_quota')
+            ->whereIn('transactions.status', ['settlement', 'paid'])
+            ->select('membership_quotas.*', 'membership_packages.name as package_name')
+            ->first();
 
-        return view('pages.payment-method', compact('schedule'));
+        return view('pages.payment-method', compact('schedule', 'activeQuota'));
     }
 
     // ── Process payment with selected method ──
@@ -452,5 +464,76 @@ class PaymentController extends Controller
         $user = DB::table('users')->where('user_id', $userId)->first();
 
         return view('pages.payment-receipt', compact('transaction', 'schedule', 'user'));
+    }
+
+    public function useQuota(Request $request)
+    {
+        $userId = Session::get('user_id');
+        $scheduleId = $request->quota_id ? $request->schedule_id : null;
+        $quotaId = $request->quota_id;
+
+        if (!$userId || !$scheduleId || !$quotaId)
+            return redirect()->route('home')->withErrors('Data tidak valid.');
+
+        $quota = DB::table('membership_quotas')
+            ->join('transactions', 'membership_quotas.quota_id', '=', 'transactions.quota_id')
+            ->where('membership_quotas.user_id', $userId)
+            ->where('membership_quotas.quota_id', $quotaId)
+            ->where('membership_quotas.is_active', 1)
+            ->whereRaw('membership_quotas.used_quota < membership_quotas.total_quota')
+            ->select('membership_quotas.*')
+            ->first();
+
+        if (!$quota)
+            return redirect()->route('home')->withErrors('Kuota tidak valid atau sudah habis.');
+
+        $alreadyBooked = DB::table('bookings')
+            ->where('user_id', $userId)
+            ->where('schedule_id', $scheduleId)
+            ->exists();
+
+        if ($alreadyBooked)
+            return redirect()->route('home')->withErrors('Anda sudah terdaftar di kelas ini.');
+
+        DB::beginTransaction();
+        try {
+            $bookingId = DB::table('bookings')->insertGetId([
+                'user_id' => $userId,
+                'schedule_id' => $scheduleId,
+                'booking_date' => now(),
+                'status' => 'confirmed',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            DB::table('transactions')->insert([
+                'user_id' => $userId,
+                'booking_id' => $bookingId,
+                'amount' => 0,
+                'payment_type' => 'membership_quota',
+                'payment_channel' => 'quota',
+                'status' => 'settlement',
+                'transaction_date' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+
+            DB::table('membership_quotas')
+                ->where('quota_id', $quotaId)
+                ->increment('used_quota');
+
+            DB::table('schedules')
+                ->where('schedule_id', $scheduleId)
+                ->decrement('available_slots');
+
+            DB::commit();
+
+            return redirect()->route('activity')->with('success', 'Berhasil mendaftar menggunakan kuota membership!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Use quota error: ' . $e->getMessage());
+            return back()->withErrors('Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 }

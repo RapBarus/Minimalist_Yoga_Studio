@@ -117,6 +117,7 @@ Route::middleware('auth.session')->group(function () {
     Route::post('/payment/method/{schedule_id}', [PaymentController::class, 'processMethod'])->name('payment.method.process');
     Route::post('/payment/process', [PaymentController::class, 'process'])->name('payment.process');
     Route::get('/payment/{schedule_id}', [PaymentController::class, 'show'])->name('payment.show');
+    Route::post('/payment/use-quota', [PaymentController::class, 'useQuota'])->name('payment.use.quota');
 
     // Membership payment
     Route::get('/membership/payment/{package_id}', [MembershipPaymentController::class, 'show'])->name('membership.payment.show');

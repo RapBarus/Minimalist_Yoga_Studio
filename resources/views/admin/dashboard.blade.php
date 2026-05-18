@@ -497,8 +497,7 @@
                 @endphp
 
                 <div class="schedule-card" data-date="{{ $schedule->schedule_date }}">
-                    <div class="sc-title">{{ $schedule->class_name }}</div>
-
+                    <div class="sc-title">{{ $schedule->title ?? $schedule->class_name }}</div>
                     <div class="sc-coach">
                         <div class="sc-coach-avatar">{{ $initial }}</div>
                         {{ $schedule->coach_name }}
@@ -702,6 +701,11 @@
         <form action="{{ route('admin.schedules.store') }}" method="POST" class="modal-form">
             @csrf
             <div class="modal-field">
+                <label>Nama Kustom (Opsional)</label>
+                <input type="text" name="custom_name" placeholder="contoh: Hatha Yoga With Nima"
+                    value="{{ old('custom_name') }}">
+            </div>
+            <div class="modal-field">
                 <label>Nama Kelas</label>
                 <select name="class_id" required>
                     <option value="">Pilih Kelas</option>
@@ -765,6 +769,18 @@
                 <label>Nama Membership</label>
                 <input type="text" name="name" placeholder="contoh: Member Yoga With Nima"
                     value="{{ old('name') }}" required>
+            </div>
+            <div class="modal-field">
+                <label>Kelas</label>
+                <select name="class_id" required>
+                    <option value="">Pilih Kelas</option>
+                    @foreach ($classes as $class)
+                        <option value="{{ $class->class_id }}"
+                            {{ old('class_id') == $class->class_id ? 'selected' : '' }}>
+                            {{ $class->class_name }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
             <div class="modal-field">
                 <label>Coach</label>

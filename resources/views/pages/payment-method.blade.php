@@ -439,6 +439,56 @@
             document.getElementById('payment-form').submit();
         }
     </script>
+    @if (isset($activeQuota) && $activeQuota)
+        <div id="quota-dialog"
+            style="
+    display:flex;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    z-index:100;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+">
+            <div style="background:#fff;border-radius:18px;padding:24px;max-width:320px;width:100%;text-align:center;">
+                <div style="font-size:2rem;margin-bottom:12px;">?</div>
+                <div style="font-weight:700;font-size:.95rem;margin-bottom:8px;color:#3A2E28;">
+                    Anda memiliki kuota anggota pada kelas "{{ $schedule->class_name }}", apakah anda ingin
+                    menggunakannya?
+                </div>
+                <div style="font-size:.78rem;color:#9A8C82;margin-bottom:20px;">
+                    Sisa kuota: {{ $activeQuota->total_quota - $activeQuota->used_quota }} sesi
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <form action="{{ route('payment.use.quota') }}" method="POST" style="flex:1;">
+                        @csrf
+                        <input type="hidden" name="schedule_id" value="{{ $schedule->schedule_id }}">
+                        <input type="hidden" name="quota_id" value="{{ $activeQuota->quota_id }}">
+                        <button type="submit"
+                            style="
+                    width:100%;padding:.75rem;
+                    background:#A0522D;color:#fff;
+                    border:none;border-radius:10px;
+                    font-family:'Raleway',sans-serif;
+                    font-size:.82rem;font-weight:600;
+                    cursor:pointer;
+                ">Ya</button>
+                    </form>
+                    <button onclick="document.getElementById('quota-dialog').style.display='none'"
+                        style="
+                flex:1;padding:.75rem;
+                background:#F2EFEB;color:#3A2E28;
+                border:1.5px solid #E0D8D0;border-radius:10px;
+                font-family:'Raleway',sans-serif;
+                font-size:.82rem;font-weight:600;
+                cursor:pointer;
+            ">Bayar
+                        Normal</button>
+                </div>
+            </div>
+        </div>
+    @endif
 </body>
 
 </html>
