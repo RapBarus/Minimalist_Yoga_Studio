@@ -168,17 +168,23 @@ class MembershipPaymentController extends Controller
             return redirect()->route('member')->withErrors('Data pembayaran tidak valid.');
         }
 
-        DB::table('membership_quotas')
-            ->where('user_id', $userId)
-            ->where('package_id', $packageId)
-            ->where('is_active', 0)
-            ->update(['is_active' => 1, 'updated_at' => now()]);
-
-        DB::table('transactions')
+        $transaction = DB::table('transactions')
             ->where('xendit_external_id', $externalId)
-            ->update(['status' => 'settlement', 'updated_at' => now()]);
+            ->first();
 
-        $transaction = DB::table('transactions')->where('xendit_external_id', $externalId)->first();
+        if ($transaction && $transaction->status === 'pending') {
+            DB::table('membership_quotas')
+                ->where('user_id', $userId)
+                ->where('package_id', $packageId)
+                ->where('is_active', 0)
+                ->update(['is_active' => 1, 'updated_at' => now()]);
+
+            DB::table('transactions')
+                ->where('xendit_external_id', $externalId)
+                ->update(['status' => 'settlement', 'updated_at' => now()]);
+
+            $transaction = DB::table('transactions')->where('xendit_external_id', $externalId)->first();
+        }
         $package = DB::table('membership_packages')
             ->leftJoin('classes', 'membership_packages.class_id', '=', 'classes.class_id')
             ->where('membership_packages.package_id', $packageId)
