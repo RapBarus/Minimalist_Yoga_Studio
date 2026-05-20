@@ -20,9 +20,9 @@ class DashboardController extends Controller
 
         $coaches = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
-            ->join('classes', 'coaches.class_id', '=', 'classes.class_id') // ← add this
+            ->join('classes', 'coaches.class_id', '=', 'classes.class_id')
             ->where('users.status', 'active')
-            ->select('coaches.coach_id', 'users.name', 'classes.class_name') // ← not specialization
+            ->select('coaches.coach_id', 'users.name', 'classes.class_name')
             ->get();
 
         $scheduleDates = DB::table('schedules')
@@ -33,6 +33,12 @@ class DashboardController extends Controller
             ->values()
             ->toArray();
 
-        return view('admin.dashboard', compact('schedules', 'classes', 'coaches', 'scheduleDates'));
+        $packages = DB::table('membership_packages')
+            ->leftJoin('classes', 'membership_packages.class_id', '=', 'classes.class_id')
+            ->orderBy('membership_packages.created_at', 'desc')
+            ->select('membership_packages.*', 'classes.class_name')
+            ->get();
+
+        return view('admin.dashboard', compact('schedules', 'classes', 'coaches', 'scheduleDates', 'packages'));
     }
 }

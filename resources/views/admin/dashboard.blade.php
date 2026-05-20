@@ -273,6 +273,7 @@
             align-items: center;
             justify-content: center;
             transition: background .15s;
+            cursor: pointer;
         }
 
         .btn-view-jadwal:hover {
@@ -489,20 +490,20 @@
             </button>
         </div>
 
-        {{-- Schedule Cards Container --}}
+        {{-- Cards Container: Schedules + Memberships --}}
         <div class="schedule-container" style="display: flex; flex-direction: column; gap: 16px;">
+
+            {{-- Schedule Cards --}}
             @forelse($schedules as $schedule)
                 @php
                     $initial = strtoupper(substr($schedule->coach_name ?? 'C', 0, 1));
                 @endphp
-
                 <div class="schedule-card" data-date="{{ $schedule->schedule_date }}">
                     <div class="sc-title">{{ $schedule->title ?? $schedule->class_name }}</div>
                     <div class="sc-coach">
                         <div class="sc-coach-avatar">{{ $initial }}</div>
                         {{ $schedule->coach_name }}
                     </div>
-
                     <div class="sc-meta">
                         <div class="sc-meta-row">
                             <svg viewBox="0 0 24 24">
@@ -523,7 +524,6 @@
                         </div>
                     </div>
                     <div class="sc-footer">
-                        {{-- UBAH: $coaches->rate_per_class MENJADI $schedule->rate_per_class --}}
                         <span class="sc-price">Rp {{ number_format($schedule->rate_per_class ?? 0, 0, ',', '.') }}</span>
                         <span class="sc-quota">
                             @if ($schedule->available_slots > 0)
@@ -536,7 +536,6 @@
                     <div class="sc-buttons">
                         <a href="{{ route('admin.schedules.view', $schedule->schedule_id) }}" class="btn-view-jadwal">View
                             Jadwal</a>
-
                         <form action="{{ route('admin.schedules.destroy', $schedule->schedule_id) }}" method="POST"
                             style="flex:1;" onsubmit="return confirm('Hapus jadwal ini?')">
                             @csrf
@@ -548,6 +547,52 @@
             @empty
                 <div class="empty-schedule">Belum ada jadwal kelas untuk ditampilkan.</div>
             @endforelse
+
+            {{-- Membership Cards --}}
+            @foreach ($packages as $package)
+                <div class="schedule-card">
+                    <div class="sc-title">{{ $package->name }}</div>
+
+                    @if ($package->class_name)
+                        <div class="sc-coach" style="pointer-events:none;">
+                            <div class="sc-coach-avatar">M</div>
+                            {{ $package->class_name }}
+                        </div>
+                    @endif
+
+                    <div class="sc-meta">
+                        <div class="sc-meta-row">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            Masa Aktif : {{ $package->validity_months * 30 }} Hari
+                        </div>
+                    </div>
+
+                    <div class="sc-footer">
+                        <div style="display:flex;flex-direction:column;gap:2px;">
+                            @if ($package->original_price)
+                                <span style="font-size:.75rem;opacity:.65;text-decoration:line-through;">Rp
+                                    {{ number_format($package->original_price, 0, ',', '.') }}</span>
+                            @endif
+                            <span class="sc-price">Rp {{ number_format($package->price, 0, ',', '.') }}</span>
+                        </div>
+                        <span class="sc-quota">pertemuan : {{ $package->quota_amount }}</span>
+                    </div>
+
+                    <div class="sc-buttons">
+                        <a href="{{ route('admin.membership.view', $package->package_id) }}" class="btn-view-jadwal">View
+                            Membership</a>
+                        <form action="{{ route('admin.membership.destroy', $package->package_id) }}" method="POST"
+                            style="flex:1;" onsubmit="return confirm('Hapus paket ini?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn-hapus-jadwal" style="width:100%;">Hapus</button>
+                        </form>
+                    </div>
+                </div>
+            @endforeach
+
         </div>
 
     </div>
@@ -564,6 +609,7 @@
             document.getElementById(id).classList.remove('open');
             document.body.style.overflow = '';
         }
+
         document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e) {
             if (e.target === this) {
                 this.classList.remove('open');
@@ -658,27 +704,19 @@
             openModal('modal-member');
         @endif
 
-
         let activeDate = null;
 
         function filterByDate(dateStr) {
             const cards = document.querySelectorAll('.schedule-card');
-
-            // Toggle
             if (activeDate === dateStr) {
                 activeDate = null;
                 cards.forEach(card => card.style.display = '');
                 document.querySelectorAll('.cal-day.selected').forEach(el => el.classList.remove('selected'));
                 return;
             }
-
             activeDate = dateStr;
-
-            // Highlight selected date
             document.querySelectorAll('.cal-day.selected').forEach(el => el.classList.remove('selected'));
             document.querySelector(`.cal-day[data-date="${dateStr}"]`)?.classList.add('selected');
-
-            // Filter cards
             cards.forEach(card => {
                 card.style.display = card.dataset.date === dateStr ? '' : 'none';
             });
@@ -790,16 +828,6 @@
                         <option value="{{ $coach->coach_id }}">{{ $coach->name }}</option>
                     @endforeach
                 </select>
-            </div>
-            <div class="modal-field-row">
-                <div class="modal-field">
-                    <label>Jam Mulai</label>
-                    <input type="time" name="start_time" value="{{ old('start_time') }}">
-                </div>
-                <div class="modal-field">
-                    <label>Jam Selesai</label>
-                    <input type="time" name="end_time" value="{{ old('end_time') }}">
-                </div>
             </div>
             <div class="modal-field-row">
                 <div class="modal-field">

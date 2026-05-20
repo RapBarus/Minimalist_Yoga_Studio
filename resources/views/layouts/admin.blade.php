@@ -103,166 +103,6 @@
             stroke-linejoin: round;
         }
 
-        /* ── Hamburger ── */
-        .btn-hamburger {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            background: var(--clay-pale, #F0E6DF);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background .18s;
-            flex-shrink: 0;
-        }
-
-        .btn-hamburger:hover {
-            background: #e8d5c8;
-        }
-
-        .btn-hamburger svg {
-            width: 18px;
-            height: 18px;
-            stroke: var(--clay);
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        /* ── Drawer overlay ── */
-        .drawer-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, .4);
-            z-index: 150;
-            animation: fadeIn .2s ease;
-        }
-
-        .drawer-overlay.open {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        /* ── Drawer ── */
-        .drawer {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            right: -240px;
-            width: 240px;
-            height: 100%;
-            min-height: 100vh;
-            background: var(--bg-white);
-            z-index: 160;
-            display: flex;
-            flex-direction: column;
-            box-shadow: -8px 0 32px rgba(0, 0, 0, .12);
-        }
-
-        .drawer.open {
-            right: 0%;
-        }
-
-        .drawer-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .drawer-header-title {
-            font-weight: 700;
-            font-size: .9rem;
-            color: var(--text);
-            letter-spacing: .02em;
-        }
-
-        .btn-drawer-close {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            color: var(--text-muted);
-            border-radius: 6px;
-            transition: background .15s;
-        }
-
-        .btn-drawer-close:hover {
-            background: #f5f5f5;
-        }
-
-        .btn-drawer-close svg {
-            width: 18px;
-            height: 18px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-        }
-
-        .drawer-body {
-            flex: 1;
-            padding: 16px 12px;
-            overflow-y: auto;
-        }
-
-        .drawer-section-label {
-            font-size: .62rem;
-            font-weight: 700;
-            letter-spacing: .14em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            padding: 12px 8px 6px;
-        }
-
-        .drawer-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 11px 12px;
-            border-radius: 10px;
-            text-decoration: none;
-            color: var(--text);
-            font-size: .82rem;
-            font-weight: 500;
-            transition: background .15s, color .15s;
-        }
-
-        .drawer-link:hover {
-            background: var(--clay-pale, #F0E6DF);
-            color: var(--clay);
-        }
-
-        .drawer-link.active {
-            background: var(--clay);
-            color: #fff;
-        }
-
-        .drawer-link svg {
-            width: 17px;
-            height: 17px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 1.8;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            flex-shrink: 0;
-        }
-
         /* ── Page title ── */
         .page-titlebar {
             padding: 16px 20px 0;
@@ -366,8 +206,6 @@
                 border-left: 1.5px solid var(--border);
                 border-right: 1.5px solid var(--border);
             }
-
-
         }
     </style>
     @stack('styles')
@@ -376,57 +214,6 @@
 <body>
 
     <div class="admin-frame">
-
-        {{-- Drawer overlay --}}
-        <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
-
-        {{-- Drawer --}}
-        <div class="drawer" id="drawer">
-            <div class="drawer-header">
-                <div class="drawer-header-title">Menu</div>
-                <button class="btn-drawer-close" onclick="closeDrawer()">
-                    <svg viewBox="0 0 24 24">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                </button>
-            </div>
-            <div class="drawer-body">
-                <div class="drawer-section-label">Konten</div>
-
-                <a href="{{ route('admin.membership') }}"
-                    class="drawer-link {{ request()->routeIs('admin.membership*') ? 'active' : '' }}"
-                    onclick="closeDrawer()">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M20 12V22H4V12" />
-                        <path d="M22 7H2v5h20V7z" />
-                        <path d="M12 22V7" />
-                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-                    </svg>
-                    Membership
-                </a>
-
-                <a href="{{ route('admin.promos') }}"
-                    class="drawer-link {{ request()->routeIs('admin.promos*') ? 'active' : '' }}"
-                    onclick="closeDrawer()">
-                    <svg viewBox="0 0 24 24">
-                        <polygon
-                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    Penawaran
-                </a>
-
-                <a href="{{ route('admin.classes') }}"
-                    class="drawer-link {{ request()->routeIs('admin.classes*') ? 'active' : '' }}"
-                    onclick="closeDrawer()">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                    </svg>
-                    Kelas
-                </a>
-            </div>
-        </div>
 
         {{-- Top header --}}
         <div class="admin-header">
@@ -438,13 +225,6 @@
                     Admin Panel
                     <strong>{{ Session::get('user_name') }}</strong>
                 </div>
-                <button class="btn-hamburger" onclick="openDrawer()">
-                    <svg viewBox="0 0 24 24">
-                        <line x1="3" y1="6" x2="21" y2="6" />
-                        <line x1="3" y1="12" x2="21" y2="12" />
-                        <line x1="3" y1="18" x2="21" y2="18" />
-                    </svg>
-                </button>
                 <form action="{{ route('logout') }}" method="POST" style="margin:0;">
                     @csrf
                     <button type="submit" class="btn-header-logout">
@@ -520,20 +300,6 @@
         </nav>
 
     </div>
-
-    <script>
-        function openDrawer() {
-            document.getElementById('drawer').classList.add('open');
-            document.getElementById('drawer-overlay').classList.add('open');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeDrawer() {
-            document.getElementById('drawer').classList.remove('open');
-            document.getElementById('drawer-overlay').classList.remove('open');
-            document.body.style.overflow = '';
-        }
-    </script>
 
     <script>
         if ('serviceWorker' in navigator) {

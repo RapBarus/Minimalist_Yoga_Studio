@@ -69,6 +69,9 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::post('/membership', [MembershipController::class, 'store'])->name('membership.store');
     Route::post('/membership/{id}/toggle', [MembershipController::class, 'toggleActive'])->name('membership.toggle');
     Route::delete('/membership/{id}', [MembershipController::class, 'destroy'])->name('membership.destroy');
+    Route::get('/membership/{id}/view', [MembershipController::class, 'view'])->name('membership.view');
+    Route::get('/membership/{id}/view', [MembershipController::class, 'view'])->name('membership.view');
+    Route::put('/membership/{id}/update', [MembershipController::class, 'update'])->name('membership.update');
 
     // Promos
     Route::get('/promos', [PromoController::class, 'index'])->name('promos');

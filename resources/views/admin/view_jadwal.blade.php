@@ -301,7 +301,7 @@
 @section('content')
     <div class="content">
 
-        <a href="{{ route('admin.schedules') }}" class="back-btn">
+        <a href="{{ route('admin.dashboard') }}" class="back-btn">
             <svg viewBox="0 0 24 24">
                 <polyline points="15 18 9 12 15 6" />
             </svg>

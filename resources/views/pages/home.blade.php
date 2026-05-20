@@ -31,97 +31,7 @@
             margin-bottom: 8px;
         }
 
-        .coach-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 10px;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .coach-badge-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 10px;
-            text-decoration: none;
-            color: inherit;
-            border-radius: 20px;
-            padding: 3px 10px 3px 3px;
-            transition: background .18s;
-        }
-
-        .coach-badge-link:hover {
-            background: rgba(255, 255, 255, .2);
-        }
-
-        .coach-avatar {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, .25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .7rem;
-            font-weight: 700;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .promo-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            margin-bottom: 10px;
-        }
-
-        .promo-meta-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: .75rem;
-            opacity: .9;
-        }
-
-        .promo-meta-row svg {
-            width: 13px;
-            height: 13px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 1.8;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            flex-shrink: 0;
-        }
-
-        .price-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-
-        .price-old {
-            font-size: .8rem;
-            opacity: .65;
-            text-decoration: line-through;
-        }
-
-        .price-arrow {
-            font-size: .85rem;
-            opacity: .7;
-        }
-
-        .price-new {
-            font-weight: 700;
-            font-size: 1.05rem;
-        }
-
         .pertemuan-pill {
-            margin-left: auto;
             font-size: .72rem;
             background: rgba(255, 255, 255, .15);
             padding: 3px 10px;
@@ -272,6 +182,36 @@
             margin-bottom: 8px;
         }
 
+        .coach-badge-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: inherit;
+            border-radius: 20px;
+            padding: 3px 10px 3px 3px;
+            transition: background .18s;
+        }
+
+        .coach-badge-link:hover {
+            background: rgba(255, 255, 255, .2);
+        }
+
+        .coach-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .7rem;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
         .card-class-meta {
             display: flex;
             flex-direction: column;
@@ -362,54 +302,28 @@
 
                     <div class="card-promo-title">{{ $promo->title }}</div>
 
-                    {{-- Coach badge --}}
-                    @if ($promo->coach_name)
-                        @if (!empty($promo->coach_id))
-                            <a href="{{ route('coach.show', $promo->coach_id) }}" class="coach-badge-link">
-                                <div class="coach-avatar">{{ strtoupper(substr($promo->coach_name, 0, 1)) }}</div>
-                                <span style="font-size:.78rem;opacity:.9;">{{ $promo->coach_name }}</span>
-                            </a>
-                        @else
-                            <div class="coach-badge">
-                                <div class="coach-avatar">{{ strtoupper(substr($promo->coach_name, 0, 1)) }}</div>
-                                <span style="font-size:.78rem;opacity:.9;">{{ $promo->coach_name }}</span>
-                            </div>
-                        @endif
+                    {{-- Class tag --}}
+                    @if (!empty($promo->class_name))
+                        <span
+                            style="display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:3px 14px;font-size:.75rem;font-weight:600;margin-bottom:10px;">
+                            {{ $promo->class_name }}
+                        </span>
                     @endif
 
-                    {{-- Date & time --}}
-                    @if ($promo->schedule_date)
-                        <div class="promo-meta">
-                            <div class="promo-meta-row">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                </svg>
-                                {{ \Carbon\Carbon::parse($promo->schedule_date)->translatedFormat('l, d F Y') }}
-                            </div>
-                            @if ($promo->start_time)
-                                <div class="promo-meta-row">
-                                    <svg viewBox="0 0 24 24">
-                                        <circle cx="12" cy="12" r="10" />
-                                        <polyline points="12 6 12 12 16 14" />
-                                    </svg>
-                                    {{ \Carbon\Carbon::parse($promo->start_time)->format('H:i') }} –
-                                    {{ \Carbon\Carbon::parse($promo->end_time)->format('H:i') }} WIB
-                                </div>
-                            @endif
-                        </div>
-                    @endif
+                    {{-- Masa aktif & pertemuan --}}
+                    <div
+                        style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:.78rem;opacity:.85;">
+                        <span>Masa Aktif : {{ $promo->masa_aktif }}</span>
+                        <span class="pertemuan-pill">pertemuan : {{ $promo->quota_amount }}</span>
+                    </div>
 
-                    {{-- Price row --}}
-                    <div class="price-row">
-                        <span class="price-old">Rp {{ $promo->original_price }}</span>
-                        <span class="price-arrow">→</span>
-                        <span class="price-new">Rp {{ $promo->promo_price }}</span>
-                        @if ($promo->pertemuan)
-                            <span class="pertemuan-pill">pertemuan : {{ $promo->pertemuan }}</span>
+                    {{-- Price --}}
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                        @if ($promo->original_price)
+                            <span style="font-size:.8rem;opacity:.65;text-decoration:line-through;">Rp
+                                {{ number_format($promo->original_price, 0, ',', '.') }}</span>
                         @endif
+                        <span style="font-weight:700;font-size:1.05rem;">Rp {{ $promo->promo_price }}</span>
                     </div>
 
                     <a href="{{ route('membership.payment.show', $promo->promo_id) }}" class="btn btn-white">Pesan
@@ -498,7 +412,7 @@
                 <div class="card-class" data-kelas="{{ $schedule->class_name }}" data-waktu="{{ $dayName }}"
                     data-coach="{{ $schedule->coach_name }}">
 
-                    <div class="card-class-title">{{ $schedule->class_name }}</div>
+                    <div class="card-class-title">{{ $schedule->title ?? $schedule->class_name }}</div>
 
                     {{-- Coach badge --}}
                     <a href="{{ route('coach.show', $schedule->coach_id) }}" class="coach-badge-link">
@@ -579,7 +493,7 @@
                                 left: card.offsetWidth + 14,
                                 behavior: 'smooth'
                             });
-                    }, 3000);
+                    }, 6000);
                 }
 
                 function stopAutoRotate() {
@@ -592,7 +506,7 @@
                 slider.addEventListener('touchstart', stopAutoRotate, {
                     passive: true
                 });
-                slider.addEventListener('touchend', () => setTimeout(startAutoRotate, 3000));
+                slider.addEventListener('touchend', () => setTimeout(startAutoRotate, 6000));
                 slider.addEventListener('mousedown', function(e) {
                     isDown = true;
                     stopAutoRotate();
@@ -605,7 +519,7 @@
                     if (!isDown) return;
                     isDown = false;
                     slider.style.cursor = 'grab';
-                    setTimeout(startAutoRotate, 3000);
+                    setTimeout(startAutoRotate, 6000);
                 });
                 document.addEventListener('mousemove', function(e) {
                     if (!isDown) return;

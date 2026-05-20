@@ -21,7 +21,67 @@ class MembershipController extends Controller
             ->get();
 
         $classes = DB::table('classes')->orderBy('class_name')->get();
+
         return view('admin.membership', compact('packages', 'coaches', 'classes'));
+    }
+
+    public function view($id)
+    {
+        $package = DB::table('membership_packages')
+            ->leftJoin('classes', 'membership_packages.class_id', '=', 'classes.class_id')
+            ->where('membership_packages.package_id', $id)
+            ->select('membership_packages.*', 'classes.class_name')
+            ->first();
+
+        abort_if(!$package, 404);
+
+        $classes = DB::table('classes')->orderBy('class_name')->get();
+
+        $peserta = DB::table('membership_quotas')
+            ->join('users', 'membership_quotas.user_id', '=', 'users.user_id')
+            ->join('transactions', 'transactions.quota_id', '=', 'membership_quotas.quota_id')
+            ->where('membership_quotas.package_id', $id)
+            ->whereIn('transactions.status', ['settlement', 'paid'])
+            ->select(
+                'users.name',
+                'users.phone_number',
+                'transactions.payment_channel',
+                'transactions.status',
+                'membership_quotas.used_quota',
+                'membership_quotas.total_quota',
+                'membership_quotas.is_active',
+                'membership_quotas.reset_date'
+            )
+            ->get();
+
+        return view('admin.membership', compact('package', 'peserta', 'classes'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'class_id' => 'required|integer',
+            'price' => 'required|numeric|min:0',
+            'original_price' => 'nullable|numeric|min:0',
+            'validity_months' => 'required|integer|min:1',
+            'quota_amount' => 'required|integer|min:1',
+            'description' => 'nullable|string',
+        ]);
+
+        DB::table('membership_packages')->where('package_id', $id)->update([
+            'name' => $request->name,
+            'class_id' => $request->class_id,
+            'price' => $request->price,
+            'original_price' => $request->original_price ?: null,
+            'validity_months' => $request->validity_months,
+            'quota_amount' => $request->quota_amount,
+            'description' => $request->description,
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('admin.membership.view', $id)
+            ->with('success', 'Paket berhasil diperbarui.');
     }
 
     public function store(Request $request)
@@ -63,7 +123,7 @@ class MembershipController extends Controller
             'updated_at' => now(),
         ]);
 
-        return redirect()->route('admin.membership')
+        return redirect()->route('admin.dashboard')
             ->with('success', 'Paket membership berhasil ditambahkan!');
     }
 
@@ -77,22 +137,21 @@ class MembershipController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.membership')
+        return redirect()->route('admin.dashboard')
             ->with('success', 'Status paket berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
-        // Check if any quotas reference this package
         $hasQuotas = DB::table('membership_quotas')->where('package_id', $id)->exists();
         if ($hasQuotas) {
-            return redirect()->route('admin.membership')
+            return redirect()->route('admin.dashboard')
                 ->withErrors(['error' => 'Paket tidak bisa dihapus karena sudah ada member yang membeli.']);
         }
 
         DB::table('membership_packages')->where('package_id', $id)->delete();
 
-        return redirect()->route('admin.membership')
+        return redirect()->route('admin.dashboard')
             ->with('success', 'Paket membership berhasil dihapus.');
     }
 }
