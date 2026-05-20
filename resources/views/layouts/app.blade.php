@@ -118,9 +118,27 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('SW registered'))
-                    .catch(err => console.log('SW failed:', err));
+
+                const params = new URLSearchParams(window.location.search);
+                const swParam = params.get('sw');
+                if (swParam === 'cache-first' || swParam === 'network-first') {
+                    localStorage.setItem('sw-strategy', swParam);
+                }
+                const strategy = localStorage.getItem('sw-strategy') || 'network-first';
+                const swFile = strategy === 'cache-first' ? '/sw-cache-first.js' : '/sw-network-first.js';
+
+                navigator.serviceWorker.getRegistrations().then((registrations) => {
+                    const unregisterPromises = registrations
+                        .filter(reg => reg.active && !reg.active.scriptURL.endsWith(swFile))
+                        .map(reg => reg.unregister());
+
+                    Promise.all(unregisterPromises).then(() => {
+                        navigator.serviceWorker.register(swFile)
+                            .then(reg => console.log('[SW] Registered:', swFile, reg))
+                            .catch(err => console.warn('[SW] Registration failed:', err));
+                    });
+                });
+
             });
         }
     </script>
