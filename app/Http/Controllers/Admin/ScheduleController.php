@@ -15,8 +15,7 @@ class ScheduleController extends Controller
             ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
             ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
-            ->where('schedules.status', 'upcoming')
-            ->where('schedules.schedule_date', '>=', now()->toDateString())
+            ->whereIn('schedules.status', ['upcoming', 'completed'])->where('schedules.schedule_date', '>=', now()->toDateString())
             ->orderBy('schedules.schedule_date', 'asc')
             ->orderBy('schedules.start_time', 'asc')
             ->select(
@@ -38,9 +37,8 @@ class ScheduleController extends Controller
 
         $coaches = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
-            ->join('classes', 'coaches.class_id', '=', 'classes.class_id') // ← add this
-            ->where('users.status', 'active')
-            ->select('coaches.coach_id', 'users.name', 'classes.class_name') // ← not specialization
+            ->join('classes', 'coaches.class_id', '=', 'classes.class_id')
+            ->select('coaches.coach_id', 'users.name', 'classes.class_name')
             ->get();
 
         // Dates that have schedules for calendar highlighting
@@ -178,21 +176,21 @@ class ScheduleController extends Controller
             $username = 'walkin_' . time() . '_' . rand(100, 999);
 
             $userId = DB::table('users')->insertGetId([
-                'username'      => $username,
-                'name'          => $request->name,
-                'phone_number'  => $request->filled('phone_number')
+                'username' => $username,
+                'name' => $request->name,
+                'phone_number' => $request->filled('phone_number')
                     ? (str_starts_with($request->phone_number, '0')
                         ? '+62' . substr($request->phone_number, 1)
                         : (str_starts_with($request->phone_number, '+')
                             ? $request->phone_number
                             : '+' . $request->phone_number))
                     : null,
-                'email'         => null,
+                'email' => null,
                 'password_hash' => bcrypt('walkin' . time()),
-                'role'          => 'customer',
-                'status'        => 'active',
-                'created_at'    => now(),
-                'updated_at'    => now(),
+                'role' => 'customer',
+                'status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         } else {
             $userId = $user->user_id;
@@ -283,5 +281,73 @@ class ScheduleController extends Controller
 
         return redirect()->route('admin.schedules.view', $scheduleId)
             ->with('success', 'Pembayaran berhasil dikonfirmasi.');
+    }
+    public function attendance($scheduleId)
+    {
+        $schedule = DB::table('schedules')
+            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
+            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
+            ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->where('schedules.schedule_id', $scheduleId)
+            ->select(
+                'schedules.schedule_id',
+                'schedules.schedule_date',
+                'schedules.start_time',
+                'schedules.end_time',
+                'schedules.capacity',
+                'schedules.available_slots',
+                'schedules.title',
+                'schedules.coach_id',
+                'classes.class_name',
+                'coaches.rate_per_class',
+                'users.name as coach_name'
+            )
+            ->first();
+
+        abort_if(!$schedule, 404);
+
+        // All confirmed bookings for this schedule
+        $bookings = DB::table('bookings')
+            ->join('users', 'bookings.user_id', '=', 'users.user_id')
+            ->leftJoin('attendance', 'attendance.booking_id', '=', 'bookings.booking_id')
+            ->where('bookings.schedule_id', $scheduleId)
+            ->whereIn('bookings.status', ['confirmed', 'attended'])
+            ->select(
+                'bookings.booking_id',
+                'users.name',
+                'attendance.coach_verification',
+                'attendance.admin_verification'
+            )
+            ->get();
+
+        $present = $bookings->filter(fn($b) => $b->coach_verification == 1);
+        $absent = $bookings->filter(fn($b) => $b->coach_verification != 1);
+
+        // Get schedule-level attendance record (for photo)
+        $attendance = DB::table('attendance')
+            ->join('bookings', 'attendance.booking_id', '=', 'bookings.booking_id')
+            ->where('bookings.schedule_id', $scheduleId)
+            ->whereNotNull('attendance.photo_url')
+            ->select('attendance.photo_url')
+            ->first();
+
+        return view('admin.attendance', compact('schedule', 'present', 'absent', 'attendance'));
+    }
+
+    public function uploadAttendance(Request $request, $scheduleId)
+    {
+        $request->validate(['photo' => 'required|image|max:5120']);
+
+        $path = $request->file('photo')->store('attendance', 'public');
+        $url = asset('storage/' . $path);
+
+        // Update all attendance records for this schedule with the photo
+        DB::table('attendance')
+            ->join('bookings', 'attendance.booking_id', '=', 'bookings.booking_id')
+            ->where('bookings.schedule_id', $scheduleId)
+            ->update(['attendance.photo_url' => $url, 'attendance.photo_uploaded_at' => now()]);
+
+        return redirect()->route('admin.schedules.attendance', $scheduleId)
+            ->with('success', 'Bukti hadir berhasil diupload.');
     }
 }

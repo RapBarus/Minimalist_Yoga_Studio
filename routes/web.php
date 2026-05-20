@@ -49,6 +49,7 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::delete('/coaches/{coachId}', [CoachController::class, 'destroy'])->name('coaches.destroy');
     Route::get('/coaches/{coachId}/detail', [CoachController::class, 'detail'])->name('coaches.detail');
     Route::post('/coaches/{coachId}/restore', [CoachController::class, 'restore'])->name('coaches.restore');
+    Route::post('/coaches/{id}/add-pendapatan', [CoachController::class, 'addPendapatan'])->name('coaches.add-pendapatan');
 
     // Schedules
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules');
@@ -58,6 +59,8 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::post('/schedules/{scheduleId}/status', [ScheduleController::class, 'updateStatus'])->name('schedules.status');
     Route::post('/schedules/{scheduleId}/peserta', [ScheduleController::class, 'addPeserta'])->name('schedules.peserta');
     Route::post('/schedules/{scheduleId}/confirm-booking/{bookingId}', [ScheduleController::class, 'confirmBooking'])->name('schedules.confirm-booking');
+    Route::get('/schedules/{id}/attendance', [ScheduleController::class, 'attendance'])->name('schedules.attendance');
+    Route::post('/schedules/{id}/upload-attendance', [ScheduleController::class, 'uploadAttendance'])->name('schedules.upload-attendance');
 
     // Classes
     Route::get('/classes', [ClassController::class, 'index'])->name('classes');
@@ -82,6 +85,8 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     // Customers
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers');
     Route::get('/customers/{userId}/detail', [CustomerController::class, 'detail'])->name('customers.detail');
+    Route::delete('/customers/stop-membership', [CustomerController::class, 'stopMembership'])->name('customers.stop-membership');
+    Route::delete('/customers/cancel-booking', [CustomerController::class, 'cancelBooking'])->name('customers.cancel-booking');
 
     // Keuangan
     Route::get('/keuangan', [KeuanganController::class, 'index'])->name('keuangan');

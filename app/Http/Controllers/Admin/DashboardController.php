@@ -10,10 +10,29 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $schedules = DB::table('vw_available_schedules')
-            ->where('schedule_date', '>=', now()->toDateString())
-            ->orderBy('schedule_date', 'asc')
-            ->orderBy('start_time', 'asc')
+        $schedules = DB::table('schedules')
+            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
+            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
+            ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->whereIn('schedules.status', ['upcoming', 'ongoing', 'completed'])
+            ->where('schedules.schedule_date', '>=', now()->toDateString())
+            ->orderBy('schedules.schedule_date', 'asc')
+            ->orderBy('schedules.start_time', 'asc')
+            ->select(
+                'schedules.schedule_id',
+                'schedules.schedule_date',
+                'schedules.start_time',
+                'schedules.end_time',
+                'schedules.status',
+                'schedules.capacity',
+                'schedules.available_slots',
+                'classes.class_name',
+                'schedules.title',
+                'users.name as coach_name',
+                'coaches.coach_id',
+                'coaches.rate_per_class',
+                'coaches.profile_photo'
+            )
             ->get();
 
         $classes = DB::table('classes')->orderBy('class_name')->get();

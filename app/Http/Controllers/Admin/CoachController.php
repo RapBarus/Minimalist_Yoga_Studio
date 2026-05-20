@@ -13,10 +13,10 @@ class CoachController extends Controller
     {
         $coaches = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
-            ->join('classes', 'coaches.class_id', '=', 'classes.class_id') // ← add
+            ->join('classes', 'coaches.class_id', '=', 'classes.class_id')
             ->select(
                 'coaches.coach_id',
-                'classes.class_name',            // ← was coaches.specialization
+                'classes.class_name',
                 'coaches.rate_per_class',
                 'coaches.years_experience',
                 'coaches.created_at',
@@ -27,7 +27,7 @@ class CoachController extends Controller
             ->orderBy('coaches.created_at', 'desc')
             ->get();
 
-        $classes = DB::table('classes')->orderBy('class_name')->get(); // ← needed for modal
+        $classes = DB::table('classes')->orderBy('class_name')->get();
 
         return view('admin.coaches', compact('coaches', 'classes'));
     }
@@ -36,13 +36,13 @@ class CoachController extends Controller
     {
         $coach = DB::table('coaches')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
-            ->join('classes', 'coaches.class_id', '=', 'classes.class_id') // ← add
+            ->join('classes', 'coaches.class_id', '=', 'classes.class_id')
             ->where('coaches.coach_id', $coachId)
             ->select(
                 'coaches.coach_id',
                 'coaches.user_id',
-                'classes.class_name',    // ← was coaches.specialization
-                'classes.class_id',      // ← add so the edit form can pre-select it
+                'classes.class_name',
+                'classes.class_id',
                 'coaches.bio',
                 'coaches.rate_per_class',
                 'coaches.years_experience',
@@ -63,15 +63,15 @@ class CoachController extends Controller
             ->whereBetween('schedules.schedule_date', [$from, $to])
             ->orderBy('schedules.schedule_date', 'desc')
             ->select(
+                'schedules.schedule_id',
+                'schedules.title',
                 'classes.class_name',
                 'schedules.schedule_date',
                 'schedules.start_time',
-                'schedules.end_time',
-                'schedules.schedule_id'
+                'schedules.end_time'
             )
             ->get();
 
-        // Total pendapatan: sum of transactions for bookings in this coach's schedules
         $totalPendapatan = DB::table('transactions')
             ->join('bookings', 'transactions.booking_id', '=', 'bookings.booking_id')
             ->join('schedules', 'bookings.schedule_id', '=', 'schedules.schedule_id')
@@ -79,6 +79,15 @@ class CoachController extends Controller
             ->whereBetween('schedules.schedule_date', [$from, $to])
             ->whereIn('transactions.status', ['settlement', 'capture'])
             ->sum('transactions.amount');
+
+        // Add manual income entries (requires coach_income table)
+        if (DB::getSchemaBuilder()->hasTable('coach_income')) {
+            $manualPendapatan = DB::table('coach_income')
+                ->where('coach_id', $coachId)
+                ->whereBetween('session_date', [$from, $to])
+                ->sum('amount');
+            $totalPendapatan += $manualPendapatan;
+        }
 
         $allClasses = DB::table('classes')->orderBy('class_name')->get();
 
@@ -92,13 +101,32 @@ class CoachController extends Controller
         ));
     }
 
+    public function addPendapatan(Request $request, $coachId)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        DB::table('coach_income')->insert([
+            'coach_id' => $coachId,
+            'amount' => $request->amount,
+            'notes' => 'Manual entry',
+            'session_date' => now()->toDateString(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('admin.coaches.detail', $coachId)
+            ->with('success', 'Pendapatan berhasil ditambahkan.');
+    }
+
     public function update(Request $request, $coachId)
     {
         $request->validate([
-            'name'    => 'required|string|max:100',
-            'phone'   => ['nullable', 'string', 'regex:/^(0|62)[0-9]{8,13}/'],
-            'class_id' => 'required|integer|exists:classes,class_id', // ← was specialization
-            'bio'     => 'nullable|string',
+            'name' => 'required|string|max:100',
+            'phone' => ['nullable', 'string', 'regex:/^(0|62)[0-9]{8,13}/'],
+            'class_id' => 'required|integer|exists:classes,class_id',
+            'bio' => 'nullable|string',
         ], [
             'name.required' => 'Nama coach wajib diisi.',
             'phone.regex' => 'Format nomor HP tidak valid.',
@@ -121,8 +149,8 @@ class CoachController extends Controller
 
         DB::table('users')->where('user_id', $coach->user_id)->update($updateData);
         DB::table('coaches')->where('coach_id', $coachId)->update([
-            'class_id'   => $request->class_id, // ← was specialization => $request->specialization
-            'bio'        => $request->bio,
+            'class_id' => $request->class_id,
+            'bio' => $request->bio,
         ]);
 
         return redirect()->route('admin.coaches.detail', $coachId)
@@ -132,21 +160,19 @@ class CoachController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'             => 'required|string|max:100',
-            'phone'            => ['required', 'string', 'regex:/^(0|62)[0-9]{8,13}/'],
-            'password'         => 'required|string|min:6',
-            'class_id'         => 'required|integer|exists:classes,class_id', // ← was specialization
-            'rate_per_class'   => 'required|numeric|min:0',
+            'name' => 'required|string|max:100',
+            'phone' => ['required', 'string', 'regex:/^(0|62)[0-9]{8,13}/'],
+            'password' => 'required|string|min:6',
+            'class_id' => 'required|integer|exists:classes,class_id',
+            'rate_per_class' => 'required|numeric|min:0',
             'years_experience' => 'required|integer|min:0',
         ]);
 
         $baseName = strtolower(str_replace(' ', '', $request->name));
         $username = $baseName;
-
         $counter = 1;
         while (DB::table('users')->where('username', $username)->exists()) {
-            $username = $baseName . $counter;
-            $counter++;
+            $username = $baseName . $counter++;
         }
 
         $userId = DB::table('users')->insertGetId([
@@ -161,12 +187,12 @@ class CoachController extends Controller
         ]);
 
         DB::table('coaches')->insert([
-            'user_id'          => $userId,
-            'class_id'         => $request->class_id, // ← was specialization
-            'bio'              => $request->bio ?? null,
-            'rate_per_class'   => $request->rate_per_class,
+            'user_id' => $userId,
+            'class_id' => $request->class_id,
+            'bio' => $request->bio ?? null,
+            'rate_per_class' => $request->rate_per_class,
             'years_experience' => $request->years_experience,
-            'created_at'       => now(),
+            'created_at' => now(),
         ]);
 
         return redirect()->route('admin.coaches')

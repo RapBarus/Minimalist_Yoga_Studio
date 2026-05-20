@@ -30,18 +30,84 @@ class CustomerController extends Controller
 
         abort_if(!$customer, 404);
 
-        $bookings = DB::table('bookings')
-            ->join('schedules', 'bookings.schedule_id', '=', 'schedules.schedule_id')
-            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
-            ->where('bookings.user_id', $userId)
-            ->orderBy('schedules.schedule_date', 'desc')
+        $memberships = DB::table('membership_quotas')
+            ->join('membership_packages', 'membership_quotas.package_id', '=', 'membership_packages.package_id')
+            ->leftJoin('classes', 'membership_packages.class_id', '=', 'classes.class_id')
+            ->join('transactions', 'transactions.quota_id', '=', 'membership_quotas.quota_id')
+            ->where('membership_quotas.user_id', $userId)
+            ->where('membership_quotas.is_active', 1)
+            ->whereIn('transactions.status', ['settlement', 'paid'])
             ->select(
-                'classes.class_name',
-                'schedules.schedule_date',
-                'bookings.status'
+                'membership_quotas.quota_id',
+                'membership_quotas.used_quota',
+                'membership_quotas.total_quota',
+                'membership_quotas.start_date',
+                'membership_quotas.reset_date',
+                'membership_packages.name as package_name',
+                'membership_packages.price',
+                'membership_packages.original_price',
+                'classes.class_name'
             )
             ->get();
 
-        return view('admin.customer_detail', compact('customer', 'bookings'));
+        $activeBookings = DB::table('bookings')
+            ->join('schedules', 'bookings.schedule_id', '=', 'schedules.schedule_id')
+            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
+            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
+            ->join('users as coach_users', 'coaches.user_id', '=', 'coach_users.user_id')
+            ->leftJoin('transactions', 'transactions.booking_id', '=', 'bookings.booking_id')
+            ->where('bookings.user_id', $userId)
+            ->where('bookings.status', 'confirmed')
+            ->where('schedules.schedule_date', '>=', now()->toDateString())
+            ->select(
+                'bookings.booking_id',
+                'classes.class_name',
+                'coach_users.name as coach_name',
+                'schedules.schedule_date',
+                'schedules.start_time',
+                'schedules.end_time',
+                'transactions.amount'
+            )
+            ->get();
+
+        return view('admin.customer_detail', compact('customer', 'memberships', 'activeBookings'));
+    }
+
+    public function stopMembership(Request $request)
+    {
+        $quotaId = $request->quota_id;
+        $userId = $request->user_id;
+
+        DB::table('membership_quotas')
+            ->where('quota_id', $quotaId)
+            ->where('user_id', $userId)
+            ->update(['is_active' => 0, 'updated_at' => now()]);
+
+        return redirect()->route('admin.customers.detail', $userId)
+            ->with('success', 'Membership berhasil dihentikan.');
+    }
+
+    public function cancelBooking(Request $request)
+    {
+        $bookingId = $request->booking_id;
+        $userId = $request->user_id;
+
+        $booking = DB::table('bookings')
+            ->where('booking_id', $bookingId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($booking) {
+            DB::table('bookings')
+                ->where('booking_id', $bookingId)
+                ->update(['status' => 'cancelled', 'updated_at' => now()]);
+
+            DB::table('schedules')
+                ->where('schedule_id', $booking->schedule_id)
+                ->increment('available_slots');
+        }
+
+        return redirect()->route('admin.customers.detail', $userId)
+            ->with('success', 'Booking berhasil dibatalkan.');
     }
 }

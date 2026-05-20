@@ -77,11 +77,19 @@ class CoachDashboardController extends Controller
         $hadir = $participants->where('status', 'attended');
         $tidakHadir = $participants->whereNotIn('status', ['attended']);
 
+        $existingPhoto = DB::table('attendance')
+            ->join('bookings', 'attendance.booking_id', '=', 'bookings.booking_id')
+            ->where('bookings.schedule_id', $scheduleId)
+            ->whereNotNull('attendance.photo_url')
+            ->value('attendance.photo_url');
+
+
         return view('coach.coach_schedule_detail', compact(
             'schedule',
             'participants',
             'hadir',
-            'tidakHadir'
+            'tidakHadir',
+            'existingPhoto'
         ));
     }
 
@@ -109,6 +117,25 @@ class CoachDashboardController extends Controller
         if ($request->hasFile('bukti_hadir')) {
             $file = $request->file('bukti_hadir');
             $path = $file->store('bukti_hadir', 'public');
+            $url = asset('storage/' . $path);
+
+            $bookings = DB::table('bookings')
+                ->where('schedule_id', $scheduleId)
+                ->select('booking_id', 'status')
+                ->get();
+
+            foreach ($bookings as $booking) {
+                DB::table('attendance')->updateOrInsert(
+                    ['booking_id' => $booking->booking_id],
+                    [
+                        'coach_verification' => $booking->status === 'attended' ? 1 : 0,
+                        'admin_verification' => 0,
+                        'check_in_time' => $booking->status === 'attended' ? now() : null,
+                        'photo_url' => $url,
+                        'photo_uploaded_at' => now(),
+                    ]
+                );
+            }
         }
 
         // Mark schedule as completed
@@ -119,7 +146,7 @@ class CoachDashboardController extends Controller
                 // 'updated_at' => now(),
             ]);
 
-        return redirect()->route('coach.dashboard')
+        return redirect()->route('coach.schedule.detail', $scheduleId)
             ->with('success', 'Jadwal berhasil diupdate!');
     }
 }
