@@ -229,11 +229,6 @@ class ScheduleController extends Controller
             'updated_at' => now(),
         ]);
 
-        // Decrease available slots
-        DB::table('schedules')
-            ->where('schedule_id', $scheduleId)
-            ->decrement('available_slots');
-
         return redirect()->route('admin.schedules.view', $scheduleId)
             ->with('success', $request->name . ' berhasil ditambahkan sebagai peserta.');
     }

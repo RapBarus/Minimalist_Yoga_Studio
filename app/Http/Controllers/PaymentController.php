@@ -17,7 +17,6 @@ class PaymentController extends Controller
         Configuration::setXenditKey(config('services.xendit.secret_key'));
     }
 
-    // ── Show payment confirmation page ──
     public function show($schedule_id)
     {
         $schedule = DB::table('schedules')
@@ -54,7 +53,6 @@ class PaymentController extends Controller
         return view('pages.payment', compact('schedule'));
     }
 
-    // ── Show payment method selection ──
     public function showMethod($schedule_id)
     {
         $schedule = DB::table('schedules')
@@ -88,6 +86,7 @@ class PaymentController extends Controller
         if ($alreadyBooked) {
             return redirect()->route('home')->withErrors(['error' => 'Anda sudah terdaftar di kelas ini.']);
         }
+
         $activeQuota = DB::table('membership_quotas')
             ->join('membership_packages', 'membership_quotas.package_id', '=', 'membership_packages.package_id')
             ->join('transactions', 'transactions.quota_id', '=', 'membership_quotas.quota_id')
@@ -103,7 +102,6 @@ class PaymentController extends Controller
         return view('pages.payment-method', compact('schedule', 'activeQuota'));
     }
 
-    // ── Process payment with selected method ──
     public function processMethod(Request $request, $schedule_id)
     {
         $userId = Session::get('user_id');
@@ -140,7 +138,6 @@ class PaymentController extends Controller
 
         DB::beginTransaction();
         try {
-            // Create booking
             $bookingId = DB::table('bookings')->insertGetId([
                 'user_id' => $userId,
                 'schedule_id' => $schedule_id,
@@ -152,92 +149,51 @@ class PaymentController extends Controller
 
             $externalId = 'booking-' . $bookingId . '-' . time();
 
-            if ($method === 'QRIS') {
-                // Use Xendit Invoice for QRIS (supports QRIS)
-                $apiInstance = new InvoiceApi();
-                $invoiceRequest = new CreateInvoiceRequest([
-                    'external_id' => $externalId,
-                    'amount' => $amount,
-                    'description' => 'Booking ' . $schedule->class_name . ' - Minimalist Studio',
-                    'invoice_duration' => 3600,
-                    'customer' => [
-                        'given_names' => $user->name,
-                        'email' => strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $user->name)) . '@minimaliststudio.com',
-                    ],
-                    'success_redirect_url' => route('payment.success', $bookingId),
-                    'failure_redirect_url' => route('payment.failed', $bookingId),
-                    'currency' => 'IDR',
-                    'payment_methods' => ['QRIS'],
-                ]);
+            $apiInstance = new InvoiceApi();
 
-                $invoice = $apiInstance->createInvoice($invoiceRequest);
+            $paymentMethodMap = [
+                'QRIS' => 'QRIS',
+                'GOPAY' => 'GOPAY',
+                'OVO' => 'OVO',
+                'DANA' => 'DANA',
+                'SHOPEEPAY' => 'SHOPEEPAY',
+            ];
 
-                DB::table('transactions')->insert([
-                    'user_id' => $userId,
-                    'booking_id' => $bookingId,
-                    'amount' => $schedule->rate_per_class,
-                    'payment_type' => 'ewallet',
-                    'payment_channel' => 'QRIS',
-                    'xendit_external_id' => $externalId,
-                    'xendit_invoice_url' => $invoice->getInvoiceUrl(),
-                    'status' => 'pending',
-                    'expiry_time' => now()->addHour(),
-                    'transaction_date' => now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            $invoiceRequest = new CreateInvoiceRequest([
+                'external_id' => $externalId,
+                'amount' => $amount,
+                'description' => 'Booking ' . $schedule->class_name . ' - Minimalist Studio',
+                'invoice_duration' => 3600,
+                'customer' => [
+                    'given_names' => $user->name,
+                    'email' => strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $user->name)) . '@minimaliststudio.com',
+                ],
+                'success_redirect_url' => route('payment.success', $bookingId),
+                'failure_redirect_url' => route('payment.failed', $bookingId),
+                'currency' => 'IDR',
+                'payment_methods' => [$paymentMethodMap[$method]],
+            ]);
 
-                DB::commit();
-                // Redirect to Xendit QRIS page
-                return redirect($invoice->getInvoiceUrl());
+            $invoice = $apiInstance->createInvoice($invoiceRequest);
 
-            } else {
-                // Use Invoice API for all eWallets (Xendit v7)
-                $apiInstance = new InvoiceApi();
+            DB::table('transactions')->insert([
+                'user_id' => $userId,
+                'booking_id' => $bookingId,
+                'amount' => $schedule->rate_per_class,
+                'payment_type' => 'ewallet',
+                'payment_channel' => $method,
+                'xendit_external_id' => $externalId,
+                'xendit_invoice_url' => $invoice->getInvoiceUrl(),
+                'status' => 'pending',
+                'expiry_time' => now()->addHour(),
+                'transaction_date' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-                $paymentMethodMap = [
-                    'GOPAY' => 'GOPAY',
-                    'OVO' => 'OVO',
-                    'DANA' => 'DANA',
-                    'SHOPEEPAY' => 'SHOPEEPAY',
-                ];
+            DB::commit();
 
-                $invoiceRequest = new CreateInvoiceRequest([
-                    'external_id' => $externalId,
-                    'amount' => $amount,
-                    'description' => 'Booking ' . $schedule->class_name . ' - Minimalist Studio',
-                    'invoice_duration' => 3600,
-                    'customer' => [
-                        'given_names' => $user->name,
-                        'email' => strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $user->name)) . '@minimaliststudio.com',
-                    ],
-                    'success_redirect_url' => route('payment.success', $bookingId),
-                    'failure_redirect_url' => route('payment.failed', $bookingId),
-                    'currency' => 'IDR',
-                    'payment_methods' => [$paymentMethodMap[$method]],
-                ]);
-
-                $invoice = $apiInstance->createInvoice($invoiceRequest);
-
-                DB::table('transactions')->insert([
-                    'user_id' => $userId,
-                    'booking_id' => $bookingId,
-                    'amount' => $schedule->rate_per_class,
-                    'payment_type' => 'ewallet',
-                    'payment_channel' => $method,
-                    'xendit_external_id' => $externalId,
-                    'xendit_invoice_url' => $invoice->getInvoiceUrl(),
-                    'status' => 'pending',
-                    'expiry_time' => now()->addHour(),
-                    'transaction_date' => now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                DB::commit();
-
-                return redirect($invoice->getInvoiceUrl());
-            }
+            return redirect($invoice->getInvoiceUrl());
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -246,7 +202,6 @@ class PaymentController extends Controller
         }
     }
 
-    // ── Show payment instructions ──
     public function instructions($transactionId)
     {
         $transaction = DB::table('transactions')->where('transaction_id', $transactionId)->first();
@@ -282,7 +237,6 @@ class PaymentController extends Controller
         ));
     }
 
-    // ── Check payment status ──
     public function check($transactionId)
     {
         $transaction = DB::table('transactions')->where('transaction_id', $transactionId)->first();
@@ -295,8 +249,6 @@ class PaymentController extends Controller
             $status = $charge->getStatus();
 
             if ($status === 'SUCCEEDED') {
-                $booking = DB::table('bookings')->where('booking_id', $transaction->booking_id)->first();
-
                 DB::table('bookings')
                     ->where('booking_id', $transaction->booking_id)
                     ->update(['status' => 'confirmed', 'updated_at' => now()]);
@@ -304,10 +256,6 @@ class PaymentController extends Controller
                 DB::table('transactions')
                     ->where('transaction_id', $transactionId)
                     ->update(['status' => 'settlement', 'updated_at' => now()]);
-
-                DB::table('schedules')
-                    ->where('schedule_id', $booking->schedule_id)
-                    ->decrement('available_slots');
 
                 return redirect()->route('activity')
                     ->with('success', 'Pembayaran berhasil! Anda telah terdaftar di kelas.');
@@ -325,7 +273,6 @@ class PaymentController extends Controller
         }
     }
 
-    // ── Cancel payment ──
     public function cancel($bookingId)
     {
         $userId = Session::get('user_id');
@@ -350,33 +297,24 @@ class PaymentController extends Controller
 
     public function success(Request $request, $bookingId)
     {
+        \Log::info('Payment success hit', ['booking_id' => $bookingId]);
+
         $booking = DB::table('bookings')->where('booking_id', $bookingId)->first();
 
         if ($booking && $booking->status === 'pending') {
-            DB::table('bookings')
+            $updated = DB::table('bookings')
                 ->where('booking_id', $bookingId)
+                ->where('status', 'pending')
                 ->update(['status' => 'confirmed', 'updated_at' => now()]);
 
-            DB::table('transactions')
-                ->where('booking_id', $bookingId)
-                ->update(['status' => 'settlement', 'updated_at' => now()]);
-
-            DB::table('schedules')
-                ->where('schedule_id', $booking->schedule_id)
-                ->decrement('available_slots');
+            if ($updated) {
+                DB::table('transactions')
+                    ->where('booking_id', $bookingId)
+                    ->update(['status' => 'settlement', 'updated_at' => now()]);
+            }
         }
 
-        $transaction = DB::table('transactions')->where('booking_id', $bookingId)->first();
-        $schedule = DB::table('schedules')
-            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
-            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
-            ->join('users', 'coaches.user_id', '=', 'users.user_id')
-            ->where('schedules.schedule_id', $booking->schedule_id)
-            ->select('schedules.*', 'classes.class_name', 'users.name as coach_name')
-            ->first();
-        $user = DB::table('users')->where('user_id', $booking->user_id)->first();
-
-        return view('pages.payment-receipt', compact('transaction', 'schedule', 'user'));
+        return redirect()->route('payment.receipt', $bookingId);
     }
 
     public function failed(Request $request, $bookingId)
@@ -428,10 +366,6 @@ class PaymentController extends Controller
                 DB::table('transactions')
                     ->where('booking_id', $bookingId)
                     ->update(['status' => 'settlement', 'updated_at' => now()]);
-
-                DB::table('schedules')
-                    ->where('schedule_id', $booking->schedule_id)
-                    ->decrement('available_slots');
             }
         } elseif (in_array($status, ['EXPIRED', 'FAILED', 'VOIDED'])) {
             DB::table('bookings')
@@ -446,6 +380,7 @@ class PaymentController extends Controller
 
         return response()->json(['status' => 'ok']);
     }
+
     public function receipt($bookingId)
     {
         $userId = Session::get('user_id');
@@ -505,6 +440,7 @@ class PaymentController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
             DB::table('transactions')->insert([
                 'user_id' => $userId,
                 'booking_id' => $bookingId,
@@ -517,14 +453,9 @@ class PaymentController extends Controller
                 'updated_at' => now(),
             ]);
 
-
             DB::table('membership_quotas')
                 ->where('quota_id', $quotaId)
                 ->increment('used_quota');
-
-            DB::table('schedules')
-                ->where('schedule_id', $scheduleId)
-                ->decrement('available_slots');
 
             DB::commit();
 

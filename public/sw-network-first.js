@@ -4,11 +4,11 @@
 // Network timeout: 3 seconds before falling back to cache
 // ============================================================
 
-const CACHE_NAME = "minimalist-network-first-v1";
-const STATIC_CACHE = "minimalist-nf-static-v1";
-const DYNAMIC_CACHE = "minimalist-nf-dynamic-v1";
+const CACHE_NAME = "minimalist-network-first-v2";
+const STATIC_CACHE = "minimalist-nf-static-v2";
+const DYNAMIC_CACHE = "minimalist-nf-dynamic-v2";
 
-const NETWORK_TIMEOUT_MS = 3000; // 3 seconds
+const NETWORK_TIMEOUT_MS = 8000; // 3 seconds
 
 // ── Static assets ──
 const STATIC_ASSETS = [
@@ -90,7 +90,12 @@ self.addEventListener("fetch", (event) => {
     )
         return;
     if (url.pathname === "/payment/webhook") return;
+    if (/\/\d+/.test(url.pathname)) return; // Skip dynamic ID routes
     if (["/login", "/register", "/"].includes(url.pathname)) return;
+
+    if (url.pathname.startsWith("/payment")) return;
+    if (url.pathname.startsWith("/membership/payment")) return;
+    if (url.pathname === "/logout") return;
 
     const isDynamic = DYNAMIC_ROUTES.some((route) =>
         url.pathname.startsWith(route),
@@ -141,7 +146,13 @@ async function networkFirstWithTimeout(request) {
 // ── Fetch from network and store in cache ──
 async function fetchAndCache(request, cache) {
     const response = await fetch(request);
-    if (response.ok && response.status === 200) {
+
+    // Only cache actual page responses, not redirects or errors
+    if (
+        response.ok &&
+        response.status === 200 &&
+        response.type !== "opaqueredirect"
+    ) {
         const clone = response.clone();
         const text = await clone.text();
         if (text.length > 500) {

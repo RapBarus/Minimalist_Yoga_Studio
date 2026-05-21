@@ -4,11 +4,11 @@
 // TTL: 5 minutes for dynamic pages
 // ============================================================
 
-const CACHE_NAME = "minimalist-cache-first-v1";
-const STATIC_CACHE = "minimalist-cf-static-v1";
-const DYNAMIC_CACHE = "minimalist-cf-dynamic-v1";
+const CACHE_NAME = "minimalist-cache-first-v2";
+const STATIC_CACHE = "minimalist-cf-static-v2";
+const DYNAMIC_CACHE = "minimalist-cf-dynamic-v2";
 
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 30 * 1000; // 5 minutes
 
 // ── Static assets ──
 const STATIC_ASSETS = [
@@ -90,7 +90,13 @@ self.addEventListener("fetch", (event) => {
     )
         return;
     if (url.pathname === "/payment/webhook") return;
+    if (/\/\d+/.test(url.pathname)) return; // Skip dynamic ID routes
     if (["/login", "/register", "/"].includes(url.pathname)) return;
+
+
+    if (url.pathname.startsWith("/payment")) return;
+    if (url.pathname.startsWith("/membership/payment")) return;
+    if (url.pathname === "/logout") return;
 
     const isDynamic = DYNAMIC_ROUTES.some((route) =>
         url.pathname.startsWith(route),
@@ -113,19 +119,14 @@ async function cacheFirstWithTTL(request) {
         const age = cachedAt ? Date.now() - parseInt(cachedAt, 10) : Infinity;
 
         if (age < CACHE_TTL_MS) {
-            // Cache hit within TTL — return immediately
-            console.log("[CF] Cache hit (fresh):", request.url);
             return cachedResponse;
-        } else {
-            // Cache expired — try network, fall back to stale cache
-            console.log("[CF] Cache expired, fetching network:", request.url);
         }
-    } else {
-        console.log("[CF] Cache miss, fetching network:", request.url);
     }
 
     try {
         const networkResponse = await fetch(request);
+
+        // Don't cache redirects or error responses
         if (networkResponse.ok && networkResponse.status === 200) {
             const clone = networkResponse.clone();
             const text = await clone.text();
@@ -141,15 +142,11 @@ async function cacheFirstWithTTL(request) {
             }
         }
         return networkResponse;
-    } catch {
-        // Network failed — serve stale cache if available
-        if (cachedResponse) {
-            console.warn(
-                "[CF] Network failed, serving stale cache:",
-                request.url,
-            );
-            return cachedResponse;
-        }
+    } catch (err) {
+        // Only go offline if it's actually a network failure
+        if (cachedResponse) return cachedResponse;
+
+        // Check it's really offline before showing offline page
         const offlinePage = await caches.match("/offline");
         if (offlinePage) return offlinePage;
         return new Response("Offline", { status: 503 });
