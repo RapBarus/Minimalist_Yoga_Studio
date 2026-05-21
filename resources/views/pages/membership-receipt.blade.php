@@ -30,6 +30,8 @@
             --border: #E0D8D0;
             --success: #27AE60;
             --success-pale: #eafaf1;
+            --danger: #C0392B;
+            --danger-pale: #fdecea;
         }
 
         body {
@@ -97,28 +99,43 @@
             gap: 20px;
         }
 
-        .success-icon {
+        .status-icon {
             width: 64px;
             height: 64px;
             border-radius: 50%;
-            background: var(--success-pale);
-            border: 2px solid #a9dfbf;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .success-icon svg {
+        .status-icon.success {
+            background: var(--success-pale);
+            border: 2px solid #a9dfbf;
+        }
+
+        .status-icon.failed {
+            background: var(--danger-pale);
+            border: 2px solid #f5c6c2;
+        }
+
+        .status-icon svg {
             width: 30px;
             height: 30px;
-            stroke: var(--success);
             fill: none;
             stroke-width: 2.5;
             stroke-linecap: round;
             stroke-linejoin: round;
         }
 
-        .success-title {
+        .status-icon.success svg {
+            stroke: var(--success);
+        }
+
+        .status-icon.failed svg {
+            stroke: var(--danger);
+        }
+
+        .status-title {
             font-weight: 700;
             font-size: 1.2rem;
             color: var(--text);
@@ -160,9 +177,6 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            background: var(--success-pale);
-            color: var(--success);
-            border: 1px solid #a9dfbf;
             border-radius: 20px;
             padding: 3px 12px;
             font-size: .72rem;
@@ -174,7 +188,26 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
+        }
+
+        .status-badge.success {
+            background: var(--success-pale);
+            color: var(--success);
+            border: 1px solid #a9dfbf;
+        }
+
+        .status-badge.success::before {
             background: var(--success);
+        }
+
+        .status-badge.failed {
+            background: var(--danger-pale);
+            color: var(--danger);
+            border: 1px solid #f5c6c2;
+        }
+
+        .status-badge.failed::before {
+            background: var(--danger);
         }
 
         .receipt-bottom {
@@ -269,14 +302,28 @@
             <span class="topbar-title">Receipt</span>
         </div>
 
-        <div class="content">
-            <div class="success-icon">
-                <svg viewBox="0 0 24 24">
-                    <polyline points="20 6 9 17 4 12" />
-                </svg>
-            </div>
+        @php
+            $isSuccess = $transaction && in_array($transaction->status, ['settlement', 'paid']);
+        @endphp
 
-            <div class="success-title">Membership Aktif!</div>
+        <div class="content">
+
+            @if ($isSuccess)
+                <div class="status-icon success">
+                    <svg viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                </div>
+                <div class="status-title">Membership Aktif!</div>
+            @else
+                <div class="status-icon failed">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </div>
+                <div class="status-title">Pembayaran Gagal</div>
+            @endif
 
             <div class="receipt-card">
                 <div class="receipt-top">
@@ -287,9 +334,12 @@
                     </div>
                     <div class="receipt-top-row" style="margin-top:8px;">
                         <span class="receipt-top-label">Status Pembayaran</span>
-                        <span class="status-badge">Success</span>
+                        <span class="status-badge {{ $isSuccess ? 'success' : 'failed' }}">
+                            {{ $isSuccess ? 'Success' : 'Gagal' }}
+                        </span>
                     </div>
                 </div>
+
                 <div class="receipt-bottom">
                     <div class="receipt-row">
                         <span class="receipt-label">Nama Paket</span>
@@ -319,15 +369,22 @@
                     </div>
                     <div class="receipt-row">
                         <span class="receipt-label">Waktu</span>
-                        <span
-                            class="receipt-value">{{ \Carbon\Carbon::parse($transaction->updated_at ?? now())->format('d M Y, H:i') }}</span>
+                        <span class="receipt-value">
+                            {{ \Carbon\Carbon::parse($transaction->updated_at ?? now())->format('d M Y, H:i') }}
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="bottom-bar">
-            <a href="{{ route('member') }}" class="btn-selesai">Selesai</a>
+            @if ($isSuccess)
+                <a href="{{ route('member') }}" class="btn-selesai">Selesai</a>
+            @else
+                <a href="{{ route('membership.payment.show', $package->package_id) }}" class="btn-selesai">
+                    Kembali Ke Pembayaran
+                </a>
+            @endif
         </div>
     </div>
 </body>

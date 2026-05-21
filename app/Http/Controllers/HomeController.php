@@ -10,13 +10,31 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $schedules = DB::table('vw_available_schedules')
-            ->where('schedule_date', '>=', now()->toDateString())
-            ->orderBy('schedule_date', 'asc')
-            ->orderBy('start_time', 'asc')
-            ->get();
-
         $userId = Session::get('user_id');
+
+        $schedules = DB::table('schedules')
+            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
+            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
+            ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->whereIn('schedules.status', ['upcoming', 'ongoing'])
+            ->where('schedules.schedule_date', '>=', now()->toDateString())
+            ->orderBy('schedules.schedule_date', 'asc')
+            ->orderBy('schedules.start_time', 'asc')
+            ->select(
+                'schedules.schedule_id',
+                'schedules.schedule_date',
+                'schedules.start_time',
+                'schedules.end_time',
+                'schedules.available_slots',
+                'schedules.status',
+                'schedules.coach_id',
+                'schedules.title',
+                'classes.class_name',
+                'coaches.rate_per_class',
+                'coaches.profile_photo',
+                'users.name as coach_name'
+            )
+            ->get();
 
         // Get schedules the user already booked
         $bookedScheduleIds = DB::table('bookings')
@@ -30,6 +48,15 @@ class HomeController extends Controller
             $schedule->already_booked = in_array($schedule->schedule_id, $bookedScheduleIds);
             return $schedule;
         });
+
+        // Sort: available first, full second, already-booked last
+        $schedules = $schedules->sortBy(function ($s) {
+            if ($s->already_booked)
+                return 2;
+            if ($s->available_slots <= 0)
+                return 1;
+            return 0;
+        })->values();
 
         $promotions = DB::table('membership_packages')
             ->leftJoin('classes', 'membership_packages.class_id', '=', 'classes.class_id')
@@ -51,9 +78,9 @@ class HomeController extends Controller
             });
 
         return view('pages.home', [
-            'schedules'  => $schedules,
+            'schedules' => $schedules,
             'promotions' => $promotions,
-            'user_name'  => Session::get('user_name', 'Member'),
+            'user_name' => Session::get('user_name', 'Member'),
         ]);
     }
 
