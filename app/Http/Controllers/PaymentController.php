@@ -281,7 +281,7 @@ class PaymentController extends Controller
             ->where('booking_id', $bookingId)
             ->where('user_id', $userId)
             ->where('status', 'pending')
-            ->update(['status' => 'cancelled', 'updated_at' => now()]);
+            ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
 
         DB::table('transactions')
             ->where('booking_id', $bookingId)
@@ -322,7 +322,7 @@ class PaymentController extends Controller
         DB::table('bookings')
             ->where('booking_id', $bookingId)
             ->where('status', 'pending')
-            ->update(['status' => 'cancelled', 'updated_at' => now()]);
+            ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
 
         DB::table('transactions')
             ->where('booking_id', $bookingId)
@@ -371,7 +371,7 @@ class PaymentController extends Controller
             DB::table('bookings')
                 ->where('booking_id', $bookingId)
                 ->where('status', 'pending')
-                ->update(['status' => 'cancelled', 'updated_at' => now()]);
+                ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
 
             DB::table('transactions')
                 ->where('booking_id', $bookingId)

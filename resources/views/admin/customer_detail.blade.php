@@ -98,10 +98,11 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            background: rgba(255, 255, 255, .15);
+            background: rgba(255, 255, 255, .2);
             border-radius: 20px;
-            padding: 3px 10px 3px 3px;
+            padding: 4px 14px;
             font-size: .73rem;
+            font-weight: 600;
             margin-bottom: 8px;
         }
 
@@ -362,22 +363,21 @@
 
                     @if ($m->class_name)
                         <div class="ac-badge">
-                            <div class="ac-badge-avatar">M</div>
                             {{ $m->class_name }}
                         </div>
                     @endif
 
                     <div class="ac-footer">
                         <div style="font-size:.78rem;opacity:.85;">
-                            {{ \Carbon\Carbon::parse($m->start_date)->format('d M Y') }} –
-                            {{ \Carbon\Carbon::parse($m->reset_date)->format('d M Y') }}
+                            Masa Aktif :
+                            {{ \Carbon\Carbon::parse($m->start_date)->diffInDays(\Carbon\Carbon::parse($m->reset_date)) }}
+                            Hari
                         </div>
-                        <span class="ac-pill">pertemuan : {{ $m->total_quota - $m->used_quota }} /
-                            {{ $m->total_quota }}</span>
+                        <span class="ac-pill">pertemuan : {{ $m->total_quota - $m->used_quota }}</span>
                     </div>
 
                     <div class="ac-footer" style="margin-bottom:12px;">
-                        <div class="ac-price-group">
+                        <div class="ac-price-group" style="flex-direction:row;align-items:center;gap:8px;">
                             @if ($m->original_price)
                                 <span class="ac-price-old">Rp {{ number_format($m->original_price, 0, ',', '.') }}</span>
                             @endif
@@ -386,7 +386,7 @@
                     </div>
 
                     <button class="btn-ac-danger" onclick="openConfirm('membership', {{ $m->quota_id }})">
-                        Hentikan Membership
+                        Hapus Membership
                     </button>
                 </div>
             @endforeach
@@ -403,22 +403,21 @@
 
                     <div class="ac-footer">
                         <div style="font-size:.78rem;opacity:.85;">
-                            {{ \Carbon\Carbon::parse($ab->schedule_date)->translatedFormat('l') }}
+                            {{ \Carbon\Carbon::parse($ab->schedule_date)->translatedFormat('l, d F Y') }}
                         </div>
+                    </div>
+
+                    <div class="ac-footer">
                         <div style="font-size:.78rem;opacity:.85;">
                             {{ \Carbon\Carbon::parse($ab->start_time)->format('H:i') }} –
                             {{ \Carbon\Carbon::parse($ab->end_time)->format('H:i') }} WIB
                         </div>
+                        <span class="ac-price-new">Rp {{ number_format($ab->amount ?? 0, 0, ',', '.') }}</span>
                     </div>
 
-                    <div class="ac-footer" style="margin-bottom:12px;">
-                        <div class="ac-price-group">
-                            <span class="ac-price-new">Rp {{ number_format($ab->amount ?? 0, 0, ',', '.') }}</span>
-                        </div>
-                    </div>
-
-                    <button class="btn-ac-danger" onclick="openConfirm('booking', {{ $ab->booking_id }})">
-                        Cancel Booking
+                    <button class="btn-ac-danger" onclick="openConfirm('booking', {{ $ab->booking_id }})"
+                        style="margin-top:8px;">
+                        Batalkan Jadwal
                     </button>
                 </div>
             @endforeach

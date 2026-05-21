@@ -211,23 +211,6 @@
             <div class="coach-header-logo">
                 <img src="{{ asset('images/minimalist-logo-2.png') }}" alt="Minimalist Studio">
             </div>
-            <div class="coach-header-right">
-                <div class="coach-header-name">
-                    Coach
-                    <strong>{{ Session::get('user_name') }}</strong>
-                </div>
-                <form action="{{ route('logout') }}" method="POST" style="margin:0;">
-                    @csrf
-                    <button type="submit" class="btn-coach-logout">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                            <polyline points="16 17 21 12 16 7" />
-                            <line x1="21" y1="12" x2="9" y2="12" />
-                        </svg>
-                        Keluar
-                    </button>
-                </form>
-            </div>
         </div>
 
         {{-- Alerts --}}

@@ -268,6 +268,7 @@
                     <tr>
                         <th>Pelanggan</th>
                         <th>Status</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -276,19 +277,21 @@
                             <td>{{ $p->name }}</td>
                             <td>
                                 <span class="status-badge-tidak">Tidak Hadir</span>
+                                <input type="hidden" name="attendance[{{ $p->booking_id }}]" id="att-{{ $p->booking_id }}"
+                                    value="tidak_hadir">
+                            </td>
+                            <td>
                                 <button type="button" class="btn-check" onclick="markHadir({{ $p->booking_id }}, this)"
                                     title="Tandai Hadir">
                                     <svg class="check-hadir" viewBox="0 0 24 24">
                                         <polyline points="20 6 9 17 4 12" />
                                     </svg>
                                 </button>
-                                <input type="hidden" name="attendance[{{ $p->booking_id }}]" id="att-{{ $p->booking_id }}"
-                                    value="tidak_hadir">
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="2" style="text-align:center;color:var(--text-muted);">—</td>
+                            <td colspan="3" style="text-align:center;color:var(--text-muted);">—</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -303,6 +306,7 @@
                     <tr>
                         <th>Pelanggan</th>
                         <th>Status</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -311,6 +315,10 @@
                             <td>{{ $p->name }}</td>
                             <td>
                                 <span class="status-badge-hadir">Hadir</span>
+                                <input type="hidden" name="attendance[{{ $p->booking_id }}]" id="att-{{ $p->booking_id }}"
+                                    value="hadir">
+                            </td>
+                            <td>
                                 <button type="button" class="btn-check"
                                     onclick="markTidakHadir({{ $p->booking_id }}, this)" title="Tandai Tidak Hadir">
                                     <svg class="check-tidak" viewBox="0 0 24 24">
@@ -318,13 +326,11 @@
                                         <line x1="6" y1="6" x2="18" y2="18" />
                                     </svg>
                                 </button>
-                                <input type="hidden" name="attendance[{{ $p->booking_id }}]" id="att-{{ $p->booking_id }}"
-                                    value="hadir">
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="2" style="text-align:center;color:var(--text-muted);">—</td>
+                            <td colspan="3" style="text-align:center;color:var(--text-muted);">—</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -367,28 +373,28 @@
     <script>
         function markHadir(bookingId, btn) {
             document.getElementById('att-' + bookingId).value = 'hadir';
-            const td = btn.closest('td');
-            const badge = td.querySelector('.status-badge-tidak, .status-badge-hadir');
+            const tr = btn.closest('tr');
+            const badge = tr.querySelector('.status-badge-tidak, .status-badge-hadir');
             if (badge) {
                 badge.className = 'status-badge-hadir';
                 badge.textContent = 'Hadir';
             }
             const svg = btn.querySelector('svg');
-            svg.className = 'check-tidak';
+            svg.className.baseVal = 'check-tidak';
             svg.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
             btn.setAttribute('onclick', 'markTidakHadir(' + bookingId + ', this)');
         }
 
         function markTidakHadir(bookingId, btn) {
             document.getElementById('att-' + bookingId).value = 'tidak_hadir';
-            const td = btn.closest('td');
-            const badge = td.querySelector('.status-badge-tidak, .status-badge-hadir');
+            const tr = btn.closest('tr');
+            const badge = tr.querySelector('.status-badge-tidak, .status-badge-hadir');
             if (badge) {
                 badge.className = 'status-badge-tidak';
                 badge.textContent = 'Tidak Hadir';
             }
             const svg = btn.querySelector('svg');
-            svg.className = 'check-hadir';
+            svg.className.baseVal = 'check-hadir';
             svg.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
             btn.setAttribute('onclick', 'markHadir(' + bookingId + ', this)');
         }

@@ -562,7 +562,7 @@
         <form action="{{ route('admin.coaches.destroy', $coach->coach_id) }}" method="POST"
             onsubmit="return confirm('Nonaktifkan coach {{ $coach->name }}?')">
             @csrf @method('DELETE')
-            <button type="submit" class="btn-delete-coach">Nonaktifkan Coach</button>
+            <button type="submit" class="btn-delete-coach">Hapus Pelatih</button>
         </form>
 
     </div>

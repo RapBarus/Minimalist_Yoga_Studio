@@ -17,6 +17,7 @@ use App\Http\Controllers\Coach\CoachDashboardController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\KeuanganController;
 use App\Http\Controllers\MembershipPaymentController;
+use App\Http\Controllers\Coach\CoachProfileController;
 
 // ── Welcome ──
 Route::get('/', fn() => view('welcome'))->name('welcome');
@@ -61,6 +62,7 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     Route::post('/schedules/{scheduleId}/confirm-booking/{bookingId}', [ScheduleController::class, 'confirmBooking'])->name('schedules.confirm-booking');
     Route::get('/schedules/{id}/attendance', [ScheduleController::class, 'attendance'])->name('schedules.attendance');
     Route::post('/schedules/{id}/upload-attendance', [ScheduleController::class, 'uploadAttendance'])->name('schedules.upload-attendance');
+    Route::put('/schedules/{scheduleId}/update', [ScheduleController::class, 'update'])->name('schedules.update');
 
     // Classes
     Route::get('/classes', [ClassController::class, 'index'])->name('classes');
@@ -98,7 +100,7 @@ Route::middleware(['auth.session', 'coach.auth'])->prefix('coach')->name('coach.
     Route::get('/dashboard', [CoachDashboardController::class, 'index'])->name('dashboard');
     Route::get('/schedule/{scheduleId}', [CoachDashboardController::class, 'scheduleDetail'])->name('schedule.detail');
     Route::post('/schedule/{scheduleId}/update', [CoachDashboardController::class, 'updateSchedule'])->name('schedule.update');
-    Route::get('/profile', fn() => 'Coming soon')->name('profile');
+    Route::get('/profile', [\App\Http\Controllers\Coach\CoachProfileController::class, 'index'])->name('profile');
 });
 
 // ── Customer ──

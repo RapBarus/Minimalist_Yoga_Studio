@@ -167,7 +167,7 @@
 
                 <div class="sc-coach-badge">
                     <div class="sc-coach-avatar">{{ $initial }}</div>
-                    Coach {{ Session::get('user_name') }}
+                    {{ Session::get('user_name') }}
                 </div>
 
                 <div class="sc-meta">

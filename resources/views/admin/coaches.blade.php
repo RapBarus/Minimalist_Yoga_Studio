@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Data Coach | Minimalist Studio')
-@section('page-title', 'Data Coach')
-@section('page-sub', 'Kelola coach studio')
+@section('title', 'Data Pelatih | Minimalist Studio')
+@section('page-title', 'Data Pelatih')
+@section('page-sub', 'Kelola pelatih studio')
 
 @push('styles')
     <style>
@@ -57,15 +57,6 @@
             stroke-linecap: round;
         }
 
-        .coach-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-            transition: background .15s;
-        }
-
         .coach-row:last-child {
             border-bottom: none;
         }
@@ -74,42 +65,44 @@
             background: #faf8f6;
         }
 
-        .coach-row-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .coach-table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .coach-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--clay-pale);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .coach-table thead tr {
+            background: var(--clay);
+            color: #fff;
+        }
+
+        .coach-table th {
+            padding: 10px 20px;
+            text-align: left;
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .coach-table td {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
             font-size: .85rem;
-            font-weight: 700;
-            color: var(--clay);
-            flex-shrink: 0;
+            color: var(--text);
+        }
+
+        .coach-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .coach-table tr:hover td {
+            background: #faf8f6;
         }
 
         .coach-name {
             font-size: .85rem;
             font-weight: 600;
             color: var(--text);
-        }
-
-        .coach-spec {
-            font-size: .72rem;
-            color: var(--text-muted);
-            margin-top: 1px;
-        }
-
-        .coach-row-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .btn-edit-coach {
@@ -291,50 +284,38 @@
             <div class="coach-list-header">
                 <div class="coach-list-title">Coach</div>
                 <button class="btn-tambah-coach" onclick="openModal('modal-tambah-coach')">
+                    Tambah Pelatih
                     <svg viewBox="0 0 24 24">
                         <line x1="12" y1="5" x2="12" y2="19" />
                         <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
-                    Tambah Coach
                 </button>
             </div>
 
-            @forelse($coaches as $coach)
-                <div class="coach-row">
-                    <div class="coach-row-left">
-                        <div class="coach-avatar">{{ strtoupper(substr($coach->name, 0, 1)) }}</div>
-                        <div>
-                            <div class="coach-name">{{ $coach->name }}</div>
-                            <div class="coach-spec">{{ $coach->class_name ?? '-' }}</div>
-                        </div>
-                    </div>
-                    <div class="coach-row-actions">
-                        @if ($coach->status === 'inactive')
-                            <span class="badge badge-cancelled" style="margin-right:4px;">Nonaktif</span>
-                            <form action="{{ route('admin.coaches.restore', $coach->coach_id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="btn-restore-sm">Aktifkan</button>
-                            </form>
-                        @else
-                            <a href="{{ route('admin.coaches.detail', $coach->coach_id) }}" class="btn-edit-coach">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 20h9" />
-                                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                                </svg>
-                            </a>
-                            <form action="{{ route('admin.coaches.destroy', $coach->coach_id) }}" method="POST"
-                                onsubmit="return confirm('Nonaktifkan coach ini?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn-danger-sm">Nonaktifkan</button>
-                            </form>
-                        @endif
-                    </div>
-                </div>
-            @empty
-                <div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:.85rem;">
-                    Belum ada coach.
-                </div>
-            @endforelse
+            <table class="coach-table">
+                <tbody>
+                <tbody>
+                    @forelse($coaches->where('status', 'active') as $coach)
+                        <tr>
+                            <td>{{ $coach->name }}</td>
+                            <td style="text-align:right;">
+                                <a href="{{ route('admin.coaches.detail', $coach->coach_id) }}" class="btn-edit-coach">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                    </svg>
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="2" style="text-align:center;color:var(--text-muted);padding:2rem;">
+                                Belum ada coach.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
     </div>

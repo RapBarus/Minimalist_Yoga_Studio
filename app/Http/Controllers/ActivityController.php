@@ -118,14 +118,10 @@ class ActivityController extends Controller
                             'updated_at' => now(),
                         ]);
 
-                    DB::table('schedules')
-                        ->where('schedule_id', $tx->schedule_id)
-                        ->decrement('available_slots');
-
                 } elseif ($status === 'EXPIRED') {
                     DB::table('bookings')
                         ->where('booking_id', $tx->booking_id)
-                        ->update(['status' => 'cancelled', 'updated_at' => now()]);
+                        ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
 
                     DB::table('transactions')
                         ->where('transaction_id', $tx->transaction_id)

@@ -207,6 +207,107 @@
                 border-right: 1.5px solid var(--border);
             }
         }
+
+        /* ── Toast ── */
+        .toast-container {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 520px;
+            width: calc(100% - 40px);
+            animation: toastIn .3s ease both;
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .12);
+            font-size: .82rem;
+            color: var(--text);
+        }
+
+        .toast-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .toast-icon.success {
+            background: #eafaf1;
+        }
+
+        .toast-icon.success svg {
+            width: 16px;
+            height: 16px;
+            stroke: #27AE60;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .toast-icon.info {
+            background: #ebf5fb;
+        }
+
+        .toast-icon.info svg {
+            width: 16px;
+            height: 16px;
+            stroke: #2E86C1;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .toast-text {
+            flex: 1;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .toast-close svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
     </style>
     @stack('styles')
 </head>
@@ -247,13 +348,29 @@
             </div>
 
             <div style="padding: 0 20px; margin-top: 14px;">
-                @if (session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
                 @if ($errors->any())
                     <div class="alert alert-error">{{ $errors->first() }}</div>
                 @endif
             </div>
+
+            @if (session('success'))
+                <div class="toast-container" id="toast-container">
+                    <div class="toast toast-success">
+                        <div class="toast-icon success">
+                            <svg viewBox="0 0 24 24">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </div>
+                        <div class="toast-text">{{ session('success') }}</div>
+                        <button class="toast-close" onclick="this.closest('.toast').remove()">
+                            <svg viewBox="0 0 24 24">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            @endif
 
             @yield('content')
         </div>
@@ -326,6 +443,14 @@
                 });
 
             });
+        }
+        const toastContainer = document.getElementById('toast-container');
+        if (toastContainer) {
+            setTimeout(() => {
+                toastContainer.style.transition = 'opacity .3s ease';
+                toastContainer.style.opacity = '0';
+                setTimeout(() => toastContainer.remove(), 300);
+            }, 4000);
         }
     </script>
 

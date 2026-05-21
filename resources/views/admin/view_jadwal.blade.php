@@ -42,26 +42,55 @@
             margin-bottom: 5px;
         }
 
-        .info-field-value {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .info-field input,
+        .info-field select {
+            width: 100%;
             padding: .7rem .9rem;
             background: var(--bg-white);
             border: 1.5px solid var(--border);
             border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
             font-size: .85rem;
             color: var(--text);
+            outline: none;
+            transition: border-color .2s;
+            appearance: none;
         }
 
-        .info-field-value svg {
+        .info-field input:focus,
+        .info-field select:focus {
+            border-color: var(--clay);
+        }
+
+        .info-field-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .info-field-row .info-field {
+            flex: 1;
+        }
+
+        .select-wrap {
+            position: relative;
+        }
+
+        .select-wrap select {
+            padding-right: 2rem;
+        }
+
+        .select-wrap svg {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
             width: 14px;
             height: 14px;
             stroke: var(--clay);
             fill: none;
             stroke-width: 2;
             stroke-linecap: round;
-            opacity: .5;
+            pointer-events: none;
         }
 
         .peserta-header {
@@ -106,6 +135,27 @@
             fill: none;
             stroke-width: 2.5;
             stroke-linecap: round;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: .85rem;
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .82rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background .18s;
+            margin-top: 4px;
+        }
+
+        .btn-save:hover {
+            background: var(--clay-dark);
         }
 
         .peserta-table {
@@ -172,7 +222,6 @@
             letter-spacing: .06em;
         }
 
-        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -200,12 +249,12 @@
         @keyframes modalIn {
             from {
                 opacity: 0;
-                transform: translateY(16px)
+                transform: translateY(16px);
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0)
+                transform: translateY(0);
             }
         }
 
@@ -308,60 +357,84 @@
             Kembali
         </a>
 
-        <div class="info-field">
-            <label>Nama Kelas</label>
-            <div class="info-field-value">
-                {{ $schedule->class_name }}
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
-            </div>
-        </div>
+        <form action="{{ route('admin.schedules.update', $schedule->schedule_id) }}" method="POST">
+            @csrf
+            @method('PUT')
 
-        <div class="info-field">
-            <label>Coach</label>
-            <div class="info-field-value">
-                {{ $schedule->coach_name }}
-                <svg viewBox="0 0 24 24">
-                    <polyline points="6 9 12 15 18 9" />
-                </svg>
+            <div class="info-field">
+                <label>Nama Kelas (Custom)</label>
+                <input type="text" name="custom_name" value="{{ $schedule->title ?? '' }}"
+                    placeholder="{{ $schedule->class_name }}">
             </div>
-        </div>
 
-        <div class="info-field">
-            <label>Jam Kelas</label>
-            <div class="info-field-value">
-                {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} –
-                {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
+            <div class="info-field">
+                <label>Tanggal</label>
+                <input type="date" name="schedule_date"
+                    value="{{ \Carbon\Carbon::parse($schedule->schedule_date)->format('Y-m-d') }}" required>
             </div>
-        </div>
 
-        <div class="info-field">
-            <label>Harga</label>
-            <div class="info-field-value">
-                Rp {{ number_format($schedule->rate_per_class ?? 0, 0, ',', '.') }}
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
+            <div class="info-field">
+                <label>Kelas</label>
+                <div class="select-wrap">
+                    <select name="class_id" required>
+                        @foreach ($classes as $class)
+                            <option value="{{ $class->class_id }}"
+                                {{ $schedule->class_id == $class->class_id ? 'selected' : '' }}>
+                                {{ $class->class_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <svg viewBox="0 0 24 24">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                </div>
             </div>
-        </div>
 
-        <div class="info-field">
-            <label>Kuota Kelas</label>
-            <div class="info-field-value">
-                {{ $schedule->available_slots }} / {{ $schedule->capacity }} tersedia
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
+            <div class="info-field">
+                <label>Coach</label>
+                <div class="select-wrap">
+                    <select name="coach_id" required>
+                        @foreach ($coaches as $coach)
+                            <option value="{{ $coach->coach_id }}"
+                                {{ $schedule->coach_id == $coach->coach_id ? 'selected' : '' }}>
+                                {{ $coach->name }} — {{ $coach->class_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <svg viewBox="0 0 24 24">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                </div>
             </div>
-        </div>
+
+            <div class="info-field">
+                <label>Jam Kelas</label>
+                <div class="info-field-row">
+                    <div class="info-field" style="margin-bottom:0;">
+                        <input type="time" name="start_time"
+                            value="{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}" required>
+                    </div>
+                    <div class="info-field" style="margin-bottom:0;">
+                        <input type="time" name="end_time"
+                            value="{{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-field">
+                <label>Harga</label>
+                <input type="number" name="rate_per_class" value="{{ $schedule->rate_per_class ?? 0 }}" min="0"
+                    step="1000" required>
+            </div>
+
+            <div class="info-field">
+                <label>Kuota Kelas</label>
+                <input type="number" name="capacity" value="{{ $schedule->capacity }}" min="1" max="100"
+                    required>
+            </div>
+
+            <button type="submit" class="btn-save">Simpan Perubahan</button>
+        </form>
 
         {{-- Peserta --}}
         <div class="peserta-header">
@@ -380,46 +453,28 @@
                 <thead>
                     <tr>
                         <th>Peserta</th>
-                        <th>Nomor HP</th>
                         <th>Metode Pembayaran</th>
                         <th>Status</th>
-                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($participants as $p)
                         <tr>
                             <td>{{ $p->name }}</td>
-                            <td>{{ $p->phone_number ?? '—' }}</td>
                             <td>{{ strtoupper($p->payment_type ?? '—') }}</td>
                             <td>
-                               @if (!in_array($p->transaction_status, ['settlement', 'settled', 'capture', 'cash_paid']))
+                                @if (in_array($p->transaction_status, ['settlement', 'settled', 'capture', 'cash_paid']))
                                     <span class="status-valid">VALID</span>
                                 @else
                                     <span class="status-pending">PENDING</span>
                                 @endif
                             </td>
-                            <td>
-                                @if (!in_array($p->transaction_status, ['settlement', 'capture', 'cash_paid']))
-                                    <form
-                                        action="{{ route('admin.schedules.confirm-booking', [$schedule->schedule_id, $p->booking_id]) }}"
-                                        method="POST" style="display:inline;">
-                                        @csrf
-                                        <button type="submit" class="btn-input-peserta"
-                                            style="padding:5px 12px;font-size:.7rem;"
-                                            onclick="return confirm('Konfirmasi pembayaran ini?')">
-                                            Konfirmasi
-                                        </button>
-                                    </form>
-                                @else
-                                    —
-                                @endif
-                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" style="text-align:center;color:var(--text-muted);padding:2rem;">Belum ada
-                                peserta.</td>
+                            <td colspan="3" style="text-align:center;color:var(--text-muted);padding:2rem;">
+                                Belum ada peserta.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -440,6 +495,7 @@
             document.getElementById(id).classList.remove('open');
             document.body.style.overflow = '';
         }
+
         document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e) {
             if (e.target === this) {
                 this.classList.remove('open');
@@ -452,11 +508,13 @@
 <div class="modal-overlay" id="modal-peserta">
     <div class="modal">
         <div class="modal-header">
-            <div class="modal-title">Nama Peserta</div>
-            <button class="modal-close" onclick="closeModal('modal-peserta')"><svg viewBox="0 0 24 24">
+            <div class="modal-title">Tambah Peserta</div>
+            <button class="modal-close" onclick="closeModal('modal-peserta')">
+                <svg viewBox="0 0 24 24">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
-                </svg></button>
+                </svg>
+            </button>
         </div>
         <form action="{{ route('admin.schedules.peserta', $schedule->schedule_id) }}" method="POST"
             class="modal-form">
@@ -464,10 +522,6 @@
             <div class="modal-field">
                 <label>Nama Peserta</label>
                 <input type="text" name="name" placeholder="Masukan Nama Peserta" required>
-            </div>
-            <div class="modal-field">
-                <label>Nomor HP</label>
-                <input type="text" name="phone_number" placeholder="contoh: 08123456789 atau +628123456789">
             </div>
             <div class="modal-field">
                 <label>Metode Pembayaran</label>

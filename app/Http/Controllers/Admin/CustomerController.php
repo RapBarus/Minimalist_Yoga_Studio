@@ -100,11 +100,11 @@ class CustomerController extends Controller
         if ($booking) {
             DB::table('bookings')
                 ->where('booking_id', $bookingId)
-                ->update(['status' => 'cancelled', 'updated_at' => now()]);
-
-            DB::table('schedules')
-                ->where('schedule_id', $booking->schedule_id)
-                ->increment('available_slots');
+                ->update([
+                    'status' => 'cancelled',
+                    'cancellation_date' => now(),
+                    'updated_at' => now(),
+                ]);
         }
 
         return redirect()->route('admin.customers.detail', $userId)
