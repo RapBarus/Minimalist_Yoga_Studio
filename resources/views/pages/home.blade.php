@@ -95,6 +95,8 @@
             top: calc(100% + 6px);
             left: 0;
             min-width: 160px;
+            max-height: 280px;
+            overflow-y: auto;
             background: var(--bg-white);
             border: 1.5px solid var(--border);
             border-radius: 12px;
@@ -139,6 +141,8 @@
             cursor: pointer;
             flex-shrink: 0;
         }
+
+
 
         @keyframes dropDown {
             from {
@@ -302,7 +306,6 @@
 
                     <div class="card-promo-title">{{ $promo->title }}</div>
 
-                    {{-- Class tag --}}
                     @if (!empty($promo->class_name))
                         <span
                             style="display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:3px 14px;font-size:.75rem;font-weight:600;margin-bottom:10px;">
@@ -310,14 +313,12 @@
                         </span>
                     @endif
 
-                    {{-- Masa aktif & pertemuan --}}
                     <div
                         style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:.78rem;opacity:.85;">
                         <span>Masa Aktif : {{ $promo->masa_aktif }}</span>
                         <span class="pertemuan-pill">pertemuan : {{ $promo->quota_amount }}</span>
                     </div>
 
-                    {{-- Price --}}
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
                         @if ($promo->original_price)
                             <span style="font-size:.8rem;opacity:.65;text-decoration:line-through;">Rp
@@ -337,7 +338,9 @@
         {{-- Jadwal Kelas --}}
         <div class="section-row">
             <div class="section-label">Jadwal Kelas</div>
-            <span class="section-count" id="class-count">{{ $schedules->count() }} kelas tersedia</span>
+            <span class="section-count" id="class-count">
+                {{ $todaySchedules->count() > 0 ? $todaySchedules->count() . ' kelas hari ini' : 'Tidak ada kelas hari ini' }}
+            </span>
         </div>
 
         {{-- Dropdown filters --}}
@@ -350,7 +353,7 @@
                 </button>
                 <div class="dropdown-menu" id="menu-kelas">
                     <div class="dropdown-label">Filter Kelas</div>
-                    @foreach ($schedules->pluck('class_name')->unique()->sortBy(fn($n) => strtolower($n))->values() as $className)
+                    @foreach ($allClasses as $className)
                         <label class="dropdown-item">
                             <input type="checkbox" class="filter-check" data-type="kelas" value="{{ $className }}">
                             {{ $className }}
@@ -367,15 +370,7 @@
                 </button>
                 <div class="dropdown-menu" id="menu-waktu">
                     <div class="dropdown-label">Filter Hari</div>
-                    @php
-                        $dayOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-                        $days = $schedules
-                            ->map(fn($s) => \Carbon\Carbon::parse($s->schedule_date)->translatedFormat('l'))
-                            ->unique()
-                            ->sortBy(fn($day) => array_search($day, $dayOrder))
-                            ->values();
-                    @endphp
-                    @foreach ($days as $day)
+                    @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as $day)
                         <label class="dropdown-item">
                             <input type="checkbox" class="filter-check" data-type="waktu" value="{{ $day }}">
                             {{ $day }}
@@ -392,7 +387,7 @@
                 </button>
                 <div class="dropdown-menu" id="menu-coach">
                     <div class="dropdown-label">Filter Coach</div>
-                    @foreach ($schedules->pluck('coach_name')->unique()->sortBy(fn($n) => strtolower($n))->values() as $coachName)
+                    @foreach ($allCoaches as $coachName)
                         <label class="dropdown-item">
                             <input type="checkbox" class="filter-check" data-type="coach" value="{{ $coachName }}">
                             {{ $coachName }}
@@ -404,22 +399,80 @@
 
         {{-- Class cards --}}
         <div class="cards-grid" id="cards-grid">
-            @forelse ($schedules as $schedule)
+
+            {{-- TODAY cards (shown by default, hidden when filter active) --}}
+            @if ($todaySchedules->count() > 0)
+                @foreach ($todaySchedules as $schedule)
+                    @php
+                        $dayName = \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l');
+                        $initial = strtoupper(substr($schedule->coach_name, 0, 1));
+                    @endphp
+                    <div class="card-class today-card" data-kelas="{{ $schedule->class_name }}"
+                        data-waktu="{{ $dayName }}" data-coach="{{ $schedule->coach_name }}">
+
+                        <div class="card-class-title">{{ $schedule->title ?? $schedule->class_name }}</div>
+                        <a href="{{ route('coach.show', $schedule->coach_id) }}" class="coach-badge-link">
+                            <div class="coach-avatar">{{ $initial }}</div>
+                            <span style="font-size:.78rem;opacity:.9;">{{ $schedule->coach_name }}</span>
+                        </a>
+                        <div class="card-class-meta">
+                            <div class="card-class-meta-row">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                {{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l, d F Y') }}
+                            </div>
+                            <div class="card-class-meta-row">
+                                <svg viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg>
+                                {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} –
+                                {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
+                            </div>
+                        </div>
+                        <div class="card-class-footer">
+                            <span class="card-class-price">Rp
+                                {{ number_format($schedule->rate_per_class ?? 50000, 0, ',', '.') }}</span>
+                            <span class="card-class-quota @if ($schedule->available_slots == 0) quota-full @endif">
+                                @if ($schedule->available_slots > 0)
+                                    Kuota tersedia : {{ $schedule->available_slots }}
+                                @else
+                                    Kuota penuh
+                                @endif
+                            </span>
+                        </div>
+                        @if ($schedule->already_booked)
+                            <button class="btn-pesan" disabled>Sudah Terdaftar</button>
+                        @elseif ($schedule->available_slots > 0)
+                            <a href="{{ route('payment.show', $schedule->schedule_id) }}" class="btn-pesan">Pesan
+                                Sekarang</a>
+                        @else
+                            <button class="btn-pesan" disabled>Kuota Penuh</button>
+                        @endif
+                    </div>
+                @endforeach
+            @else
+                <div class="empty-state today-card" id="empty-today">Tidak ada jadwal kelas hari ini.</div>
+            @endif
+
+            {{-- ALL schedules (hidden by default, shown when filter active) --}}
+            @foreach ($schedules as $schedule)
                 @php
                     $dayName = \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l');
                     $initial = strtoupper(substr($schedule->coach_name, 0, 1));
                 @endphp
-                <div class="card-class" data-kelas="{{ $schedule->class_name }}" data-waktu="{{ $dayName }}"
-                    data-coach="{{ $schedule->coach_name }}">
+                <div class="card-class all-card" data-kelas="{{ $schedule->class_name }}"
+                    data-waktu="{{ $dayName }}" data-coach="{{ $schedule->coach_name }}" style="display:none;">
 
                     <div class="card-class-title">{{ $schedule->title ?? $schedule->class_name }}</div>
-
-                    {{-- Coach badge --}}
                     <a href="{{ route('coach.show', $schedule->coach_id) }}" class="coach-badge-link">
                         <div class="coach-avatar">{{ $initial }}</div>
                         <span style="font-size:.78rem;opacity:.9;">{{ $schedule->coach_name }}</span>
                     </a>
-
                     <div class="card-class-meta">
                         <div class="card-class-meta-row">
                             <svg viewBox="0 0 24 24">
@@ -439,7 +492,6 @@
                             {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
                         </div>
                     </div>
-
                     <div class="card-class-footer">
                         <span class="card-class-price">Rp
                             {{ number_format($schedule->rate_per_class ?? 50000, 0, ',', '.') }}</span>
@@ -451,7 +503,6 @@
                             @endif
                         </span>
                     </div>
-
                     @if ($schedule->already_booked)
                         <button class="btn-pesan" disabled>Sudah Terdaftar</button>
                     @elseif ($schedule->available_slots > 0)
@@ -461,12 +512,12 @@
                         <button class="btn-pesan" disabled>Kuota Penuh</button>
                     @endif
                 </div>
-            @empty
-                <div class="empty-state">Tidak ada jadwal kelas yang tersedia saat ini.</div>
-            @endforelse
-        </div>
+            @endforeach
 
-    </div>
+        </div>{{-- end cards-grid --}}
+
+    </div>{{-- end content --}}
+
 @endsection
 
 @push('scripts')
@@ -529,13 +580,13 @@
             }
 
             // ── Dropdown filters ──
-            const cards = document.querySelectorAll('.card-class');
             const countEl = document.getElementById('class-count');
             let activeFilters = {
                 kelas: [],
                 waktu: [],
                 coach: []
             };
+            let filterActive = false;
 
             window.toggleDropdown = function(type) {
                 const menu = document.getElementById('menu-' + type);
@@ -562,15 +613,38 @@
                     this.checked ?
                         activeFilters[type].push(this.value) :
                         activeFilters[type] = activeFilters[type].filter(v => v !== this.value);
+
                     document.getElementById('btn-' + type).classList.toggle('has-selection',
                         activeFilters[type].length > 0);
+
+                    filterActive = activeFilters.kelas.length > 0 ||
+                        activeFilters.waktu.length > 0 ||
+                        activeFilters.coach.length > 0;
                     applyFilters();
                 });
             });
 
             function applyFilters() {
+                // Clear previous empty state first
+                document.querySelectorAll('.filter-empty').forEach(e => e.remove());
+
+                const todayCards = document.querySelectorAll('.today-card');
+                const allCards = document.querySelectorAll('.all-card');
+
+                if (!filterActive) {
+                    todayCards.forEach(c => c.style.display = '');
+                    allCards.forEach(c => c.style.display = 'none');
+                    const todayVisible = document.querySelectorAll('.today-card:not(.empty-state)').length;
+                    countEl.textContent = todayVisible > 0 ?
+                        todayVisible + ' kelas hari ini' :
+                        'Tidak ada kelas hari ini';
+                    return;
+                }
+
+                todayCards.forEach(c => c.style.display = 'none');
+
                 let visible = 0;
-                cards.forEach(function(card) {
+                allCards.forEach(function(card) {
                     const show =
                         (activeFilters.kelas.length === 0 || activeFilters.kelas.includes(card.dataset
                             .kelas)) &&
@@ -581,56 +655,61 @@
                     card.style.display = show ? '' : 'none';
                     if (show) visible++;
                 });
+
                 countEl.textContent = visible + ' kelas tersedia';
+
+                if (visible === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = 'empty-state filter-empty';
+                    empty.style.gridColumn = '1 / -1';
+                    empty.textContent = 'Tidak ada jadwal untuk filter yang dipilih.';
+                    document.getElementById('cards-grid').appendChild(empty);
+                }
             }
+
         });
     </script>
+
     @if (session('success'))
         <script>
-            // Splash finishes at ~3200ms, toast appears after
             setTimeout(function() {
                 const toast = document.createElement('div');
                 toast.id = 'login-toast';
                 toast.style.cssText = `
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-80px);
-    background: #fff;
-    border: 1.5px solid #a9dfbf;
-    border-radius: 12px;
-    padding: 12px 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    font-size: .82rem;
-    color: #27AE60;
-    font-weight: 500;
-    box-shadow: 0 8px 24px rgba(0,0,0,.1);
-    z-index: 9999;
-    transition: transform .4s cubic-bezier(0.2,0,0,1);
-    width: calc(100% - 40px);
-    max-width: 520px;
-    font-family: 'Raleway', sans-serif;
-`;
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%) translateY(-80px);
+                    background: #fff;
+                    border: 1.5px solid #a9dfbf;
+                    border-radius: 12px;
+                    padding: 12px 18px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 10px;
+                    font-size: .82rem;
+                    color: #27AE60;
+                    font-weight: 500;
+                    box-shadow: 0 8px 24px rgba(0,0,0,.1);
+                    z-index: 9999;
+                    transition: transform .4s cubic-bezier(0.2,0,0,1);
+                    width: calc(100% - 40px);
+                    max-width: 520px;
+                    font-family: 'Raleway', sans-serif;
+                `;
                 toast.innerHTML = `
-    <span>✅</span>
-    <span>{{ session('success') }}</span>
-    <span onclick="this.closest('#login-toast').style.transform='translateX(-50%) translateY(-80px)';setTimeout(()=>this.closest('#login-toast').remove(),400);"
-        style="margin-left:8px;cursor:pointer;color:#9A8C82;font-size:1rem;line-height:1;">✕</span>
-`;
+                    <span>✅</span>
+                    <span>{{ session('success') }}</span>
+                    <span onclick="this.closest('#login-toast').style.transform='translateX(-50%) translateY(-80px)';setTimeout(()=>this.closest('#login-toast').remove(),400);"
+                        style="margin-left:8px;cursor:pointer;color:#9A8C82;font-size:1rem;line-height:1;">✕</span>
+                `;
                 document.body.appendChild(toast);
-
-                // Slide in
                 setTimeout(() => toast.style.transform = 'translateX(-50%) translateY(0)', 50);
-
-                // Slide out
                 setTimeout(() => {
                     toast.style.transform = 'translateX(-50%) translateY(-80px)';
                     setTimeout(() => toast.remove(), 400);
                 }, 3500);
-
             }, 3300);
         </script>
     @endif

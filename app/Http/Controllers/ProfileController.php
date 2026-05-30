@@ -72,11 +72,21 @@ class ProfileController extends Controller
 
         if ($request->filled('phone_number')) {
             $phone = $request->phone_number;
-            if (str_starts_with($phone, '0')) {
+            $phone = str_replace(' ', '', $phone);
+
+            if (str_starts_with($phone, '+0')) {
+                $phone = '+62' . substr($phone, 2);
+            } elseif (str_starts_with($phone, '+62')) {
+            } elseif (str_starts_with($phone, '+')) {
                 $phone = '+62' . substr($phone, 1);
-            } elseif (!str_starts_with($phone, '+')) {
+            } elseif (str_starts_with($phone, '0')) {
+                $phone = '+62' . substr($phone, 1);
+            } elseif (str_starts_with($phone, '62')) {
                 $phone = '+' . $phone;
+            } else {
+                $phone = '+62' . $phone;
             }
+
             $data['phone_number'] = $phone;
         }
 

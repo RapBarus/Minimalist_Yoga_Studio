@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
@@ -12,31 +13,37 @@ class HomeController extends Controller
     {
         $userId = Session::get('user_id');
 
-        $schedules = DB::table('schedules')
-            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
-            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
-            ->join('users', 'coaches.user_id', '=', 'users.user_id')
-            ->whereIn('schedules.status', ['upcoming', 'ongoing'])
-            ->where('schedules.schedule_date', '>=', now()->toDateString())
-            ->orderBy('schedules.schedule_date', 'asc')
-            ->orderBy('schedules.start_time', 'asc')
-            ->select(
-                'schedules.schedule_id',
-                'schedules.schedule_date',
-                'schedules.start_time',
-                'schedules.end_time',
-                'schedules.available_slots',
-                'schedules.status',
-                'schedules.coach_id',
-                'schedules.title',
-                'classes.class_name',
-                'coaches.rate_per_class',
-                'coaches.profile_photo',
-                'users.name as coach_name'
-            )
-            ->get();
+        // Cache raw schedules for 5 minutes (shared across all users)
+        $rawSchedules = Cache::remember('schedules_week', 300, function () {
+            return DB::table('schedules')
+                ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
+                ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
+                ->join('users', 'coaches.user_id', '=', 'users.user_id')
+                ->whereIn('schedules.status', ['upcoming', 'ongoing'])
+                ->whereBetween('schedules.schedule_date', [
+                    now()->toDateString(),
+                    now()->addDays(6)->toDateString()
+                ])
+                ->orderBy('schedules.schedule_date', 'asc')
+                ->orderBy('schedules.start_time', 'asc')
+                ->select(
+                    'schedules.schedule_id',
+                    'schedules.schedule_date',
+                    'schedules.start_time',
+                    'schedules.end_time',
+                    'schedules.available_slots',
+                    'schedules.status',
+                    'schedules.coach_id',
+                    'schedules.title',
+                    'classes.class_name',
+                    'coaches.rate_per_class',
+                    'coaches.profile_photo',
+                    'users.name as coach_name'
+                )
+                ->get();
+        });
 
-        // Get schedules the user already booked
+        // User-specific booking marks — NOT cached (per user)
         $bookedScheduleIds = DB::table('bookings')
             ->where('user_id', $userId)
             ->whereIn('status', ['pending', 'confirmed', 'attended'])
@@ -44,7 +51,7 @@ class HomeController extends Controller
             ->toArray();
 
         // Mark each schedule as booked
-        $schedules = $schedules->map(function ($schedule) use ($bookedScheduleIds) {
+        $schedules = collect($rawSchedules)->map(function ($schedule) use ($bookedScheduleIds) {
             $schedule->already_booked = in_array($schedule->schedule_id, $bookedScheduleIds);
             return $schedule;
         });
@@ -58,28 +65,57 @@ class HomeController extends Controller
             return 0;
         })->values();
 
-        $promotions = DB::table('membership_packages')
-            ->leftJoin('classes', 'membership_packages.class_id', '=', 'classes.class_id')
-            ->where('membership_packages.is_active', 1)
-            ->orderBy('membership_packages.package_id', 'asc')
-            ->select('membership_packages.*', 'classes.class_name')
-            ->get()
-            ->map(function ($package) {
-                $package->title = $package->name;
-                $package->coach_name = null;
-                $package->coach_id = null;
-                $package->schedule_date = null;
-                $package->start_time = null;
-                $package->end_time = null;
-                $package->promo_price = number_format($package->price, 0, ',', '.');
-                $package->masa_aktif = $package->validity_months * 30 . ' Hari';
-                $package->promo_id = $package->package_id;
-                return $package;
-            });
+        // Today's schedules only (for default view)
+        $todaySchedules = $schedules->filter(function ($s) {
+            return $s->schedule_date === now()->toDateString();
+        })->values();
+
+        // Cache all classes for 1 hour
+        $allClasses = Cache::remember('all_classes', 3600, function () {
+            return DB::table('classes')
+                ->orderBy('class_name', 'asc')
+                ->pluck('class_name');
+        });
+
+        // Cache all active coaches for 1 hour
+        $allCoaches = Cache::remember('all_coaches', 3600, function () {
+            return DB::table('coaches')
+                ->join('users', 'coaches.user_id', '=', 'users.user_id')
+                ->where('users.status', 'active')
+                ->where('users.role', 'coach')
+                ->orderBy('users.name', 'asc')
+                ->pluck('users.name');
+        });
+
+        // Cache promotions for 1 hour
+        $promotions = Cache::remember('promotions_home', 3600, function () {
+            return DB::table('membership_packages')
+                ->leftJoin('classes', 'membership_packages.class_id', '=', 'classes.class_id')
+                ->where('membership_packages.is_active', 1)
+                ->orderBy('membership_packages.package_id', 'asc')
+                ->take(6)
+                ->select('membership_packages.*', 'classes.class_name')
+                ->get()
+                ->map(function ($package) {
+                    $package->title = $package->name;
+                    $package->coach_name = null;
+                    $package->coach_id = null;
+                    $package->schedule_date = null;
+                    $package->start_time = null;
+                    $package->end_time = null;
+                    $package->promo_price = number_format($package->price, 0, ',', '.');
+                    $package->masa_aktif = $package->validity_months * 30 . ' Hari';
+                    $package->promo_id = $package->package_id;
+                    return $package;
+                });
+        });
 
         return view('pages.home', [
             'schedules' => $schedules,
+            'todaySchedules' => $todaySchedules,
             'promotions' => $promotions,
+            'allClasses' => $allClasses,
+            'allCoaches' => $allCoaches,
             'user_name' => Session::get('user_name', 'Member'),
         ]);
     }
