@@ -22,6 +22,16 @@ class AuthController extends Controller
             'username' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z0-9_]+$/'],
             'phone' => ['required', 'string', 'regex:/^[0-9]{8,13}$/'],
             'password' => ['required', 'string', 'min:6', 'max:50', 'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/'],
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'username.required' => 'Nama pengguna wajib diisi.',
+            'username.regex' => 'Hanya huruf, angka, dan underscore yang diperbolehkan.',
+            'username.max' => 'Nama pengguna maksimal 50 karakter.',
+            'phone.required' => 'Nomor HP wajib diisi.',
+            'phone.regex' => 'Nomor HP tidak valid. Masukkan 8–13 digit angka.',
+            'password.required' => 'Kata sandi wajib diisi.',
+            'password.min' => 'Kata sandi minimal 6 karakter.',
+            'password.regex' => 'Kata sandi harus mengandung minimal 1 huruf dan 1 angka.',
         ]);
 
         // FIX: Check against 'username'
@@ -60,6 +70,11 @@ class AuthController extends Controller
         $request->validate([
             'username' => ['required', 'string', 'regex:/^([a-zA-Z0-9_]+|[a-zA-Z0-9_]+@(admin|coach)\.com)$/'],
             'password' => ['required', 'string', 'min:6'],
+        ], [
+            'username.required' => 'Nama pengguna wajib diisi.',
+            'username.regex' => 'Format nama pengguna tidak valid.',
+            'password.required' => 'Kata sandi wajib diisi.',
+            'password.min' => 'Kata sandi minimal 6 karakter.',
         ]);
 
         $input = $request->username;

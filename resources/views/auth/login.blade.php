@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#F2EFEB">
-    <title>Login | Minimalist Studio</title>
+    <title>Masuk | Minimalist Studio</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,14 +80,14 @@
             font-size: 1.6rem;
             color: var(--text);
             text-align: center;
-            margin-bottom: .4rem;
+            margin-bottom: 1.75rem;
         }
 
         .subtitle {
             text-align: center;
             font-size: .8rem;
             color: var(--text-muted);
-            margin-bottom: 1.75rem;
+            margin-top: .85rem;
         }
 
         .subtitle a {
@@ -98,26 +98,6 @@
 
         .subtitle a:hover {
             text-decoration: underline;
-        }
-
-        .alert {
-            padding: .7rem .9rem;
-            border-radius: 8px;
-            font-size: .78rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .alert-error {
-            background: #fdecea;
-            color: var(--error);
-            border: 1px solid #f5c6c2;
-        }
-
-        .alert-success {
-            background: #eafaf1;
-            color: var(--success);
-            border: 1px solid #a9dfbf;
         }
 
         .field {
@@ -165,31 +145,24 @@
             box-shadow: 0 0 0 3px rgba(160, 82, 45, .10);
         }
 
-        /* Criteria hints */
-        .criteria {
-            list-style: none;
-            font-size: .7rem;
-            color: var(--text-muted);
-            background: #faf8f6;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin-top: 6px;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .criteria li {
+        .field-error {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            margin-top: 5px;
+            font-size: .72rem;
+            color: var(--error);
         }
 
-        .criteria li::before {
-            content: '•';
-            color: var(--clay);
+        .field-error svg {
+            width: 13px;
+            height: 13px;
             flex-shrink: 0;
+            stroke: var(--error);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         .eye-btn {
@@ -239,24 +212,6 @@
             transform: translateY(0);
         }
 
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(16px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (min-width: 640px) {
-            .logo img {
-                width: 280px;
-            }
-        }
-
         .toast {
             position: fixed;
             top: 20px;
@@ -285,6 +240,24 @@
         .toast-icon {
             font-size: 1.1rem;
         }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (min-width: 640px) {
+            .logo img {
+                width: 280px;
+            }
+        }
     </style>
 </head>
 
@@ -298,8 +271,7 @@
             </a>
         </div>
 
-        <h1 class="page-title">Login</h1>
-        <p class="subtitle">Belum punya akun? <a href="{{ route('register') }}">Register</a></p>
+        <h1 class="page-title">Masuk</h1>
 
         @if (session('success'))
             <div class="toast" id="toast">
@@ -312,27 +284,35 @@
             </script>
         @endif
 
-        @if ($errors->any())
-            <div class="alert alert-error">{{ $errors->first() }}</div>
-        @endif
-
         <form action="{{ route('login.post') }}" method="POST">
             @csrf
 
+            {{-- Nama Pengguna --}}
             <div class="field">
-                <label for="username">Username</label>
+                <label for="username">Nama Pengguna</label>
                 <div class="input-wrap">
-                    <input type="text" id="username" name="username" placeholder="Masukan Username Anda"
+                    <input type="text" id="username" name="username" placeholder="Masukan Nama Pengguna Anda"
                         value="{{ old('username') }}" autocomplete="username"
                         class="{{ $errors->has('username') ? 'is-error' : '' }}">
                 </div>
+                @error('username')
+                    <div class="field-error">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
 
+            {{-- Kata Sandi --}}
             <div class="field">
-                <label for="password">Password</label>
+                <label for="password">Kata Sandi</label>
                 <div class="input-wrap">
-                    <input type="password" id="password" name="password" placeholder="Masukan Password"
-                        autocomplete="current-password">
+                    <input type="password" id="password" name="password" placeholder="Masukan Kata Sandi"
+                        autocomplete="current-password" class="{{ $errors->has('password') ? 'is-error' : '' }}">
                     <button type="button" class="eye-btn" onclick="togglePassword('password', this)">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             stroke-width="1.6">
@@ -341,10 +321,22 @@
                         </svg>
                     </button>
                 </div>
-
+                @error('password')
+                    <div class="field-error">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
 
             <button type="submit" class="btn-submit">Masuk</button>
+
+            <p class="subtitle">Belum punya akun? <a href="{{ route('register') }}">Daftar</a></p>
+
         </form>
 
     </div>

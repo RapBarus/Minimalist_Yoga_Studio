@@ -585,4 +585,53 @@
             }
         });
     </script>
+    @if (session('success'))
+        <script>
+            // Splash finishes at ~3200ms, toast appears after
+            setTimeout(function() {
+                const toast = document.createElement('div');
+                toast.id = 'login-toast';
+                toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: #fff;
+    border: 1.5px solid #a9dfbf;
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: .82rem;
+    color: #27AE60;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    z-index: 9999;
+    transition: transform .4s cubic-bezier(0.2,0,0,1);
+    width: calc(100% - 40px);
+    max-width: 520px;
+    font-family: 'Raleway', sans-serif;
+`;
+                toast.innerHTML = `
+    <span>✅</span>
+    <span>{{ session('success') }}</span>
+    <span onclick="this.closest('#login-toast').style.transform='translateX(-50%) translateY(-80px)';setTimeout(()=>this.closest('#login-toast').remove(),400);"
+        style="margin-left:8px;cursor:pointer;color:#9A8C82;font-size:1rem;line-height:1;">✕</span>
+`;
+                document.body.appendChild(toast);
+
+                // Slide in
+                setTimeout(() => toast.style.transform = 'translateX(-50%) translateY(0)', 50);
+
+                // Slide out
+                setTimeout(() => {
+                    toast.style.transform = 'translateX(-50%) translateY(-80px)';
+                    setTimeout(() => toast.remove(), 400);
+                }, 3500);
+
+            }, 3300);
+        </script>
+    @endif
 @endpush
