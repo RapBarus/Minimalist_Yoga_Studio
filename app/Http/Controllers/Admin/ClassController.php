@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class ClassController extends Controller
 {
@@ -42,6 +43,8 @@ class ClassController extends Controller
             'updated_at' => now(),
         ]);
 
+        Cache::forget('all_classes');
+
         return redirect()->route('admin.classes')->with('success', 'Kelas berhasil ditambahkan!');
     }
 
@@ -54,6 +57,8 @@ class ClassController extends Controller
         }
 
         DB::table('classes')->where('class_id', $classId)->delete();
+
+        Cache::forget('all_classes');
 
         return redirect()->route('admin.classes')->with('success', 'Kelas berhasil dihapus.');
     }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 
 class ScheduleController extends Controller
 {
@@ -102,6 +103,8 @@ class ScheduleController extends Controller
             'created_at' => now(),
         ]);
 
+        Cache::forget('schedules_week');
+
         return redirect()->route('admin.dashboard')
             ->with('success', 'Jadwal berhasil ditambahkan!');
     }
@@ -196,6 +199,8 @@ class ScheduleController extends Controller
             ->where('coach_id', $request->coach_id)
             ->update(['rate_per_class' => $request->rate_per_class]);
 
+        Cache::forget('schedules_week');
+
         return redirect()->route('admin.schedules.view', $scheduleId)
             ->with('success', 'Jadwal berhasil diupdate!');
     }
@@ -274,6 +279,8 @@ class ScheduleController extends Controller
             'updated_at' => now(),
         ]);
 
+        Cache::forget('schedules_week');
+
         return redirect()->route('admin.schedules.view', $scheduleId)
             ->with('success', $request->name . ' berhasil ditambahkan sebagai peserta.');
     }
@@ -288,6 +295,8 @@ class ScheduleController extends Controller
 
         DB::table('schedules')->where('schedule_id', $scheduleId)->delete();
 
+        Cache::forget('schedules_week');
+
         return redirect()->route('admin.dashboard')
             ->with('success', 'Jadwal berhasil dihapus.');
     }
@@ -299,6 +308,8 @@ class ScheduleController extends Controller
         DB::table('schedules')
             ->where('schedule_id', $scheduleId)
             ->update(['status' => $request->status]);
+
+        Cache::forget('schedules_week');
 
         return redirect()->route('admin.schedules')
             ->with('success', 'Status jadwal berhasil diperbarui.');
@@ -319,6 +330,8 @@ class ScheduleController extends Controller
         DB::table('transactions')
             ->where('booking_id', $bookingId)
             ->update(['status' => 'settlement', 'updated_at' => now()]);
+
+        Cache::forget('schedules_week');
 
         return redirect()->route('admin.schedules.view', $scheduleId)
             ->with('success', 'Pembayaran berhasil dikonfirmasi.');

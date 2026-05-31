@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 
 class CoachController extends Controller
 {
@@ -80,7 +81,6 @@ class CoachController extends Controller
             ->whereIn('transactions.status', ['settlement', 'capture'])
             ->sum('transactions.amount');
 
-        // Add manual income entries (requires coach_income table)
         if (DB::getSchemaBuilder()->hasTable('coach_income')) {
             $manualPendapatan = DB::table('coach_income')
                 ->where('coach_id', $coachId)
@@ -153,6 +153,8 @@ class CoachController extends Controller
             'bio' => $request->bio,
         ]);
 
+        Cache::forget('all_coaches');
+
         return redirect()->route('admin.coaches.detail', $coachId)
             ->with('success', 'Data coach berhasil diperbarui.');
     }
@@ -195,6 +197,8 @@ class CoachController extends Controller
             'created_at' => now(),
         ]);
 
+        Cache::forget('all_coaches');
+
         return redirect()->route('admin.coaches')
             ->with('success', 'Coach berhasil ditambahkan! Login: ' . $username . '@coach.com');
     }
@@ -209,6 +213,8 @@ class CoachController extends Controller
             ]);
         }
 
+        Cache::forget('all_coaches');
+
         return redirect()->route('admin.coaches')
             ->with('success', 'Coach berhasil diaktifkan kembali.');
     }
@@ -222,6 +228,8 @@ class CoachController extends Controller
                 'updated_at' => now(),
             ]);
         }
+
+        Cache::forget('all_coaches');
 
         return redirect()->route('admin.coaches')
             ->with('success', 'Coach berhasil dinonaktifkan.');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class MembershipController extends Controller
 {
@@ -80,6 +81,9 @@ class MembershipController extends Controller
             'updated_at' => now(),
         ]);
 
+        Cache::forget('promotions_home');
+        Cache::forget('all_packages');
+
         return redirect()->route('admin.membership.view', $id)
             ->with('success', 'Paket berhasil diperbarui.');
     }
@@ -123,6 +127,9 @@ class MembershipController extends Controller
             'updated_at' => now(),
         ]);
 
+        Cache::forget('promotions_home');
+        Cache::forget('all_packages');
+
         return redirect()->route('admin.dashboard')
             ->with('success', 'Paket membership berhasil ditambahkan!');
     }
@@ -137,6 +144,9 @@ class MembershipController extends Controller
             ]);
         }
 
+        Cache::forget('promotions_home');
+        Cache::forget('all_packages');
+
         return redirect()->route('admin.dashboard')
             ->with('success', 'Status paket berhasil diperbarui.');
     }
@@ -150,6 +160,9 @@ class MembershipController extends Controller
         }
 
         DB::table('membership_packages')->where('package_id', $id)->delete();
+
+        Cache::forget('promotions_home');
+        Cache::forget('all_packages');
 
         return redirect()->route('admin.dashboard')
             ->with('success', 'Paket membership berhasil dihapus.');

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Xendit\Configuration;
 use Xendit\Invoice\InvoiceApi;
 use Xendit\Invoice\CreateInvoiceRequest;
@@ -257,6 +258,8 @@ class PaymentController extends Controller
                     ->where('transaction_id', $transactionId)
                     ->update(['status' => 'settlement', 'updated_at' => now()]);
 
+                Cache::forget('schedules_week');
+
                 return redirect()->route('activity')
                     ->with('success', 'Pembayaran berhasil! Anda telah terdaftar di kelas.');
             } elseif ($status === 'FAILED' || $status === 'VOIDED') {
@@ -287,6 +290,8 @@ class PaymentController extends Controller
             ->where('booking_id', $bookingId)
             ->update(['status' => 'failed', 'updated_at' => now()]);
 
+        Cache::forget('schedules_week');
+
         return redirect()->route('home')->with('info', 'Pembayaran dibatalkan.');
     }
 
@@ -313,6 +318,8 @@ class PaymentController extends Controller
                     ->update(['status' => 'settlement', 'updated_at' => now()]);
             }
         }
+
+        Cache::forget('schedules_week');
 
         return redirect()->route('payment.receipt', $bookingId);
     }
@@ -366,6 +373,8 @@ class PaymentController extends Controller
                 DB::table('transactions')
                     ->where('booking_id', $bookingId)
                     ->update(['status' => 'settlement', 'updated_at' => now()]);
+
+                Cache::forget('schedules_week');
             }
         } elseif (in_array($status, ['EXPIRED', 'FAILED', 'VOIDED'])) {
             DB::table('bookings')
@@ -458,6 +467,8 @@ class PaymentController extends Controller
                 ->increment('used_quota');
 
             DB::commit();
+
+            Cache::forget('schedules_week');
 
             return redirect()->route('activity')->with('success', 'Berhasil mendaftar menggunakan kuota membership!');
 
