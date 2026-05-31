@@ -237,8 +237,8 @@ class ScheduleController extends Controller
                         : (str_starts_with($request->phone_number, '+')
                             ? $request->phone_number
                             : '+' . $request->phone_number))
-                    : null,
-                'email' => null,
+                    : '+620000000000',
+                // 'email' => null,
                 'password_hash' => bcrypt('walkin' . time()),
                 'role' => 'customer',
                 'status' => 'active',

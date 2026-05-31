@@ -109,51 +109,72 @@
             background: #fff;
         }
 
-        /* ── Action buttons ── */
-        .action-row {
+        .cal-day.selected {
+            background: var(--clay-dark);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        /* ── Tabs ── */
+        .tab-row {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap;
         }
 
-        .btn-action {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 9px 18px;
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
             border-radius: 10px;
+            border: 1.5px solid var(--clay);
+            background: transparent;
+            color: var(--clay);
             font-family: 'Raleway', sans-serif;
-            font-size: .78rem;
+            font-size: .8rem;
             font-weight: 600;
-            letter-spacing: .04em;
+            letter-spacing: .06em;
             cursor: pointer;
-            transition: background .18s, transform .15s;
-            border: none;
+            transition: background .18s, color .18s;
+            text-align: center;
         }
 
-        .btn-action:hover {
-            transform: translateY(-1px);
-        }
-
-        .btn-action svg {
-            width: 14px;
-            height: 14px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2.2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .btn-tambah-kelas {
+        .tab-btn.active {
             background: var(--clay);
             color: #fff;
         }
 
-        .btn-tambah-member {
-            background: #fff;
-            color: var(--clay);
-            border: 1.5px solid var(--clay) !important;
+        /* ── Add button ── */
+        .btn-tambah {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            font-family: 'Raleway', sans-serif;
+            font-size: .8rem;
+            font-weight: 600;
+            letter-spacing: .06em;
+            cursor: pointer;
+            transition: background .18s;
+            font-size: .9rem;
+        }
+
+        .btn-tambah:hover {
+            background: var(--clay-dark);
+        }
+
+        .btn-tambah svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         /* ── Schedule cards ── */
@@ -404,7 +425,8 @@
         }
 
         .modal-field input,
-        .modal-field select {
+        .modal-field select,
+        .modal-field textarea {
             width: 100%;
             padding: .72rem .9rem;
             background: #faf8f6;
@@ -418,7 +440,8 @@
         }
 
         .modal-field input:focus,
-        .modal-field select:focus {
+        .modal-field select:focus,
+        .modal-field textarea:focus {
             border-color: var(--clay);
         }
 
@@ -448,12 +471,6 @@
         .btn-modal-submit:hover {
             background: var(--clay-dark);
         }
-
-        .cal-day.selected {
-            background: var(--clay-dark);
-            color: #fff;
-            font-weight: 700;
-        }
     </style>
 @endpush
 
@@ -470,34 +487,26 @@
             <div class="calendar-grid" id="cal-grid"></div>
         </div>
 
-        {{-- Section label + action buttons --}}
-        <div class="section-label-page" style="margin-top: 25px; margin-bottom: 15px;">Jadwal Kelas</div>
-
-        <div class="action-row" style="margin-bottom: 20px;">
-            <button class="btn-action btn-tambah-member" onclick="openModal('modal-member')">
-                <svg viewBox="0 0 24 24">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Tambah Member
-            </button>
-            <button class="btn-action btn-tambah-kelas" onclick="openModal('modal-kelas')">
-                <svg viewBox="0 0 24 24">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Tambah Kelas
-            </button>
+        {{-- Tabs --}}
+        <div class="tab-row">
+            <button class="tab-btn active" id="tab-kelas" onclick="switchTab('kelas')">Kelas</button>
+            <button class="tab-btn" id="tab-keanggotaan" onclick="switchTab('keanggotaan')">Keanggotaan</button>
         </div>
 
-        {{-- Cards Container: Schedules + Memberships --}}
-        <div class="schedule-container" style="display: flex; flex-direction: column; gap: 16px;">
+        {{-- Tambah button (changes based on active tab) --}}
+        <button class="btn-tambah" id="btn-tambah" onclick="handleTambah()">
+            <span id="btn-tambah-label">Tambah Kelas</span>
+            <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+        </button>
 
-            {{-- Schedule Cards --}}
+        {{-- Jadwal Kelas Section --}}
+        <div id="section-kelas" style="display:flex;flex-direction:column;gap:16px;">
+            <div class="section-label-page">Jadwal Kelas</div>
             @forelse($schedules as $schedule)
-                @php
-                    $initial = strtoupper(substr($schedule->coach_name ?? 'C', 0, 1));
-                @endphp
+                @php $initial = strtoupper(substr($schedule->coach_name ?? 'C', 0, 1)); @endphp
                 <div class="schedule-card" data-date="{{ $schedule->schedule_date }}">
                     <div class="sc-title">{{ $schedule->title ?? $schedule->class_name }}</div>
                     <div class="sc-coach">
@@ -529,17 +538,16 @@
                             @if ($schedule->available_slots > 0)
                                 Kuota tersedia: {{ $schedule->available_slots }} / {{ $schedule->capacity }}
                             @else
-                                <span style="color: #fee2e2; font-weight: bold;">Kuota penuh</span>
+                                <span style="color:#fee2e2;font-weight:bold;">Kuota penuh</span>
                             @endif
                         </span>
                     </div>
                     <div class="sc-buttons">
-                        <a href="{{ route('admin.schedules.view', $schedule->schedule_id) }}" class="btn-view-jadwal">View
+                        <a href="{{ route('admin.schedules.view', $schedule->schedule_id) }}" class="btn-view-jadwal">Lihat
                             Jadwal</a>
                         <form action="{{ route('admin.schedules.destroy', $schedule->schedule_id) }}" method="POST"
                             style="flex:1;" onsubmit="return confirm('Hapus jadwal ini?')">
-                            @csrf
-                            @method('DELETE')
+                            @csrf @method('DELETE')
                             <button type="submit" class="btn-hapus-jadwal" style="width:100%;">Hapus Jadwal</button>
                         </form>
                     </div>
@@ -547,19 +555,20 @@
             @empty
                 <div class="empty-schedule">Belum ada jadwal kelas untuk ditampilkan.</div>
             @endforelse
+        </div>
 
-            {{-- Membership Cards --}}
-            @foreach ($packages as $package)
+        {{-- Keanggotaan Section --}}
+        <div id="section-keanggotaan" style="display:none;flex-direction:column;gap:16px;">
+            <div class="section-label-page">Keanggotaan</div>
+            @forelse($packages as $package)
                 <div class="schedule-card">
                     <div class="sc-title">{{ $package->name }}</div>
-
                     @if ($package->class_name)
                         <div class="sc-coach" style="pointer-events:none;">
                             <div class="sc-coach-avatar">M</div>
                             {{ $package->class_name }}
                         </div>
                     @endif
-
                     <div class="sc-meta">
                         <div class="sc-meta-row">
                             <svg viewBox="0 0 24 24">
@@ -569,7 +578,6 @@
                             Masa Aktif : {{ $package->validity_months * 30 }} Hari
                         </div>
                     </div>
-
                     <div class="sc-footer">
                         <div style="display:flex;flex-direction:column;gap:2px;">
                             @if ($package->original_price)
@@ -580,10 +588,9 @@
                         </div>
                         <span class="sc-quota">pertemuan : {{ $package->quota_amount }}</span>
                     </div>
-
                     <div class="sc-buttons">
-                        <a href="{{ route('admin.membership.view', $package->package_id) }}" class="btn-view-jadwal">View
-                            Membership</a>
+                        <a href="{{ route('admin.membership.view', $package->package_id) }}" class="btn-view-jadwal">Lihat
+                            Keanggotaan</a>
                         <form action="{{ route('admin.membership.destroy', $package->package_id) }}" method="POST"
                             style="flex:1;" onsubmit="return confirm('Hapus paket ini?')">
                             @csrf @method('DELETE')
@@ -591,8 +598,9 @@
                         </form>
                     </div>
                 </div>
-            @endforeach
-
+            @empty
+                <div class="empty-schedule">Belum ada paket keanggotaan.</div>
+            @endforelse
         </div>
 
     </div>
@@ -600,6 +608,24 @@
 
 @push('scripts')
     <script>
+        // ── Tab switching ──
+        let activeTab = 'kelas';
+
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('tab-kelas').classList.toggle('active', tab === 'kelas');
+            document.getElementById('tab-keanggotaan').classList.toggle('active', tab === 'keanggotaan');
+            document.getElementById('section-kelas').style.display = tab === 'kelas' ? 'flex' : 'none';
+            document.getElementById('section-keanggotaan').style.display = tab === 'keanggotaan' ? 'flex' : 'none';
+            document.getElementById('btn-tambah-label').textContent = tab === 'kelas' ? 'Tambah Kelas' :
+                'Tambah Keanggotaan';
+        }
+
+        function handleTambah() {
+            openModal(activeTab === 'kelas' ? 'modal-kelas' : 'modal-member');
+        }
+
+        // ── Modal ──
         function openModal(id) {
             document.getElementById(id).classList.add('open');
             document.body.style.overflow = 'hidden';
@@ -617,6 +643,7 @@
             }
         }));
 
+        // ── Calendar ──
         const scheduleDates = @json($scheduleDates);
         let currentDate = new Date();
         let currentYear = currentDate.getFullYear();
@@ -625,7 +652,7 @@
         const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
             'Oktober', 'November', 'Desember'
         ];
-        const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        const dayNames = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
 
         function renderCalendar(year, month) {
             document.getElementById('cal-title').textContent = monthNames[month] + ' ' + year;
@@ -655,8 +682,8 @@
                 const el = document.createElement('div');
                 el.className = 'cal-day';
                 const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-                if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) el.classList.add(
-                    'today');
+                if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear())
+                    el.classList.add('today');
                 if (scheduleDates.includes(dateStr)) {
                     el.classList.add('has-schedule');
                     const dot = document.createElement('div');
@@ -697,17 +724,20 @@
 
         renderCalendar(currentYear, currentMonth);
 
-        @if ($errors->has('class_id') || $errors->has('coach_id') || $errors->has('capacity'))
+        // Re-open modal on validation error
+        @if ($errors->has('class_id') || $errors->has('coach_id') || $errors->has('capacity') || $errors->has('schedule_date'))
             openModal('modal-kelas');
         @endif
         @if ($errors->has('name') || $errors->has('quota_amount') || $errors->has('price'))
+            switchTab('keanggotaan');
             openModal('modal-member');
         @endif
 
+        // ── Calendar filter ──
         let activeDate = null;
 
         function filterByDate(dateStr) {
-            const cards = document.querySelectorAll('.schedule-card');
+            const cards = document.querySelectorAll('#section-kelas .schedule-card');
             if (activeDate === dateStr) {
                 activeDate = null;
                 cards.forEach(card => card.style.display = '');
@@ -720,6 +750,8 @@
             cards.forEach(card => {
                 card.style.display = card.dataset.date === dateStr ? '' : 'none';
             });
+            // Switch to kelas tab when filtering by date
+            switchTab('kelas');
         }
     </script>
 @endpush
@@ -744,23 +776,26 @@
                     value="{{ old('custom_name') }}">
             </div>
             <div class="modal-field">
-                <label>Nama Kelas</label>
+                <label>Kelas</label>
                 <select name="class_id" required>
                     <option value="">Pilih Kelas</option>
                     @foreach ($classes as $class)
                         <option value="{{ $class->class_id }}"
-                            {{ old('class_id') == $class->class_id ? 'selected' : '' }}>{{ $class->class_name }}
+                            {{ old('class_id') == $class->class_id ? 'selected' : '' }}>
+                            {{ $class->class_name }}
                         </option>
                     @endforeach
                 </select>
             </div>
             <div class="modal-field">
-                <label>Coach</label>
+                <label>Pelatih</label>
                 <select name="coach_id" required>
-                    <option value="">Pilih Coach</option>
+                    <option value="">Pilih Pelatih</option>
                     @foreach ($coaches as $coach)
                         <option value="{{ $coach->coach_id }}"
-                            {{ old('coach_id') == $coach->coach_id ? 'selected' : '' }}>{{ $coach->name }}</option>
+                            {{ old('coach_id') == $coach->coach_id ? 'selected' : '' }}>
+                            {{ $coach->name }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -789,11 +824,11 @@
     </div>
 </div>
 
-{{-- Modal: Tambah Member --}}
+{{-- Modal: Tambah Keanggotaan --}}
 <div class="modal-overlay" id="modal-member">
     <div class="modal">
         <div class="modal-header">
-            <div class="modal-title">Tambah Member</div>
+            <div class="modal-title">Tambah Keanggotaan</div>
             <button class="modal-close" onclick="closeModal('modal-member')">
                 <svg viewBox="0 0 24 24">
                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -805,7 +840,7 @@
             @csrf
             <div class="modal-field">
                 <label>Nama Membership</label>
-                <input type="text" name="name" placeholder="contoh: Member Yoga With Nima"
+                <input type="text" name="name" placeholder="contoh: Member Platinum Yoga"
                     value="{{ old('name') }}" required>
             </div>
             <div class="modal-field">
@@ -817,15 +852,6 @@
                             {{ old('class_id') == $class->class_id ? 'selected' : '' }}>
                             {{ $class->class_name }}
                         </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="modal-field">
-                <label>Coach</label>
-                <select name="coach_id">
-                    <option value="">Pilih Coach</option>
-                    @foreach ($coaches as $coach)
-                        <option value="{{ $coach->coach_id }}">{{ $coach->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -842,7 +868,7 @@
                 </div>
             </div>
             <div class="modal-field">
-                <label>Kuota Kelas (Jumlah Sesi)</label>
+                <label>Kuota Keanggotaan (Jumlah Sesi)</label>
                 <input type="number" name="quota_amount" placeholder="8" value="{{ old('quota_amount') }}"
                     min="1" required>
             </div>
@@ -853,10 +879,9 @@
             </div>
             <div class="modal-field">
                 <label>Deskripsi</label>
-                <textarea name="description" rows="3" placeholder="Deskripsi paket..."
-                    style="width:100%;padding:.72rem .9rem;background:#faf8f6;border:1.5px solid var(--border);border-radius:10px;font-family:'Raleway',sans-serif;font-size:.85rem;color:var(--text);outline:none;resize:vertical;">{{ old('description') }}</textarea>
+                <textarea name="description" rows="3" placeholder="Deskripsi paket...">{{ old('description') }}</textarea>
             </div>
-            <button type="submit" class="btn-modal-submit">Tambah Kelas</button>
+            <button type="submit" class="btn-modal-submit">Tambah Anggota</button>
         </form>
     </div>
 </div>
