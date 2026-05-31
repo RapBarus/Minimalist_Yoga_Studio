@@ -153,6 +153,31 @@
             background: var(--clay-dark);
             transform: translateY(-1px);
         }
+
+        .btn-keluar {
+            width: 100%;
+            padding: .85rem;
+            background: transparent;
+            color: var(--danger);
+            border: 1.5px solid var(--danger);
+            border-radius: 12px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .82rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background .18s, color .18s;
+        }
+
+        .btn-keluar:hover {
+            background: var(--danger);
+            color: #fff;
+        }
     </style>
 @endpush
 
@@ -201,6 +226,19 @@
         <button class="btn-cetak-pdf" onclick="printReport()">
             CETAK PDF
         </button>
+        {{-- Keluar --}}
+        <form action="{{ route('logout') }}" method="POST" style="margin:0;">
+            @csrf
+            <button type="submit" class="btn-keluar">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Keluar
+            </button>
+        </form>
 
     </div>
 @endsection

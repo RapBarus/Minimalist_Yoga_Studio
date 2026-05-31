@@ -52,7 +52,7 @@
 
             .attendance-table th {
                 padding: 10px 14px;
-                text-align: left;
+                text-align: center;
                 font-size: .7rem;
                 font-weight: 600;
                 letter-spacing: .08em;
@@ -61,6 +61,7 @@
 
             .attendance-table th:first-child {
                 border-radius: 10px 0 0 10px;
+                text-align: left;
             }
 
             .attendance-table th:last-child {
@@ -71,6 +72,11 @@
                 padding: 10px 14px;
                 border-bottom: 1px solid var(--border);
                 color: var(--text);
+                text-align: center;
+            }
+
+            .attendance-table td:first-child {
+                text-align: left;
             }
 
             .attendance-table tr:last-child td {
@@ -96,59 +102,6 @@
                 color: var(--text-muted);
                 margin-bottom: 10px;
                 display: block;
-            }
-
-            .upload-input-wrap {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                border: 1.5px solid var(--clay);
-                border-radius: 10px;
-                padding: .6rem .9rem;
-                background: var(--bg-white);
-                cursor: pointer;
-            }
-
-            .upload-input-wrap input[type="file"] {
-                display: none;
-            }
-
-            .upload-filename {
-                flex: 1;
-                font-size: .82rem;
-                color: var(--text-muted);
-                font-family: 'Raleway', sans-serif;
-            }
-
-            .upload-input-wrap svg {
-                width: 18px;
-                height: 18px;
-                stroke: var(--clay);
-                fill: none;
-                stroke-width: 1.8;
-                stroke-linecap: round;
-                flex-shrink: 0;
-            }
-
-            .btn-upload-submit {
-                width: 100%;
-                padding: .85rem;
-                background: var(--clay);
-                color: #fff;
-                border: none;
-                border-radius: 10px;
-                font-family: 'Raleway', sans-serif;
-                font-size: .82rem;
-                font-weight: 600;
-                letter-spacing: .1em;
-                text-transform: uppercase;
-                cursor: pointer;
-                margin-top: 12px;
-                transition: background .18s;
-            }
-
-            .btn-upload-submit:hover {
-                background: var(--clay-dark);
             }
 
             .uploaded-img {
@@ -177,8 +130,8 @@
             {{ $schedule->title ?? $schedule->class_name }}
         </div>
 
-        {{-- Tidak Hadir --}}
-        <div class="section-label-sm">Tidak Hadir</div>
+        {{-- Combined Absensi Table --}}
+        <div class="section-label-sm">Absensi Kelas</div>
         <div class="section-card" style="overflow:hidden;">
             <table class="attendance-table">
                 <thead>
@@ -188,72 +141,44 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($absent as $p)
+                    @php $all = $present->merge($absent)->sortBy('name'); @endphp
+                    @forelse($all as $p)
                         <tr>
                             <td>{{ $p->name }}</td>
-                            <td>Tidak Hadir</td>
+                            <td>
+                                @if ($p->coach_verification == 1)
+                                    <span
+                                        style="display:inline-block;padding:3px 10px;background:rgba(39,174,96,.12);color:#27AE60;border-radius:20px;font-size:.7rem;font-weight:700;">Hadir</span>
+                                @else
+                                    <span
+                                        style="display:inline-block;padding:3px 10px;background:rgba(192,57,43,.12);color:#C0392B;border-radius:20px;font-size:.7rem;font-weight:700;">Tidak
+                                        Hadir</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="2" style="text-align:center;color:var(--text-muted);padding:1.5rem;">Semua
-                                hadir.</td>
+                            <td colspan="2" style="text-align:center;color:var(--text-muted);padding:1.5rem;">
+                                Belum ada peserta.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        {{-- Hadir --}}
-        <div class="section-label-sm">Hadir</div>
-        <div class="section-card" style="overflow:hidden;">
-            <table class="attendance-table">
-                <thead>
-                    <tr>
-                        <th>Pelanggan</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($present as $p)
-                        <tr>
-                            <td>{{ $p->name }}</td>
-                            <td>Hadir</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="2" style="text-align:center;color:var(--text-muted);padding:1.5rem;">Belum ada
-                                data kehadiran.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        {{-- Upload Bukti Hadir --}}
+        {{-- Upload Bukti Hadir — view only --}}
         <div class="upload-wrap">
             <span class="upload-label">Upload Bukti Hadir</span>
 
             @if ($attendance && $attendance->photo_url)
                 <img src="{{ $attendance->photo_url }}" class="uploaded-img" alt="Bukti Hadir">
-            @endif
-
-            <form action="{{ route('admin.schedules.upload-attendance', $schedule->schedule_id) }}" method="POST"
-                enctype="multipart/form-data">
-                @csrf
-                <div class="upload-input-wrap" onclick="document.getElementById('file-input').click()">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                    <span class="upload-filename" id="file-name">
-                        {{ $attendance && $attendance->photo_url ? basename($attendance->photo_url) : 'Pilih file gambar...' }}
-                    </span>
-                    <input type="file" id="file-input" name="photo" accept="image/*"
-                        onchange="document.getElementById('file-name').textContent = this.files[0]?.name ?? 'Pilih file gambar...'">
+            @else
+                <div
+                    style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.82rem;border:1.5px dashed var(--border);border-radius:10px;">
+                    Belum ada bukti hadir.
                 </div>
-                <button type="submit" class="btn-upload-submit">Simpan Bukti</button>
-            </form>
+            @endif
         </div>
 
     </div>

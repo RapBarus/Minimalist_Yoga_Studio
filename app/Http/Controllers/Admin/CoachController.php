@@ -124,9 +124,10 @@ class CoachController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100',
-            'phone' => ['nullable', 'string', 'regex:/^(0|62)[0-9]{8,13}/'],
+            'phone' => ['nullable', 'string', 'regex:/^(\+?62|0)[0-9]{8,13}/'],
             'class_id' => 'required|integer|exists:classes,class_id',
             'bio' => 'nullable|string',
+            'rate_per_class' => 'nullable|numeric|min:0',
         ], [
             'name.required' => 'Nama coach wajib diisi.',
             'phone.regex' => 'Format nomor HP tidak valid.',
@@ -151,6 +152,8 @@ class CoachController extends Controller
         DB::table('coaches')->where('coach_id', $coachId)->update([
             'class_id' => $request->class_id,
             'bio' => $request->bio,
+            'rate_per_class' => $request->rate_per_class,
+            'updated_at' => now(),
         ]);
 
         Cache::forget('all_coaches');

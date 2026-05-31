@@ -17,7 +17,7 @@
             padding: 16px 20px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
             border-bottom: 1px solid var(--border);
         }
 
@@ -274,6 +274,31 @@
         .login-hint strong {
             color: var(--clay);
         }
+
+        .search-wrap {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: .65rem .9rem .65rem 2.4rem;
+            background: #faf8f6;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .85rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239A8C82' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: .75rem center;
+        }
+
+        .search-input:focus {
+            border-color: var(--clay);
+        }
     </style>
 @endpush
 
@@ -282,7 +307,6 @@
 
         <div class="coach-list">
             <div class="coach-list-header">
-                <div class="coach-list-title">Coach</div>
                 <button class="btn-tambah-coach" onclick="openModal('modal-tambah-coach')">
                     Tambah Pelatih
                     <svg viewBox="0 0 24 24">
@@ -290,6 +314,9 @@
                         <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
                 </button>
+            </div>
+            <div class="search-wrap">
+                <input type="text" class="search-input" id="coach-search" placeholder="Search...">
             </div>
 
             <table class="coach-table">
@@ -358,6 +385,14 @@
                 icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
             }
         }
+
+        document.getElementById('coach-search').addEventListener('input', function() {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('.coach-table tbody tr').forEach(row => {
+                const name = row.querySelector('td')?.textContent.toLowerCase() ?? '';
+                row.style.display = name.includes(q) ? '' : 'none';
+            });
+        });
     </script>
 @endpush
 

@@ -46,13 +46,18 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            position: relative;
+        }
+
+        .info-field-wrap:has(textarea) .btn-field-edit {
+            top: 14px;
+            transform: none;
         }
 
         .info-field input,
-        .info-field select,
         .info-field textarea {
             flex: 1;
-            padding: .7rem .9rem;
+            padding: .7rem 2.5rem .7rem .9rem;
             background: var(--bg-white);
             border: 1.5px solid var(--border);
             border-radius: 10px;
@@ -61,6 +66,24 @@
             color: var(--text);
             outline: none;
             transition: border-color .2s;
+        }
+
+        .info-field select {
+            width: 100%;
+            padding: .7rem 2.5rem .7rem .9rem;
+            background: var(--bg-white);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .85rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A0522D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right .9rem center;
         }
 
         .info-field textarea {
@@ -74,6 +97,41 @@
             border-color: var(--clay);
         }
 
+        /* Rate field: display span sits inside the input-like box */
+        .rate-display-wrap {
+            display: flex;
+            align-items: center;
+            position: relative;
+            flex: 1;
+        }
+
+        .rate-display {
+            flex: 1;
+            padding: .7rem 2.5rem .7rem .9rem;
+            background: var(--bg-white);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .85rem;
+            color: var(--text);
+            cursor: default;
+            user-select: none;
+        }
+
+        .rate-input {
+            display: none;
+            /* hidden until edit mode */
+            flex: 1;
+            padding: .7rem 2.5rem .7rem .9rem;
+            background: var(--bg-white);
+            border: 1.5px solid var(--clay);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .85rem;
+            color: var(--text);
+            outline: none;
+        }
+
         .btn-field-edit {
             background: none;
             border: none;
@@ -83,6 +141,10 @@
             color: var(--clay);
             flex-shrink: 0;
             transition: background .15s;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         .btn-field-edit:hover {
@@ -96,6 +158,14 @@
             fill: none;
             stroke-width: 2;
             stroke-linecap: round;
+        }
+
+        /* Wrapper for rate field row (display + edit btn side by side) */
+        .info-field-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
         }
 
         .date-range-wrap {
@@ -227,19 +297,13 @@
             padding: 20px;
         }
 
-        .pendapatan-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
         .pendapatan-label {
             font-size: .7rem;
             font-weight: 700;
             letter-spacing: .1em;
             text-transform: uppercase;
             color: var(--text-muted);
+            margin-bottom: 4px;
         }
 
         .pendapatan-value {
@@ -247,35 +311,6 @@
             font-size: 1.8rem;
             font-weight: 600;
             color: var(--clay);
-        }
-
-        .btn-add-pendapatan {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 6px 14px;
-            background: var(--clay);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-family: 'Raleway', sans-serif;
-            font-size: .73rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background .18s;
-        }
-
-        .btn-add-pendapatan:hover {
-            background: var(--clay-dark);
-        }
-
-        .btn-add-pendapatan svg {
-            width: 13px;
-            height: 13px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2.5;
-            stroke-linecap: round;
         }
 
         .btn-delete-coach {
@@ -307,108 +342,7 @@
             margin-bottom: 10px;
         }
 
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, .45);
-            z-index: 200;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal-overlay.open {
-            display: flex;
-        }
-
-        .modal {
-            background: #fff;
-            border-radius: 18px;
-            width: 100%;
-            max-width: 380px;
-            padding: 24px;
-            animation: modalIn .2s ease both;
-        }
-
-        @keyframes modalIn {
-            from {
-                opacity: 0;
-                transform: translateY(16px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--text);
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            color: var(--text-muted);
-            border-radius: 6px;
-        }
-
-        .modal-close svg {
-            width: 18px;
-            height: 18px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-        }
-
-        .modal-form {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .modal-field label {
-            display: block;
-            font-size: .7rem;
-            font-weight: 600;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: .35rem;
-        }
-
-        .modal-field input {
-            width: 100%;
-            padding: .72rem .9rem;
-            background: #faf8f6;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            font-family: 'Raleway', sans-serif;
-            font-size: .85rem;
-            color: var(--text);
-            outline: none;
-            transition: border-color .2s;
-        }
-
-        .modal-field input:focus {
-            border-color: var(--clay);
-        }
-
-        .btn-modal-submit {
+        .btn-save {
             width: 100%;
             padding: .85rem;
             background: var(--clay);
@@ -421,11 +355,11 @@
             letter-spacing: .1em;
             text-transform: uppercase;
             cursor: pointer;
-            margin-top: 4px;
+            margin-bottom: 8px;
             transition: background .18s;
         }
 
-        .btn-modal-submit:hover {
+        .btn-save:hover {
             background: var(--clay-dark);
         }
     </style>
@@ -444,6 +378,7 @@
         <form action="{{ route('admin.coaches.update', $coach->coach_id) }}" method="POST">
             @csrf @method('PUT')
 
+            {{-- Nama Coach --}}
             <div class="info-field">
                 <label>Nama Coach</label>
                 <div class="info-field-wrap">
@@ -457,6 +392,7 @@
                 </div>
             </div>
 
+            {{-- Nomor HP --}}
             <div class="info-field">
                 <label>Nomor HP</label>
                 <div class="info-field-wrap">
@@ -471,26 +407,42 @@
                 </div>
             </div>
 
+            {{-- Pendapatan Per Kelas --}}
             <div class="info-field">
-                <label>Kelas / Keahlian</label>
-                <div class="info-field-wrap">
-                    <select name="class_id" required>
-                        <option value="">-- Pilih Kelas --</option>
-                        @foreach ($allClasses as $class)
-                            <option value="{{ $class->class_id }}"
-                                {{ $coach->class_id == $class->class_id ? 'selected' : '' }}>
-                                {{ $class->class_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <button type="button" class="btn-field-edit">
-                        <svg viewBox="0 0 24 24">
-                            <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                    </button>
+                <label>Pendapatan Per Kelas</label>
+                <div class="info-field-wrap" id="rate-wrap">
+                    {{-- Display mode: formatted --}}
+                    <div class="rate-display-wrap">
+                        <span class="rate-display" id="rate-display">
+                            Rp {{ number_format($coach->rate_per_class ?? 0, 0, ',', '.') }}
+                        </span>
+                        {{-- Hidden real input submitted with form --}}
+                        <input type="number" name="rate_per_class" id="rate-input" class="rate-input"
+                            value="{{ $coach->rate_per_class ?? 0 }}" min="0" step="1000">
+                        <button type="button" class="btn-field-edit" id="rate-edit-btn" onclick="toggleRateEdit()">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
+            {{-- Kelas / Keahlian --}}
+            <div class="info-field">
+                <label>Kelas / Keahlian</label>
+                <select name="class_id" required>
+                    <option value="">-- Pilih Kelas --</option>
+                    @foreach ($allClasses as $class)
+                        <option value="{{ $class->class_id }}" {{ $coach->class_id == $class->class_id ? 'selected' : '' }}>
+                            {{ $class->class_name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Deskripsi --}}
             <div class="info-field">
                 <label>Deskripsi</label>
                 <div class="info-field-wrap">
@@ -504,9 +456,10 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-primary" style="margin-bottom:8px;">Simpan Perubahan</button>
+            <button type="submit" class="btn-save">Simpan Perubahan</button>
         </form>
 
+        {{-- Riwayat Kelas --}}
         <div class="section-label-sm">Riwayat Kelas</div>
 
         <form method="GET" action="{{ route('admin.coaches.detail', $coach->coach_id) }}">
@@ -534,7 +487,8 @@
                             <td>{{ \Carbon\Carbon::parse($item->schedule_date)->format('d-m-Y') }}</td>
                             <td>
                                 <a href="{{ route('admin.schedules.attendance', $item->schedule_id) }}"
-                                    class="btn-table-edit"> <svg viewBox="0 0 24 24">
+                                    class="btn-table-edit">
+                                    <svg viewBox="0 0 24 24">
                                         <path d="M12 20h9" />
                                         <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
                                     </svg>
@@ -552,13 +506,13 @@
             </table>
         </div>
 
+        {{-- Total Pendapatan --}}
         <div class="pendapatan-box">
             <div class="pendapatan-label">Total Pendapatan</div>
-            <div class="pendapatan-value">
-                Rp {{ number_format($totalPendapatan, 0, ',', '.') }}
-            </div>
+            <div class="pendapatan-value">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</div>
         </div>
 
+        {{-- Hapus Coach --}}
         <form action="{{ route('admin.coaches.destroy', $coach->coach_id) }}" method="POST"
             onsubmit="return confirm('Nonaktifkan coach {{ $coach->name }}?')">
             @csrf @method('DELETE')
@@ -579,11 +533,42 @@
             document.getElementById(id).classList.remove('open');
             document.body.style.overflow = '';
         }
+
         document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e) {
             if (e.target === this) {
                 this.classList.remove('open');
                 document.body.style.overflow = '';
             }
         }));
+
+        function toggleRateEdit() {
+            const display = document.getElementById('rate-display');
+            const input = document.getElementById('rate-input');
+            const btn = document.getElementById('rate-edit-btn');
+
+            const isEditing = input.style.display === 'block';
+
+            if (isEditing) {
+                const raw = parseInt(input.value) || 0;
+                display.textContent = 'Rp ' + raw.toLocaleString('id-ID');
+                display.style.display = '';
+                input.style.display = 'none';
+                btn.innerHTML =
+                    `<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+            } else {
+                display.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+                input.select();
+                btn.innerHTML = `<svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+            }
+        }
+
+        document.getElementById('rate-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                toggleRateEdit();
+            }
+        });
     </script>
 @endpush
