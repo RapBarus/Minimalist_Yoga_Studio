@@ -25,10 +25,10 @@ class CoachDashboardController extends Controller
             ->orderBy('schedule_date', 'asc');
 
         // Apply filter
-        if ($filter === 'week') {
-            $query->where('schedule_date', '<=', now()->endOfWeek()->toDateString());
-        } elseif ($filter === 'month') {
-            $query->where('schedule_date', '<=', now()->endOfMonth()->toDateString());
+        if ($filter === 'today') {
+            $query->whereDate('schedule_date', today());
+        } elseif ($filter === 'week') {
+            $query->where('schedule_date', '<=', now()->addDays(7)->toDateString());
         }
 
         $schedules = $query->get();
@@ -148,5 +148,24 @@ class CoachDashboardController extends Controller
 
         return redirect()->route('coach.schedule.detail', $scheduleId)
             ->with('success', 'Jadwal berhasil diupdate!');
+    }
+    public function deletePhoto($scheduleId)
+    {
+        $userId = Session::get('user_id');
+        $coach = DB::table('coaches')->where('user_id', $userId)->first();
+        if (!$coach)
+            return redirect()->route('login');
+
+        DB::table('attendance')
+            ->join('bookings', 'attendance.booking_id', '=', 'bookings.booking_id')
+            ->where('bookings.schedule_id', $scheduleId)
+            ->update(['attendance.photo_url' => null, 'attendance.photo_uploaded_at' => null]);
+
+        DB::table('schedules')
+            ->where('schedule_id', $scheduleId)
+            ->update(['status' => 'upcoming']);
+
+        return redirect()->route('coach.schedule.detail', $scheduleId)
+            ->with('success', 'Foto berhasil dihapus.');
     }
 }

@@ -46,25 +46,6 @@
             object-fit: contain;
         }
 
-        .coach-header-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .coach-header-name {
-            font-size: .72rem;
-            color: var(--text-muted);
-            font-weight: 500;
-            text-align: right;
-        }
-
-        .coach-header-name strong {
-            color: var(--text);
-            display: block;
-            font-size: .82rem;
-        }
-
         /* ── Bottom navbar ── */
         .coach-nav {
             position: fixed;
@@ -199,6 +180,90 @@
             stroke-linecap: round;
             stroke-linejoin: round;
         }
+
+        /* ── Toast ── */
+        .toast-container {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 520px;
+            width: calc(100% - 40px);
+            animation: toastIn .3s ease both;
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .12);
+            font-size: .82rem;
+            color: var(--text);
+        }
+
+        .toast-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: #eafaf1;
+        }
+
+        .toast-icon svg {
+            width: 16px;
+            height: 16px;
+            stroke: #27AE60;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .toast-text {
+            flex: 1;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .toast-close svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
     </style>
     @stack('styles')
 </head>
@@ -213,12 +278,27 @@
             </div>
         </div>
 
-        {{-- Alerts --}}
+        {{-- Toast: success --}}
         @if (session('success'))
-            <div style="padding:14px 20px 0;">
-                <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="toast-container" id="toast-container">
+                <div class="toast">
+                    <div class="toast-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    </div>
+                    <div class="toast-text">{{ session('success') }}</div>
+                    <button class="toast-close" onclick="this.closest('.toast-container').remove()">
+                        <svg viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         @endif
+
+        {{-- Error alert --}}
         @if ($errors->any())
             <div style="padding:14px 20px 0;">
                 <div class="alert alert-error">{{ $errors->first() }}</div>
@@ -249,6 +329,18 @@
             Profil
         </a>
     </nav>
+
+    <script>
+        // Auto-dismiss toast after 4s
+        const toast = document.getElementById('toast-container');
+        if (toast) {
+            setTimeout(() => {
+                toast.style.transition = 'opacity .3s ease';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+    </script>
 
     @stack('scripts')
 </body>

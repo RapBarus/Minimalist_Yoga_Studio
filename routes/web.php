@@ -100,7 +100,8 @@ Route::middleware(['auth.session', 'coach.auth'])->prefix('coach')->name('coach.
     Route::get('/dashboard', [CoachDashboardController::class, 'index'])->name('dashboard');
     Route::get('/schedule/{scheduleId}', [CoachDashboardController::class, 'scheduleDetail'])->name('schedule.detail');
     Route::post('/schedule/{scheduleId}/update', [CoachDashboardController::class, 'updateSchedule'])->name('schedule.update');
-    Route::get('/profile', [\App\Http\Controllers\Coach\CoachProfileController::class, 'index'])->name('profile');
+    Route::get('/profile', [CoachProfileController::class, 'index'])->name('profile');
+    Route::delete('/schedule/{id}/photo', [CoachDashboardController::class, 'deletePhoto'])->name('schedule.photo.delete');
 });
 
 // ── Customer ──

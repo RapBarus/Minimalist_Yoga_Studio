@@ -264,7 +264,7 @@
         {{-- Logout --}}
         <form action="{{ route('logout') }}" method="POST">
             @csrf
-            <button type="submit" class="btn-logout-full">Log Out</button>
+            <button type="submit" class="btn-logout-full">Keluar</button>
         </form>
 
     </div>

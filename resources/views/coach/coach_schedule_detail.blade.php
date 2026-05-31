@@ -37,7 +37,6 @@
             text-transform: uppercase;
         }
 
-        /* Section */
         .absen-section {
             padding: 0 20px;
             margin-top: 20px;
@@ -73,47 +72,89 @@
             letter-spacing: .06em;
         }
 
+        .absen-table th:last-child {
+            text-align: center;
+        }
+
         .absen-table td {
             padding: 10px 14px;
             font-size: .82rem;
             background: #fff;
             border-bottom: 1px solid var(--border);
             color: var(--text);
+            vertical-align: middle;
+        }
+
+        .absen-table td:last-child {
+            text-align: center;
         }
 
         .absen-table tr:last-child td {
             border-bottom: none;
         }
 
-        .absen-table td:last-child {
-            text-align: right;
+        .status-badge-hadir {
+            display: inline-block;
+            padding: 2px 10px;
+            background: rgba(39, 174, 96, .12);
+            color: #27AE60;
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 600;
         }
 
-        .btn-check {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
+        .status-badge-tidak {
+            display: inline-block;
+            padding: 2px 10px;
+            background: rgba(192, 57, 43, .1);
+            color: var(--danger);
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 600;
+        }
+
+        /* Toggle switch */
+        .toggle-wrap {
             display: inline-flex;
             align-items: center;
             justify-content: center;
         }
 
-        .btn-check svg {
-            width: 20px;
-            height: 20px;
-            stroke-width: 2.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
+        .toggle-input {
+            display: none;
         }
 
-        .check-hadir {
-            stroke: var(--clay);
+        .toggle-label {
+            position: relative;
+            width: 42px;
+            height: 24px;
+            border-radius: 12px;
+            background: var(--danger, #C0392B);
+            cursor: pointer;
+            transition: background .2s;
+            display: block;
+            flex-shrink: 0;
         }
 
-        .check-tidak {
-            stroke: var(--danger);
+        .toggle-input:checked+.toggle-label {
+            background: #27AE60;
+        }
+
+        .toggle-label::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform .2s;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+        }
+
+        .toggle-input:checked+.toggle-label::after {
+            transform: translateX(18px);
         }
 
         /* Upload area */
@@ -201,10 +242,35 @@
             margin-top: 6px;
         }
 
+        /* Existing photo box */
+        .photo-box {
+            border: 2px dashed var(--clay);
+            border-radius: 14px;
+            padding: 16px;
+            background: rgba(160, 82, 45, .04);
+            cursor: pointer;
+        }
+
+        .photo-box img {
+            width: 100%;
+            border-radius: 10px;
+            max-height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-box-caption {
+            font-size: .72rem;
+            color: var(--clay);
+            font-weight: 600;
+            margin-top: 8px;
+            text-align: center;
+        }
+
         .btn-update {
             display: block;
             width: calc(100% - 40px);
-            margin: 20px 20px 0;
+            margin: 20px 20px 12px;
             padding: .85rem;
             background: var(--clay);
             color: #fff;
@@ -223,31 +289,148 @@
             background: var(--clay-dark);
         }
 
-        .status-badge-hadir {
-            display: inline-block;
-            padding: 2px 10px;
-            background: rgba(39, 174, 96, .12);
-            color: #27AE60;
-            border-radius: 20px;
-            font-size: .7rem;
+        .btn-hapus-foto {
+            display: block;
+            width: calc(100% - 40px);
+            margin: 0 20px 40px;
+            padding: .75rem;
+            background: rgba(192, 57, 43, .08);
+            border: 1.5px solid rgba(192, 57, 43, .25);
+            color: var(--danger);
+            font-family: 'Raleway', sans-serif;
+            font-size: .78rem;
             font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            transition: background .15s;
         }
 
-        .status-badge-tidak {
-            display: inline-block;
-            padding: 2px 10px;
+        .btn-hapus-foto:hover {
+            background: rgba(192, 57, 43, .16);
+        }
+
+        /* ── Custom confirm modal ── */
+        .confirm-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .confirm-overlay.open {
+            display: flex;
+        }
+
+        .confirm-box {
+            background: #fff;
+            border-radius: 18px;
+            padding: 28px 24px 20px;
+            max-width: 320px;
+            width: 100%;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, .18);
+            animation: modalIn .22s ease both;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(.94) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .confirm-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
             background: rgba(192, 57, 43, .1);
-            color: var(--danger);
-            border-radius: 20px;
-            font-size: .7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px;
+        }
+
+        .confirm-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--danger);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .confirm-title {
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .confirm-desc {
+            font-size: .78rem;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .confirm-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-confirm-cancel {
+            padding: .7rem;
+            background: var(--bg, #F2EFEB);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .78rem;
             font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .btn-confirm-cancel:hover {
+            background: #e8e4df;
+        }
+
+        .btn-confirm-ok {
+            padding: .7rem;
+            background: var(--danger);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .78rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .btn-confirm-ok:hover {
+            background: #a93226;
         }
     </style>
 @endpush
 
 @section('content')
 
-    {{-- Custom header for this page --}}
+    {{-- Custom header --}}
     <div class="detail-header">
         <a href="{{ route('coach.dashboard') }}" class="detail-back">
             <svg viewBox="0 0 24 24">
@@ -257,80 +440,48 @@
         <div class="detail-title">{{ $schedule->class_name }}</div>
     </div>
 
+    {{-- ── MAIN UPDATE FORM ── --}}
     <form action="{{ route('coach.schedule.update', $schedule->schedule_id) }}" method="POST" enctype="multipart/form-data">
         @csrf
 
-        {{-- Tidak Hadir --}}
+        {{-- Absensi Kelas --}}
         <div class="absen-section">
-            <div class="absen-section-title">Tidak Hadir</div>
+            <div class="absen-section-title">Absensi Kelas</div>
             <table class="absen-table">
                 <thead>
                     <tr>
                         <th>Pelanggan</th>
                         <th>Status</th>
-                        <th></th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($tidakHadir as $p)
-                        <tr>
+                    @forelse($participants as $p)
+                        @php $isHadir = $p->status === 'attended'; @endphp
+                        <tr id="row-{{ $p->booking_id }}">
                             <td>{{ $p->name }}</td>
                             <td>
-                                <span class="status-badge-tidak">Tidak Hadir</span>
+                                <span id="badge-{{ $p->booking_id }}"
+                                    class="{{ $isHadir ? 'status-badge-hadir' : 'status-badge-tidak' }}">
+                                    {{ $isHadir ? 'Hadir' : 'Tidak Hadir' }}
+                                </span>
                                 <input type="hidden" name="attendance[{{ $p->booking_id }}]" id="att-{{ $p->booking_id }}"
-                                    value="tidak_hadir">
+                                    value="{{ $isHadir ? 'hadir' : 'tidak_hadir' }}">
                             </td>
                             <td>
-                                <button type="button" class="btn-check" onclick="markHadir({{ $p->booking_id }}, this)"
-                                    title="Tandai Hadir">
-                                    <svg class="check-hadir" viewBox="0 0 24 24">
-                                        <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                </button>
+                                <div class="toggle-wrap">
+                                    <input type="checkbox" class="toggle-input" id="toggle-{{ $p->booking_id }}"
+                                        {{ $isHadir ? 'checked' : '' }}
+                                        onchange="toggleAttendance({{ $p->booking_id }}, this.checked)">
+                                    <label class="toggle-label" for="toggle-{{ $p->booking_id }}"></label>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" style="text-align:center;color:var(--text-muted);">—</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        {{-- Hadir --}}
-        <div class="absen-section" style="margin-top:16px;">
-            <div class="absen-section-title">Hadir</div>
-            <table class="absen-table">
-                <thead>
-                    <tr>
-                        <th>Pelanggan</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($hadir as $p)
-                        <tr>
-                            <td>{{ $p->name }}</td>
-                            <td>
-                                <span class="status-badge-hadir">Hadir</span>
-                                <input type="hidden" name="attendance[{{ $p->booking_id }}]" id="att-{{ $p->booking_id }}"
-                                    value="hadir">
+                            <td colspan="3" style="text-align:center;color:var(--text-muted);padding:1.5rem;">
+                                Belum ada peserta terdaftar.
                             </td>
-                            <td>
-                                <button type="button" class="btn-check"
-                                    onclick="markTidakHadir({{ $p->booking_id }}, this)" title="Tandai Tidak Hadir">
-                                    <svg class="check-tidak" viewBox="0 0 24 24">
-                                        <line x1="18" y1="6" x2="6" y2="18" />
-                                        <line x1="6" y1="6" x2="18" y2="18" />
-                                    </svg>
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="3" style="text-align:center;color:var(--text-muted);">—</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -340,16 +491,18 @@
         {{-- Upload Bukti Hadir --}}
         <div class="upload-section">
             <span class="upload-label">Upload Bukti Hadir</span>
-            <div class="upload-area" id="uploadArea">
-                <input type="file" name="bukti_hadir" accept="image/*" id="buktiHadirInput">
 
-                @if ($existingPhoto)
-                    <img src="{{ $existingPhoto }}"
-                        style="width:100%;border-radius:10px;max-height:180px;object-fit:cover;margin-bottom:10px;">
-                    <div style="font-size:.72rem;color:var(--clay);font-weight:600;">
+            @if ($existingPhoto)
+                <div class="photo-box" onclick="document.getElementById('replaceInput').click()">
+                    <img src="{{ $existingPhoto }}" alt="Bukti Hadir">
+                    <div class="photo-box-caption" id="replaceCaption">
                         Foto sudah diupload — tap untuk ganti
                     </div>
-                @else
+                </div>
+                <input type="file" name="bukti_hadir" accept="image/*" id="replaceInput" style="display:none;">
+            @else
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" name="bukti_hadir" accept="image/*" id="buktiHadirInput">
                     <svg id="uploadIcon" viewBox="0 0 24 24">
                         <rect x="3" y="3" width="18" height="18" rx="2" />
                         <circle cx="8.5" cy="8.5" r="1.5" />
@@ -359,83 +512,142 @@
                     <div class="upload-filename" id="uploadFilename" style="display:none;"></div>
                     <div class="upload-filesize" id="uploadFilesize" style="display:none;"></div>
                     <div class="upload-change-hint" id="uploadHint" style="display:none;">Tap to change file</div>
-                @endif
-            </div>
+                </div>
+            @endif
         </div>
 
         <button type="submit" class="btn-update">Update Kelas</button>
 
     </form>
+    {{-- ── END MAIN FORM ── --}}
+
+    {{-- Hapus Foto button — triggers custom modal --}}
+    @if ($existingPhoto)
+        <button type="button" class="btn-hapus-foto" onclick="openDeleteModal()">
+            Hapus Foto
+        </button>
+    @endif
+
+    {{-- Custom confirm modal --}}
+    <div class="confirm-overlay" id="deleteModal">
+        <div class="confirm-box">
+            <div class="confirm-icon">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                </svg>
+            </div>
+            <div class="confirm-title">Hapus Foto?</div>
+            <div class="confirm-desc">
+                Foto bukti hadir akan dihapus dan status jadwal akan kembali ke <strong>upcoming</strong>.
+            </div>
+            <div class="confirm-actions">
+                <button type="button" class="btn-confirm-cancel" onclick="closeDeleteModal()">
+                    Batal
+                </button>
+                <button type="button" class="btn-confirm-ok" onclick="submitDelete()">
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Hidden delete form --}}
+    @if ($existingPhoto)
+        <form id="deletePhotoForm" action="{{ route('coach.schedule.photo.delete', $schedule->schedule_id) }}"
+            method="POST" style="display:none;">
+            @csrf @method('DELETE')
+        </form>
+    @endif
 
 @endsection
 
 @push('scripts')
     <script>
-        function markHadir(bookingId, btn) {
-            document.getElementById('att-' + bookingId).value = 'hadir';
-            const tr = btn.closest('tr');
-            const badge = tr.querySelector('.status-badge-tidak, .status-badge-hadir');
-            if (badge) {
+        function toggleAttendance(bookingId, isChecked) {
+            const hidden = document.getElementById('att-' + bookingId);
+            const badge = document.getElementById('badge-' + bookingId);
+            if (isChecked) {
+                hidden.value = 'hadir';
                 badge.className = 'status-badge-hadir';
                 badge.textContent = 'Hadir';
-            }
-            const svg = btn.querySelector('svg');
-            svg.className.baseVal = 'check-tidak';
-            svg.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
-            btn.setAttribute('onclick', 'markTidakHadir(' + bookingId + ', this)');
-        }
-
-        function markTidakHadir(bookingId, btn) {
-            document.getElementById('att-' + bookingId).value = 'tidak_hadir';
-            const tr = btn.closest('tr');
-            const badge = tr.querySelector('.status-badge-tidak, .status-badge-hadir');
-            if (badge) {
+            } else {
+                hidden.value = 'tidak_hadir';
                 badge.className = 'status-badge-tidak';
                 badge.textContent = 'Tidak Hadir';
             }
-            const svg = btn.querySelector('svg');
-            svg.className.baseVal = 'check-hadir';
-            svg.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
-            btn.setAttribute('onclick', 'markHadir(' + bookingId + ', this)');
         }
 
-        document.getElementById('buktiHadirInput').addEventListener('change', function() {
-            const area = document.getElementById('uploadArea');
-            const icon = document.getElementById('uploadIcon');
-            const text = document.getElementById('uploadText');
-            const filename = document.getElementById('uploadFilename');
-            const filesize = document.getElementById('uploadFilesize');
-            const hint = document.getElementById('uploadHint');
+        function openDeleteModal() {
+            document.getElementById('deleteModal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
 
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-                const sizeKB = (file.size / 1024).toFixed(1);
-                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('open');
+            document.body.style.overflow = '';
+        }
 
-                area.classList.add('has-file');
-                text.style.display = 'none';
+        function submitDelete() {
+            document.getElementById('deletePhotoForm').submit();
+        }
 
-                // Swap icon to checkmark
-                icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
-
-                filename.textContent = file.name;
-                filename.style.display = 'block';
-
-                filesize.textContent = file.size > 1024 * 1024 ?
-                    sizeMB + ' MB' :
-                    sizeKB + ' KB';
-                filesize.style.display = 'block';
-
-                hint.style.display = 'block';
-            } else {
-                area.classList.remove('has-file');
-                text.style.display = 'block';
-                icon.innerHTML =
-                    '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>';
-                filename.style.display = 'none';
-                filesize.style.display = 'none';
-                hint.style.display = 'none';
-            }
+        // Close modal on overlay click
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
         });
+
+        // Replace input caption update
+        const replaceInput = document.getElementById('replaceInput');
+        if (replaceInput) {
+            replaceInput.addEventListener('change', function() {
+                const caption = document.getElementById('replaceCaption');
+                if (caption && this.files && this.files[0]) {
+                    caption.textContent = this.files[0].name + ' dipilih — klik Update Kelas untuk menyimpan';
+                }
+            });
+        }
+
+        // Normal upload area
+        const buktiInput = document.getElementById('buktiHadirInput');
+        if (buktiInput) {
+            buktiInput.addEventListener('change', function() {
+                const area = document.getElementById('uploadArea');
+                const icon = document.getElementById('uploadIcon');
+                const text = document.getElementById('uploadText');
+                const filename = document.getElementById('uploadFilename');
+                const filesize = document.getElementById('uploadFilesize');
+                const hint = document.getElementById('uploadHint');
+
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    const sizeKB = (file.size / 1024).toFixed(1);
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                    area.classList.add('has-file');
+                    if (text) text.style.display = 'none';
+                    if (icon) icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+                    if (filename) {
+                        filename.textContent = file.name;
+                        filename.style.display = 'block';
+                    }
+                    if (filesize) {
+                        filesize.textContent = file.size > 1024 * 1024 ? sizeMB + ' MB' : sizeKB + ' KB';
+                        filesize.style.display = 'block';
+                    }
+                    if (hint) hint.style.display = 'block';
+                } else {
+                    area.classList.remove('has-file');
+                    if (text) text.style.display = 'block';
+                    if (icon) icon.innerHTML =
+                        '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>';
+                    if (filename) filename.style.display = 'none';
+                    if (filesize) filesize.style.display = 'none';
+                    if (hint) hint.style.display = 'none';
+                }
+            });
+        }
     </script>
 @endpush
