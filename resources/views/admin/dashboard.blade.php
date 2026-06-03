@@ -692,10 +692,8 @@
                 }
                 el.insertBefore(document.createTextNode(d), el.firstChild);
                 el.dataset.date = dateStr;
-                if (scheduleDates.includes(dateStr)) {
-                    el.style.cursor = 'pointer';
-                    el.addEventListener('click', () => filterByDate(dateStr));
-                }
+                el.style.cursor = 'pointer';
+                el.addEventListener('click', () => filterByDate(dateStr));
                 grid.appendChild(el);
             }
 
@@ -737,21 +735,39 @@
         let activeDate = null;
 
         function filterByDate(dateStr) {
+            switchTab('kelas');
+
             const cards = document.querySelectorAll('#section-kelas .schedule-card');
+
             if (activeDate === dateStr) {
                 activeDate = null;
                 cards.forEach(card => card.style.display = '');
                 document.querySelectorAll('.cal-day.selected').forEach(el => el.classList.remove('selected'));
+                document.getElementById('no-schedule-msg')?.remove();
                 return;
             }
+
             activeDate = dateStr;
             document.querySelectorAll('.cal-day.selected').forEach(el => el.classList.remove('selected'));
             document.querySelector(`.cal-day[data-date="${dateStr}"]`)?.classList.add('selected');
+
+            document.getElementById('no-schedule-msg')?.remove();
+
+            let anyVisible = false;
             cards.forEach(card => {
-                card.style.display = card.dataset.date === dateStr ? '' : 'none';
+                const show = card.dataset.date === dateStr;
+                card.style.display = show ? '' : 'none';
+                if (show) anyVisible = true;
             });
-            // Switch to kelas tab when filtering by date
-            switchTab('kelas');
+
+            if (!anyVisible) {
+                const section = document.getElementById('section-kelas');
+                const msg = document.createElement('div');
+                msg.id = 'no-schedule-msg';
+                msg.className = 'empty-schedule';
+                msg.textContent = 'Tidak ada jadwal kelas pada tanggal ini.';
+                section.appendChild(msg);
+            }
         }
     </script>
 @endpush
