@@ -12,6 +12,7 @@ class HomeController extends Controller
     public function index()
     {
         $userId = Session::get('user_id');
+        $this->cleanupExpiredBookings($userId);
 
         // Cache raw schedules for 5 minutes (shared across all users)
         $rawSchedules = Cache::remember('schedules_week', 300, function () {
@@ -44,9 +45,10 @@ class HomeController extends Controller
         });
 
         // User-specific booking marks — NOT cached (per user)
+        // Only confirmed/attended count as "already booked" — pending does not block rebooking
         $bookedScheduleIds = DB::table('bookings')
             ->where('user_id', $userId)
-            ->whereIn('status', ['pending', 'confirmed', 'attended'])
+            ->whereIn('status', ['confirmed', 'attended'])
             ->pluck('schedule_id')
             ->toArray();
 
@@ -118,6 +120,35 @@ class HomeController extends Controller
             'allCoaches' => $allCoaches,
             'user_name' => Session::get('user_name', 'Member'),
         ]);
+    }
+
+    private function cleanupExpiredBookings($userId)
+    {
+        $expired = DB::table('transactions')
+            ->join('bookings', 'transactions.booking_id', '=', 'bookings.booking_id')
+            ->where('bookings.user_id', $userId)
+            ->where('bookings.status', 'pending')
+            ->where('transactions.status', 'pending')
+            ->where('transactions.expiry_time', '<', now())
+            ->select('transactions.transaction_id', 'bookings.booking_id')
+            ->get();
+
+        foreach ($expired as $row) {
+            DB::table('bookings')
+                ->where('booking_id', $row->booking_id)
+                ->where('status', 'pending')
+                ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+
+            DB::table('transactions')
+                ->where('transaction_id', $row->transaction_id)
+                ->where('status', 'pending')
+                ->update(['status' => 'failed', 'updated_at' => now()]);
+        }
+
+        // Clear schedule cache so updated available_slots are reflected
+        if ($expired->isNotEmpty()) {
+            Cache::forget('schedules_week');
+        }
     }
 
     public function coachProfile($coachId)

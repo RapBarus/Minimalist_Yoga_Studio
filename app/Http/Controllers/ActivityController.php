@@ -13,33 +13,38 @@ class ActivityController extends Controller
         $userId = Session::get('user_id');
         $this->checkPendingPayments($userId);
 
-        $baseQuery = DB::table('vw_customer_booking_history')
-            ->where('user_id', $userId)
+        $baseQuery = DB::table('bookings')
+            ->join('schedules', 'bookings.schedule_id', '=', 'schedules.schedule_id')
+            ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
+            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
+            ->join('users', 'coaches.user_id', '=', 'users.user_id')
+            ->leftJoin('transactions', 'transactions.booking_id', '=', 'bookings.booking_id')
+            ->where('bookings.user_id', $userId)
             ->select(
-                'booking_id',
-                'booking_status',
-                'schedule_date',
-                'start_time',
-                'end_time',
-                'class_name',
-                'coach_id',
-                'rate_per_class',
-                'coach_name',
-                'amount'
+                'bookings.booking_id',
+                'bookings.status as booking_status',
+                'schedules.schedule_date',
+                'schedules.start_time',
+                'schedules.end_time',
+                'schedules.coach_id',
+                'classes.class_name',
+                'coaches.rate_per_class',
+                'users.name as coach_name',
+                'transactions.amount'
             );
 
         $activeBookings = (clone $baseQuery)
-            ->where('schedule_date', '>=', now()->toDateString())
-            ->whereIn('booking_status', ['confirmed'])
-            ->orderBy('schedule_date', 'asc')
+            ->where('schedules.schedule_date', '>=', now()->toDateString())
+            ->whereIn('bookings.status', ['confirmed'])
+            ->orderBy('schedules.schedule_date', 'asc')
             ->get();
 
         $historyBookings = (clone $baseQuery)
             ->where(function ($q) {
-                $q->where('schedule_date', '<', now()->toDateString())
-                    ->orWhere('booking_status', 'cancelled');
+                $q->where('schedules.schedule_date', '<', now()->toDateString())
+                    ->orWhere('bookings.status', 'cancelled');
             })
-            ->orderBy('schedule_date', 'desc')
+            ->orderBy('schedules.schedule_date', 'desc')
             ->get();
 
         $membershipPurchases = DB::table('transactions')
@@ -68,9 +73,9 @@ class ActivityController extends Controller
 
         return view('pages.activity', compact('activeBookings', 'historyBookings', 'membershipPurchases'));
     }
+
     private function checkPendingPayments($userId)
     {
-        // Get all pending transactions for this user that have a xendit_external_id
         $pendingTransactions = DB::table('transactions')
             ->join('bookings', 'transactions.booking_id', '=', 'bookings.booking_id')
             ->where('bookings.user_id', $userId)
@@ -92,11 +97,7 @@ class ActivityController extends Controller
             $apiInstance = new \Xendit\Invoice\InvoiceApi();
 
             foreach ($pendingTransactions as $tx) {
-                // Get invoice status from Xendit
-                $invoices = $apiInstance->getInvoices(
-                    null,
-                    $tx->xendit_external_id
-                );
+                $invoices = $apiInstance->getInvoices(null, $tx->xendit_external_id);
 
                 if (empty($invoices))
                     continue;
@@ -105,7 +106,6 @@ class ActivityController extends Controller
                 $status = $invoice->getStatus();
 
                 if ($status === 'PAID' || $status === 'SETTLED') {
-                    // Confirm booking
                     DB::table('bookings')
                         ->where('booking_id', $tx->booking_id)
                         ->update(['status' => 'confirmed', 'updated_at' => now()]);
@@ -129,7 +129,6 @@ class ActivityController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            // Silently fail — don't break the page if Xendit is unreachable
             \Illuminate\Support\Facades\Log::error('Xendit check error: ' . $e->getMessage());
         }
     }

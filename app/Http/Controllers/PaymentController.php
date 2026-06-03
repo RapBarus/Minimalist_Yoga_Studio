@@ -42,14 +42,7 @@ class PaymentController extends Controller
         }
 
         $userId = Session::get('user_id');
-        $alreadyBooked = DB::table('bookings')
-            ->where('user_id', $userId)
-            ->where('schedule_id', $schedule_id)
-            ->exists();
-
-        if ($alreadyBooked) {
-            return redirect()->route('home')->withErrors(['error' => 'Anda sudah terdaftar di kelas ini.']);
-        }
+        $this->resolveExistingBooking($userId, $schedule_id);
 
         return view('pages.payment', compact('schedule'));
     }
@@ -79,14 +72,9 @@ class PaymentController extends Controller
         }
 
         $userId = Session::get('user_id');
-        $alreadyBooked = DB::table('bookings')
-            ->where('user_id', $userId)
-            ->where('schedule_id', $schedule_id)
-            ->exists();
-
-        if ($alreadyBooked) {
-            return redirect()->route('home')->withErrors(['error' => 'Anda sudah terdaftar di kelas ini.']);
-        }
+        $redirect = $this->resolveExistingBooking($userId, $schedule_id);
+        if ($redirect)
+            return $redirect;
 
         $activeQuota = DB::table('membership_quotas')
             ->join('membership_packages', 'membership_quotas.package_id', '=', 'membership_packages.package_id')
@@ -101,6 +89,56 @@ class PaymentController extends Controller
             ->first();
 
         return view('pages.payment-method', compact('schedule', 'activeQuota'));
+    }
+
+    /**
+     * Shared logic: check for existing booking and handle pending/confirmed/cancelled states.
+     * Returns a redirect response if action is needed, or null to continue normally.
+     */
+    private function resolveExistingBooking($userId, $scheduleId)
+    {
+        $existing = DB::table('bookings')
+            ->where('user_id', $userId)
+            ->where('schedule_id', $scheduleId)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$existing)
+            return null;
+
+        if (in_array($existing->status, ['confirmed', 'attended'])) {
+            return redirect()->route('home')
+                ->withErrors(['error' => 'Anda sudah terdaftar di kelas ini.']);
+        }
+
+        if ($existing->status === 'pending') {
+            $transaction = DB::table('transactions')
+                ->where('booking_id', $existing->booking_id)
+                ->where('status', 'pending')
+                ->first();
+
+            // Valid invoice still alive — resume it
+            if (
+                $transaction &&
+                $transaction->xendit_invoice_url &&
+                $transaction->expiry_time &&
+                now()->lt($transaction->expiry_time)
+            ) {
+                return redirect($transaction->xendit_invoice_url);
+            }
+
+            // Expired — cancel old booking so user can start fresh
+            DB::table('bookings')
+                ->where('booking_id', $existing->booking_id)
+                ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+
+            DB::table('transactions')
+                ->where('booking_id', $existing->booking_id)
+                ->update(['status' => 'failed', 'updated_at' => now()]);
+        }
+
+        // cancelled / failed — fall through, allow fresh booking
+        return null;
     }
 
     public function processMethod(Request $request, $schedule_id)
@@ -124,14 +162,10 @@ class PaymentController extends Controller
             return redirect()->route('home')->withErrors('Jadwal tidak tersedia.');
         }
 
-        $alreadyBooked = DB::table('bookings')
-            ->where('user_id', $userId)
-            ->where('schedule_id', $schedule_id)
-            ->exists();
-
-        if ($alreadyBooked) {
-            return redirect()->route('home')->withErrors('Anda sudah terdaftar di kelas ini.');
-        }
+        // Resolve any existing booking before proceeding
+        $redirect = $this->resolveExistingBooking($userId, $schedule_id);
+        if ($redirect)
+            return $redirect;
 
         $user = DB::table('users')->where('user_id', $userId)->first();
         $method = $request->payment_method;
@@ -152,14 +186,6 @@ class PaymentController extends Controller
 
             $apiInstance = new InvoiceApi();
 
-            $paymentMethodMap = [
-                'QRIS' => 'QRIS',
-                'GOPAY' => 'GOPAY',
-                'OVO' => 'OVO',
-                'DANA' => 'DANA',
-                'SHOPEEPAY' => 'SHOPEEPAY',
-            ];
-
             $invoiceRequest = new CreateInvoiceRequest([
                 'external_id' => $externalId,
                 'amount' => $amount,
@@ -172,7 +198,7 @@ class PaymentController extends Controller
                 'success_redirect_url' => route('payment.success', $bookingId),
                 'failure_redirect_url' => route('payment.failed', $bookingId),
                 'currency' => 'IDR',
-                'payment_methods' => [$paymentMethodMap[$method]],
+                'payment_methods' => [$method],
             ]);
 
             $invoice = $apiInstance->createInvoice($invoiceRequest);
@@ -262,6 +288,7 @@ class PaymentController extends Controller
 
                 return redirect()->route('activity')
                     ->with('success', 'Pembayaran berhasil! Anda telah terdaftar di kelas.');
+
             } elseif ($status === 'FAILED' || $status === 'VOIDED') {
                 return redirect()->route('payment.instructions', $transactionId)
                     ->withErrors('Pembayaran gagal. Silakan coba lagi.');
@@ -302,7 +329,7 @@ class PaymentController extends Controller
 
     public function success(Request $request, $bookingId)
     {
-        \Log::info('Payment success hit', ['booking_id' => $bookingId]);
+        Log::info('Payment success hit', ['booking_id' => $bookingId]);
 
         $booking = DB::table('bookings')->where('booking_id', $bookingId)->first();
 
@@ -413,7 +440,7 @@ class PaymentController extends Controller
     public function useQuota(Request $request)
     {
         $userId = Session::get('user_id');
-        $scheduleId = $request->quota_id ? $request->schedule_id : null;
+        $scheduleId = $request->schedule_id;
         $quotaId = $request->quota_id;
 
         if (!$userId || !$scheduleId || !$quotaId)
@@ -431,13 +458,10 @@ class PaymentController extends Controller
         if (!$quota)
             return redirect()->route('home')->withErrors('Kuota tidak valid atau sudah habis.');
 
-        $alreadyBooked = DB::table('bookings')
-            ->where('user_id', $userId)
-            ->where('schedule_id', $scheduleId)
-            ->exists();
-
-        if ($alreadyBooked)
-            return redirect()->route('home')->withErrors('Anda sudah terdaftar di kelas ini.');
+        // Check for existing booking — same resolution logic
+        $redirect = $this->resolveExistingBooking($userId, $scheduleId);
+        if ($redirect)
+            return $redirect;
 
         DB::beginTransaction();
         try {
@@ -467,10 +491,10 @@ class PaymentController extends Controller
                 ->increment('used_quota');
 
             DB::commit();
-
             Cache::forget('schedules_week');
 
-            return redirect()->route('activity')->with('success', 'Berhasil mendaftar menggunakan kuota membership!');
+            return redirect()->route('activity')
+                ->with('success', 'Berhasil mendaftar menggunakan kuota membership!');
 
         } catch (\Exception $e) {
             DB::rollBack();
