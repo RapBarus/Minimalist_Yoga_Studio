@@ -214,6 +214,21 @@
             color: #3a3a3a;
         }
 
+        /* Cancelled badge */
+        .badge-cancelled {
+            display: inline-block;
+            font-size: .65rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            background: rgba(220, 38, 38, .15);
+            color: #dc2626;
+            border: 1px solid rgba(220, 38, 38, .3);
+            border-radius: 20px;
+            padding: 2px 10px;
+            margin-bottom: 10px;
+        }
+
         /* Empty state */
         .empty-state {
             text-align: center;
@@ -370,9 +385,15 @@
         @forelse ($historyBookings as $booking)
             @php
                 $initial = strtoupper(substr($booking->coach_name ?? 'C', 0, 1));
+                $isCancelled = $booking->booking_status === 'cancelled';
             @endphp
             <div class="card-activity history">
                 <div class="card-activity-title">{{ $booking->class_name }}</div>
+
+                {{-- Cancelled badge --}}
+                @if ($isCancelled)
+                    <div class="badge-cancelled">Dibatalkan</div>
+                @endif
 
                 @if (!empty($booking->coach_name))
                     <a href="{{ route('coach.profile', $booking->coach_id) }}" class="coach-badge-link">
@@ -402,19 +423,22 @@
                 </div>
 
                 <div class="card-activity-footer">
-                    <span class="card-activity-price">Rp {{ number_format($booking->amount, 0, ',', '.') }}</span>
+                    <span class="card-activity-price">Rp {{ number_format($booking->amount ?? 0, 0, ',', '.') }}</span>
                 </div>
 
-                <a href="{{ route('payment.receipt', $booking->booking_id) }}" class="btn-receipt">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                        <polyline points="10 9 9 9 8 9" />
-                    </svg>
-                    Receipt
-                </a>
+                {{-- Hide receipt button for cancelled bookings --}}
+                @if (!$isCancelled)
+                    <a href="{{ route('payment.receipt', $booking->booking_id) }}" class="btn-receipt">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                            <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        Receipt
+                    </a>
+                @endif
             </div>
         @empty
             <div class="empty-state">

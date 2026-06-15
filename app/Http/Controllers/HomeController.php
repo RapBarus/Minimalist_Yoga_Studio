@@ -25,6 +25,12 @@ class HomeController extends Controller
                     now()->toDateString(),
                     now()->addDays(6)->toDateString()
                 ])
+                // Exclude kelas hari ini yang end_time-nya sudah lewat
+                ->where(function ($query) {
+                    $nowJkt = now('Asia/Jakarta');
+                    $query->where('schedules.schedule_date', '>', $nowJkt->toDateString())
+                        ->orWhere('schedules.end_time', '>', $nowJkt->format('H:i:s'));
+                })
                 ->orderBy('schedules.schedule_date', 'asc')
                 ->orderBy('schedules.start_time', 'asc')
                 ->select(
@@ -175,6 +181,12 @@ class HomeController extends Controller
             ->where('schedules.coach_id', $coachId)
             ->where('schedules.status', 'upcoming')
             ->where('schedules.schedule_date', '>=', now()->toDateString())
+            // Exclude kelas hari ini yang end_time-nya sudah lewat
+            ->where(function ($query) {
+                $nowJkt = now('Asia/Jakarta');
+                $query->where('schedules.schedule_date', '>', $nowJkt->toDateString())
+                    ->orWhere('schedules.end_time', '>', $nowJkt->format('H:i:s'));
+            })
             ->orderBy('schedules.schedule_date', 'asc')
             ->select(
                 'schedules.schedule_id',

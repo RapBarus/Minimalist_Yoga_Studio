@@ -188,6 +188,16 @@
             border-color: var(--clay);
         }
 
+        .upload-area.drag-over {
+            border-color: var(--clay);
+            background: rgba(160, 82, 45, .04);
+        }
+
+        .upload-area.drag-invalid {
+            border-color: var(--danger);
+            background: rgba(192, 57, 43, .04);
+        }
+
         .upload-area input[type="file"] {
             position: absolute;
             inset: 0;
@@ -528,6 +538,27 @@
         </button>
     @endif
 
+    {{-- File type error modal --}}
+    <div class="confirm-overlay" id="fileErrorModal">
+        <div class="confirm-box">
+            <div class="confirm-icon">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+            </div>
+            <div class="confirm-title">File Tidak Valid</div>
+            <div class="confirm-desc">
+                Hanya file gambar yang diperbolehkan.<br>
+                <span style="font-size:.72rem;opacity:.7;">(JPG, PNG, WEBP, GIF, dll)</span>
+            </div>
+            <div class="confirm-actions" style="grid-template-columns:1fr;">
+                <button type="button" class="btn-confirm-ok" onclick="closeFileErrorModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
     {{-- Custom confirm modal --}}
     <div class="confirm-overlay" id="deleteModal">
         <div class="confirm-box">
@@ -594,51 +625,88 @@
             document.getElementById('deletePhotoForm').submit();
         }
 
+        function showFileError() {
+            document.getElementById('fileErrorModal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFileErrorModal() {
+            document.getElementById('fileErrorModal').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('fileErrorModal').addEventListener('click', function(e) {
+            if (e.target === this) closeFileErrorModal();
+        });
+
         // Close modal on overlay click
         document.getElementById('deleteModal').addEventListener('click', function(e) {
             if (e.target === this) closeDeleteModal();
         });
 
-        // Replace input caption update
         const replaceInput = document.getElementById('replaceInput');
         if (replaceInput) {
             replaceInput.addEventListener('change', function() {
-                const caption = document.getElementById('replaceCaption');
-                if (caption && this.files && this.files[0]) {
-                    caption.textContent = this.files[0].name + ' dipilih — klik Update Kelas untuk menyimpan';
+                if (this.files && this.files[0]) {
+                    if (!this.files[0].type.startsWith('image/')) {
+                        showFileError();
+                        this.value = '';
+                        return;
+                    }
+                    const caption = document.getElementById('replaceCaption');
+                    if (caption) {
+                        caption.textContent = this.files[0].name + ' dipilih — klik Update Kelas untuk menyimpan';
+                    }
                 }
             });
         }
 
-        // Normal upload area
+        // Upload area — shared helper
+        function applyFileToUploadArea(file) {
+            const area = document.getElementById('uploadArea');
+            const icon = document.getElementById('uploadIcon');
+            const text = document.getElementById('uploadText');
+            const filename = document.getElementById('uploadFilename');
+            const filesize = document.getElementById('uploadFilesize');
+            const hint = document.getElementById('uploadHint');
+
+            if (!file.type.startsWith('image/')) {
+                showFileError();
+                const buktiInput = document.getElementById('buktiHadirInput');
+                if (buktiInput) buktiInput.value = '';
+                return;
+            }
+
+            const sizeKB = (file.size / 1024).toFixed(1);
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+            area.classList.add('has-file');
+            if (text) text.style.display = 'none';
+            if (icon) icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+            if (filename) {
+                filename.textContent = file.name;
+                filename.style.display = 'block';
+            }
+            if (filesize) {
+                filesize.textContent = file.size > 1024 * 1024 ? sizeMB + ' MB' : sizeKB + ' KB';
+                filesize.style.display = 'block';
+            }
+            if (hint) hint.style.display = 'block';
+        }
+
+        // Normal upload area — file picker
         const buktiInput = document.getElementById('buktiHadirInput');
         if (buktiInput) {
             buktiInput.addEventListener('change', function() {
-                const area = document.getElementById('uploadArea');
-                const icon = document.getElementById('uploadIcon');
-                const text = document.getElementById('uploadText');
-                const filename = document.getElementById('uploadFilename');
-                const filesize = document.getElementById('uploadFilesize');
-                const hint = document.getElementById('uploadHint');
-
                 if (this.files && this.files[0]) {
-                    const file = this.files[0];
-                    const sizeKB = (file.size / 1024).toFixed(1);
-                    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-
-                    area.classList.add('has-file');
-                    if (text) text.style.display = 'none';
-                    if (icon) icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
-                    if (filename) {
-                        filename.textContent = file.name;
-                        filename.style.display = 'block';
-                    }
-                    if (filesize) {
-                        filesize.textContent = file.size > 1024 * 1024 ? sizeMB + ' MB' : sizeKB + ' KB';
-                        filesize.style.display = 'block';
-                    }
-                    if (hint) hint.style.display = 'block';
+                    applyFileToUploadArea(this.files[0]);
                 } else {
+                    const area = document.getElementById('uploadArea');
+                    const icon = document.getElementById('uploadIcon');
+                    const text = document.getElementById('uploadText');
+                    const filename = document.getElementById('uploadFilename');
+                    const filesize = document.getElementById('uploadFilesize');
+                    const hint = document.getElementById('uploadHint');
                     area.classList.remove('has-file');
                     if (text) text.style.display = 'block';
                     if (icon) icon.innerHTML =
@@ -647,6 +715,40 @@
                     if (filesize) filesize.style.display = 'none';
                     if (hint) hint.style.display = 'none';
                 }
+            });
+        }
+
+        // Drag and drop validation
+        const uploadArea = document.getElementById('uploadArea');
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                const isImage = Array.from(e.dataTransfer.items).every(i => i.type.startsWith('image/'));
+                this.classList.toggle('drag-over', isImage);
+                this.classList.toggle('drag-invalid', !isImage);
+            });
+
+            uploadArea.addEventListener('dragleave', function() {
+                this.classList.remove('drag-over', 'drag-invalid');
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over', 'drag-invalid');
+
+                const file = e.dataTransfer.files[0];
+                if (!file) return;
+
+                if (!file.type.startsWith('image/')) {
+                    showFileError();
+                    return;
+                }
+
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                buktiInput.files = dt.files;
+
+                applyFileToUploadArea(file);
             });
         }
     </script>

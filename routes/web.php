@@ -87,8 +87,8 @@ Route::middleware(['auth.session', 'admin.auth'])->prefix('admin')->name('admin.
     // Customers
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers');
     Route::get('/customers/{userId}/detail', [CustomerController::class, 'detail'])->name('customers.detail');
-    Route::delete('/customers/stop-membership', [CustomerController::class, 'stopMembership'])->name('customers.stop-membership');
-    Route::delete('/customers/cancel-booking', [CustomerController::class, 'cancelBooking'])->name('customers.cancel-booking');
+    Route::delete('/customers/{userId}/stop-membership/{quotaId}', [CustomerController::class, 'stopMembership'])->name('customers.stop-membership');
+    Route::delete('/customers/{userId}/cancel-booking/{bookingId}', [CustomerController::class, 'cancelBooking'])->name('customers.cancel-booking');
 
     // Keuangan
     Route::get('/keuangan', [KeuanganController::class, 'index'])->name('keuangan');

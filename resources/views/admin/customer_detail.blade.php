@@ -451,11 +451,13 @@
         document.getElementById('btn-confirm-yes').addEventListener('click', function() {
             if (!pendingType || !pendingId) return;
             if (pendingType === 'membership') {
-                document.getElementById('stop-quota-id').value = pendingId;
-                document.getElementById('form-stop-membership').submit();
+                const form = document.getElementById('form-stop-membership');
+                form.action = form.action.replace('__QUOTA_ID__', pendingId);
+                form.submit();
             } else {
-                document.getElementById('cancel-booking-id').value = pendingId;
-                document.getElementById('form-cancel-booking').submit();
+                const form = document.getElementById('form-cancel-booking');
+                form.action = form.action.replace('__BOOKING_ID__', pendingId);
+                form.submit();
             }
         });
     </script>
@@ -479,18 +481,16 @@
     </div>
 </div>
 
-<form id="form-stop-membership" action="{{ route('admin.customers.stop-membership') }}" method="POST"
+<form id="form-stop-membership"
+    action="{{ route('admin.customers.stop-membership', [$customer->user_id, '__QUOTA_ID__']) }}" method="POST"
     style="display:none;">
     @csrf
     @method('DELETE')
-    <input type="hidden" name="quota_id" id="stop-quota-id">
-    <input type="hidden" name="user_id" value="{{ $customer->user_id }}">
 </form>
 
-<form id="form-cancel-booking" action="{{ route('admin.customers.cancel-booking') }}" method="POST"
+<form id="form-cancel-booking"
+    action="{{ route('admin.customers.cancel-booking', [$customer->user_id, '__BOOKING_ID__']) }}" method="POST"
     style="display:none;">
     @csrf
     @method('DELETE')
-    <input type="hidden" name="booking_id" id="cancel-booking-id">
-    <input type="hidden" name="user_id" value="{{ $customer->user_id }}">
 </form>

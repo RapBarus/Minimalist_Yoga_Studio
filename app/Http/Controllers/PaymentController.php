@@ -141,6 +141,28 @@ class PaymentController extends Controller
         return null;
     }
 
+    /**
+     * Delete a cancelled booking and its transactions (FK-safe order).
+     * Needed before INSERT to avoid unique constraint violation on (user_id, schedule_id).
+     */
+    private function deleteCancelledBooking($userId, $scheduleId)
+    {
+        $cancelled = DB::table('bookings')
+            ->where('user_id', $userId)
+            ->where('schedule_id', $scheduleId)
+            ->where('status', 'cancelled')
+            ->first();
+
+        if ($cancelled) {
+            DB::table('transactions')
+                ->where('booking_id', $cancelled->booking_id)
+                ->delete();
+            DB::table('bookings')
+                ->where('booking_id', $cancelled->booking_id)
+                ->delete();
+        }
+    }
+
     public function processMethod(Request $request, $schedule_id)
     {
         $userId = Session::get('user_id');
@@ -166,6 +188,9 @@ class PaymentController extends Controller
         $redirect = $this->resolveExistingBooking($userId, $schedule_id);
         if ($redirect)
             return $redirect;
+
+        // Delete leftover cancelled booking (FK-safe) to avoid unique constraint on INSERT
+        $this->deleteCancelledBooking($userId, $schedule_id);
 
         $user = DB::table('users')->where('user_id', $userId)->first();
         $method = $request->payment_method;
@@ -462,6 +487,9 @@ class PaymentController extends Controller
         $redirect = $this->resolveExistingBooking($userId, $scheduleId);
         if ($redirect)
             return $redirect;
+
+        // Delete leftover cancelled booking (FK-safe) to avoid unique constraint on INSERT
+        $this->deleteCancelledBooking($userId, $scheduleId);
 
         DB::beginTransaction();
         try {

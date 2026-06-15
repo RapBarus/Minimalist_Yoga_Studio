@@ -73,11 +73,8 @@ class CustomerController extends Controller
         return view('admin.customer_detail', compact('customer', 'memberships', 'activeBookings'));
     }
 
-    public function stopMembership(Request $request)
+    public function stopMembership($userId, $quotaId)
     {
-        $quotaId = $request->quota_id;
-        $userId = $request->user_id;
-
         DB::table('membership_quotas')
             ->where('quota_id', $quotaId)
             ->where('user_id', $userId)
@@ -87,11 +84,8 @@ class CustomerController extends Controller
             ->with('success', 'Membership berhasil dihentikan.');
     }
 
-    public function cancelBooking(Request $request)
+    public function cancelBooking($userId, $bookingId)
     {
-        $bookingId = $request->booking_id;
-        $userId = $request->user_id;
-
         $booking = DB::table('bookings')
             ->where('booking_id', $bookingId)
             ->where('user_id', $userId)

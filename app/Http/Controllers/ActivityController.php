@@ -53,6 +53,7 @@ class ActivityController extends Controller
             ->leftJoin('classes', 'membership_packages.class_id', '=', 'classes.class_id')
             ->where('membership_quotas.user_id', $userId)
             ->whereIn('transactions.status', ['settlement', 'paid'])
+            ->where('membership_quotas.is_active', 1)
             ->select(
                 'transactions.transaction_id',
                 'transactions.amount',
