@@ -23,6 +23,7 @@ class ActivityController extends Controller
             ->select(
                 'bookings.booking_id',
                 'bookings.status as booking_status',
+                'bookings.updated_at as booking_updated_at',
                 'schedules.schedule_date',
                 'schedules.start_time',
                 'schedules.end_time',
@@ -44,7 +45,7 @@ class ActivityController extends Controller
                 $q->where('schedules.schedule_date', '<', now()->toDateString())
                     ->orWhere('bookings.status', 'cancelled');
             })
-            ->orderBy('schedules.schedule_date', 'desc')
+            ->orderBy('bookings.updated_at', 'desc')
             ->get();
 
         $membershipPurchases = DB::table('transactions')

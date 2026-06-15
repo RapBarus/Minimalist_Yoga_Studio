@@ -136,12 +136,12 @@ class ScheduleController extends Controller
         abort_if(!$schedule, 404);
 
         $participants = DB::table('bookings')
-            ->join('users', 'bookings.user_id', '=', 'users.user_id')
+            ->leftJoin('users', 'bookings.user_id', '=', 'users.user_id')
             ->leftJoin('transactions', 'bookings.booking_id', '=', 'transactions.booking_id')
             ->where('bookings.schedule_id', $scheduleId)
             ->select(
                 'bookings.booking_id',
-                'users.name',
+                DB::raw('COALESCE(users.name, bookings.participant_name) as name'),
                 'users.phone_number',
                 'transactions.payment_type',
                 'transactions.status as transaction_status',
@@ -238,7 +238,6 @@ class ScheduleController extends Controller
                             ? $request->phone_number
                             : '+' . $request->phone_number))
                     : '+620000000000',
-                // 'email' => null,
                 'password_hash' => bcrypt('walkin' . time()),
                 'role' => 'customer',
                 'status' => 'active',
@@ -362,20 +361,21 @@ class ScheduleController extends Controller
         abort_if(!$schedule, 404);
 
         $bookings = DB::table('bookings')
-            ->join('users', 'bookings.user_id', '=', 'users.user_id')
+            ->leftJoin('users', 'bookings.user_id', '=', 'users.user_id')
             ->leftJoin('attendance', 'attendance.booking_id', '=', 'bookings.booking_id')
             ->where('bookings.schedule_id', $scheduleId)
             ->whereIn('bookings.status', ['confirmed', 'attended'])
             ->select(
                 'bookings.booking_id',
-                'users.name',
+                'bookings.status',
+                DB::raw('COALESCE(users.name, bookings.participant_name) as name'),
                 'attendance.coach_verification',
                 'attendance.admin_verification'
             )
             ->get();
 
-        $present = $bookings->filter(fn($b) => $b->coach_verification == 1);
-        $absent = $bookings->filter(fn($b) => $b->coach_verification != 1);
+        $present = $bookings->filter(fn($b) => $b->status === 'attended');
+        $absent = $bookings->filter(fn($b) => $b->status !== 'attended');
 
         $attendance = DB::table('attendance')
             ->join('bookings', 'attendance.booking_id', '=', 'bookings.booking_id')

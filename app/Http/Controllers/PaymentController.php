@@ -91,10 +91,6 @@ class PaymentController extends Controller
         return view('pages.payment-method', compact('schedule', 'activeQuota'));
     }
 
-    /**
-     * Shared logic: check for existing booking and handle pending/confirmed/cancelled states.
-     * Returns a redirect response if action is needed, or null to continue normally.
-     */
     private function resolveExistingBooking($userId, $scheduleId)
     {
         $existing = DB::table('bookings')
@@ -117,7 +113,6 @@ class PaymentController extends Controller
                 ->where('status', 'pending')
                 ->first();
 
-            // Valid invoice still alive — resume it
             if (
                 $transaction &&
                 $transaction->xendit_invoice_url &&
@@ -127,7 +122,6 @@ class PaymentController extends Controller
                 return redirect($transaction->xendit_invoice_url);
             }
 
-            // Expired — cancel old booking so user can start fresh
             DB::table('bookings')
                 ->where('booking_id', $existing->booking_id)
                 ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
@@ -137,14 +131,9 @@ class PaymentController extends Controller
                 ->update(['status' => 'failed', 'updated_at' => now()]);
         }
 
-        // cancelled / failed — fall through, allow fresh booking
         return null;
     }
 
-    /**
-     * Delete a cancelled booking and its transactions (FK-safe order).
-     * Needed before INSERT to avoid unique constraint violation on (user_id, schedule_id).
-     */
     private function deleteCancelledBooking($userId, $scheduleId)
     {
         $cancelled = DB::table('bookings')
@@ -163,6 +152,20 @@ class PaymentController extends Controller
         }
     }
 
+    private function parseFriends(Request $request)
+    {
+        $raw = $request->input('friends', []);
+        if (!is_array($raw))
+            return [];
+
+        return collect($raw)
+            ->map(fn($n) => trim($n))
+            ->filter(fn($n) => $n !== '')
+            ->take(4)
+            ->values()
+            ->all();
+    }
+
     public function processMethod(Request $request, $schedule_id)
     {
         $userId = Session::get('user_id');
@@ -171,7 +174,12 @@ class PaymentController extends Controller
 
         $request->validate([
             'payment_method' => 'required|in:QRIS,GOPAY,OVO,DANA,SHOPEEPAY',
+            'friends' => 'nullable|array|max:4',
+            'friends.*' => 'nullable|string|max:100',
         ]);
+
+        $friends = $this->parseFriends($request);
+        $totalPax = 1 + count($friends);
 
         $schedule = DB::table('schedules')
             ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
@@ -180,41 +188,70 @@ class PaymentController extends Controller
             ->select('schedules.*', 'coaches.rate_per_class', 'classes.class_name')
             ->first();
 
-        if (!$schedule || $schedule->available_slots <= 0) {
-            return redirect()->route('home')->withErrors('Jadwal tidak tersedia.');
+        if (!$schedule || $schedule->available_slots < $totalPax) {
+            return redirect()->route('home')->withErrors('Jadwal tidak tersedia atau kuota tidak mencukupi untuk ' . $totalPax . ' peserta.');
         }
 
-        // Resolve any existing booking before proceeding
         $redirect = $this->resolveExistingBooking($userId, $schedule_id);
         if ($redirect)
             return $redirect;
 
-        // Delete leftover cancelled booking (FK-safe) to avoid unique constraint on INSERT
         $this->deleteCancelledBooking($userId, $schedule_id);
 
         $user = DB::table('users')->where('user_id', $userId)->first();
         $method = $request->payment_method;
-        $amount = (float) max($schedule->rate_per_class, 1000);
+        $pricePerPax = (float) max($schedule->rate_per_class, 1000);
+        $totalAmount = $pricePerPax * $totalPax;
 
         DB::beginTransaction();
         try {
+            // 1. Create booking group
+            $groupId = DB::table('booking_groups')->insertGetId([
+                'booked_by' => $userId,
+                'schedule_id' => $schedule_id,
+                'total_pax' => $totalPax,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // 2. Insert booking for the customer
             $bookingId = DB::table('bookings')->insertGetId([
                 'user_id' => $userId,
                 'schedule_id' => $schedule_id,
+                'group_id' => $groupId,
                 'booking_date' => now(),
                 'status' => 'pending',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            $externalId = 'booking-' . $bookingId . '-' . time();
+            // 3. Insert bookings for each friend (guest, no user_id)
+            foreach ($friends as $friendName) {
+                DB::table('bookings')->insert([
+                    'user_id' => null,
+                    'participant_name' => $friendName,
+                    'schedule_id' => $schedule_id,
+                    'group_id' => $groupId,
+                    'booking_date' => now(),
+                    'status' => 'pending',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
+            // 4. Create Xendit invoice
+            $externalId = 'booking-' . $bookingId . '-' . time();
             $apiInstance = new InvoiceApi();
+
+            $description = 'Booking ' . $schedule->class_name . ' - Minimalist Studio';
+            if ($totalPax > 1) {
+                $description .= ' (' . $totalPax . ' peserta)';
+            }
 
             $invoiceRequest = new CreateInvoiceRequest([
                 'external_id' => $externalId,
-                'amount' => $amount,
-                'description' => 'Booking ' . $schedule->class_name . ' - Minimalist Studio',
+                'amount' => $totalAmount,
+                'description' => $description,
                 'invoice_duration' => 3600,
                 'customer' => [
                     'given_names' => $user->name,
@@ -228,10 +265,11 @@ class PaymentController extends Controller
 
             $invoice = $apiInstance->createInvoice($invoiceRequest);
 
+            // 5. Insert transaction linked to customer's booking
             DB::table('transactions')->insert([
                 'user_id' => $userId,
                 'booking_id' => $bookingId,
-                'amount' => $schedule->rate_per_class,
+                'amount' => $totalAmount,
                 'payment_type' => 'ewallet',
                 'payment_channel' => $method,
                 'xendit_external_id' => $externalId,
@@ -332,15 +370,28 @@ class PaymentController extends Controller
     {
         $userId = Session::get('user_id');
 
-        DB::table('bookings')
+        $booking = DB::table('bookings')
             ->where('booking_id', $bookingId)
             ->where('user_id', $userId)
             ->where('status', 'pending')
-            ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+            ->first();
 
-        DB::table('transactions')
-            ->where('booking_id', $bookingId)
-            ->update(['status' => 'failed', 'updated_at' => now()]);
+        if ($booking) {
+            if ($booking->group_id) {
+                DB::table('bookings')
+                    ->where('group_id', $booking->group_id)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+            } else {
+                DB::table('bookings')
+                    ->where('booking_id', $bookingId)
+                    ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+            }
+
+            DB::table('transactions')
+                ->where('booking_id', $bookingId)
+                ->update(['status' => 'failed', 'updated_at' => now()]);
+        }
 
         Cache::forget('schedules_week');
 
@@ -368,6 +419,15 @@ class PaymentController extends Controller
                 DB::table('transactions')
                     ->where('booking_id', $bookingId)
                     ->update(['status' => 'settlement', 'updated_at' => now()]);
+
+                // Confirm friend bookings in the same group
+                if ($booking->group_id) {
+                    DB::table('bookings')
+                        ->where('group_id', $booking->group_id)
+                        ->where('status', 'pending')
+                        ->whereNull('user_id')
+                        ->update(['status' => 'confirmed', 'updated_at' => now()]);
+                }
             }
         }
 
@@ -378,14 +438,28 @@ class PaymentController extends Controller
 
     public function failed(Request $request, $bookingId)
     {
-        DB::table('bookings')
+        $booking = DB::table('bookings')
             ->where('booking_id', $bookingId)
             ->where('status', 'pending')
-            ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+            ->first();
 
-        DB::table('transactions')
-            ->where('booking_id', $bookingId)
-            ->update(['status' => 'failed', 'updated_at' => now()]);
+        if ($booking) {
+            if ($booking->group_id) {
+                DB::table('bookings')
+                    ->where('group_id', $booking->group_id)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+            } else {
+                DB::table('bookings')
+                    ->where('booking_id', $bookingId)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+            }
+
+            DB::table('transactions')
+                ->where('booking_id', $bookingId)
+                ->update(['status' => 'failed', 'updated_at' => now()]);
+        }
 
         $scheduleId = DB::table('bookings')->where('booking_id', $bookingId)->value('schedule_id');
         return redirect()->route('payment.show', $scheduleId)
@@ -426,13 +500,30 @@ class PaymentController extends Controller
                     ->where('booking_id', $bookingId)
                     ->update(['status' => 'settlement', 'updated_at' => now()]);
 
+                if ($booking->group_id) {
+                    DB::table('bookings')
+                        ->where('group_id', $booking->group_id)
+                        ->where('status', 'pending')
+                        ->whereNull('user_id')
+                        ->update(['status' => 'confirmed', 'updated_at' => now()]);
+                }
+
                 Cache::forget('schedules_week');
             }
         } elseif (in_array($status, ['EXPIRED', 'FAILED', 'VOIDED'])) {
-            DB::table('bookings')
-                ->where('booking_id', $bookingId)
-                ->where('status', 'pending')
-                ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+            $booking = DB::table('bookings')->where('booking_id', $bookingId)->first();
+
+            if ($booking && $booking->group_id) {
+                DB::table('bookings')
+                    ->where('group_id', $booking->group_id)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+            } else {
+                DB::table('bookings')
+                    ->where('booking_id', $bookingId)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'cancelled', 'cancellation_date' => now(), 'updated_at' => now()]);
+            }
 
             DB::table('transactions')
                 ->where('booking_id', $bookingId)
@@ -459,7 +550,18 @@ class PaymentController extends Controller
             ->first();
         $user = DB::table('users')->where('user_id', $userId)->first();
 
-        return view('pages.payment-receipt', compact('transaction', 'schedule', 'user'));
+        // Get friend names in the same group
+        $groupMembers = [];
+        if ($booking->group_id) {
+            $groupMembers = DB::table('bookings')
+                ->where('group_id', $booking->group_id)
+                ->whereNull('user_id')
+                ->whereNotNull('participant_name')
+                ->pluck('participant_name')
+                ->all();
+        }
+
+        return view('pages.payment-receipt', compact('transaction', 'schedule', 'user', 'groupMembers'));
     }
 
     public function useQuota(Request $request)
@@ -483,12 +585,10 @@ class PaymentController extends Controller
         if (!$quota)
             return redirect()->route('home')->withErrors('Kuota tidak valid atau sudah habis.');
 
-        // Check for existing booking — same resolution logic
         $redirect = $this->resolveExistingBooking($userId, $scheduleId);
         if ($redirect)
             return $redirect;
 
-        // Delete leftover cancelled booking (FK-safe) to avoid unique constraint on INSERT
         $this->deleteCancelledBooking($userId, $scheduleId);
 
         DB::beginTransaction();

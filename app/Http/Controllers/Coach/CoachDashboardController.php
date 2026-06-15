@@ -14,7 +14,8 @@ class CoachDashboardController extends Controller
     {
         $userId = Session::get('user_id');
         $coach = DB::table('coaches')->where('user_id', $userId)->first();
-        if (!$coach) return redirect()->route('login');
+        if (!$coach)
+            return redirect()->route('login');
 
         $coachId = $coach->coach_id;
         $filter = $request->get('filter', 'all');
@@ -24,7 +25,6 @@ class CoachDashboardController extends Controller
             ->where('schedule_date', '>=', now()->toDateString())
             ->orderBy('schedule_date', 'asc');
 
-        // Apply filter
         if ($filter === 'today') {
             $query->whereDate('schedule_date', today());
         } elseif ($filter === 'week') {
@@ -63,14 +63,14 @@ class CoachDashboardController extends Controller
 
         abort_if(!$schedule, 404);
 
-        // Get all participants for this schedule
         $participants = DB::table('bookings')
-            ->join('users', 'bookings.user_id', '=', 'users.user_id')
+            ->leftJoin('users', 'bookings.user_id', '=', 'users.user_id')
             ->where('bookings.schedule_id', $scheduleId)
+            ->whereIn('bookings.status', ['confirmed', 'attended', 'pending'])
             ->select(
                 'bookings.booking_id',
                 'bookings.status',
-                'users.name'
+                DB::raw('COALESCE(users.name, bookings.participant_name) as name')
             )
             ->get();
 
@@ -82,7 +82,6 @@ class CoachDashboardController extends Controller
             ->where('bookings.schedule_id', $scheduleId)
             ->whereNotNull('attendance.photo_url')
             ->value('attendance.photo_url');
-
 
         return view('coach.coach_schedule_detail', compact(
             'schedule',
@@ -100,20 +99,15 @@ class CoachDashboardController extends Controller
         if (!$coach)
             return redirect()->route('login');
 
-        // Update attendance for each booking
         if ($request->has('attendance')) {
             foreach ($request->attendance as $bookingId => $status) {
                 $bookingStatus = $status === 'hadir' ? 'attended' : 'confirmed';
                 DB::table('bookings')
                     ->where('booking_id', $bookingId)
-                    ->update([
-                        'status' => $bookingStatus,
-                        // 'updated_at' => now(),
-                    ]);
+                    ->update(['status' => $bookingStatus]);
             }
         }
 
-        // Handle file upload
         if ($request->hasFile('bukti_hadir')) {
             $file = $request->file('bukti_hadir');
             $path = $file->store('bukti_hadir', 'public');
@@ -138,17 +132,15 @@ class CoachDashboardController extends Controller
             }
         }
 
-        // Mark schedule as completed
-        DB::table('schedules')
-            ->where('schedule_id', $scheduleId)
-            ->update([
-                'status' => 'completed',
-                // 'updated_at' => now(),
-            ]);
-
+        if ($request->hasFile('bukti_hadir')) {
+            DB::table('schedules')
+                ->where('schedule_id', $scheduleId)
+                ->update(['status' => 'completed']);
+        }
         return redirect()->route('coach.schedule.detail', $scheduleId)
             ->with('success', 'Jadwal berhasil diupdate!');
     }
+
     public function deletePhoto($scheduleId)
     {
         $userId = Session::get('user_id');

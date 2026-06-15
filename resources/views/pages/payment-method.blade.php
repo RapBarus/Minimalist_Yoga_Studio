@@ -91,7 +91,7 @@
 
         .content {
             flex: 1;
-            padding: 24px 18px 160px;
+            padding: 24px 18px 180px;
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -143,6 +143,140 @@
         .order-price {
             font-weight: 700;
             font-size: 1.2rem;
+        }
+
+        .order-price-note {
+            font-size: .72rem;
+            opacity: .75;
+            margin-top: 2px;
+        }
+
+        /* Tambah Teman section */
+        .friends-section {
+            background: var(--bg-white);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .friends-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .friends-title {
+            font-size: .78rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .friends-count {
+            font-size: .7rem;
+            color: var(--text-muted);
+        }
+
+        .friend-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .friend-row:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .friend-input {
+            flex: 1;
+            padding: .6rem .85rem;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .82rem;
+            color: var(--text);
+            background: var(--bg);
+            outline: none;
+            transition: border-color .18s;
+        }
+
+        .friend-input:focus {
+            border-color: var(--clay);
+        }
+
+        .friend-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-remove-friend {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border);
+            background: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: border-color .18s, background .18s;
+        }
+
+        .btn-remove-friend:hover {
+            border-color: #dc2626;
+            background: rgba(220, 38, 38, .06);
+        }
+
+        .btn-remove-friend svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        .btn-remove-friend:hover svg {
+            stroke: #dc2626;
+        }
+
+        .btn-add-friend {
+            width: 100%;
+            padding: .6rem;
+            background: none;
+            border: 1.5px dashed var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--clay);
+            cursor: pointer;
+            margin-top: 10px;
+            transition: border-color .18s, background .18s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-add-friend:hover {
+            border-color: var(--clay);
+            background: var(--clay-pale);
+        }
+
+        .btn-add-friend svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+        }
+
+        .btn-add-friend:disabled {
+            opacity: .4;
+            cursor: not-allowed;
         }
 
         /* Payment methods */
@@ -205,13 +339,6 @@
             height: 8px;
             border-radius: 50%;
             background: #fff;
-        }
-
-        .method-logo {
-            width: 52px;
-            height: 32px;
-            object-fit: contain;
-            flex-shrink: 0;
         }
 
         .method-logo-text {
@@ -343,7 +470,25 @@
                     {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
                     WIB
                 </div>
-                <div class="order-price">Rp {{ number_format($schedule->price, 0, ',', '.') }}</div>
+                <div class="order-price" id="display-price">Rp {{ number_format($schedule->price, 0, ',', '.') }}</div>
+                <div class="order-price-note" id="display-pax" style="display:none;"></div>
+            </div>
+
+            {{-- Tambah Teman --}}
+            <div class="section-title">Peserta</div>
+            <div class="friends-section">
+                <div class="friends-header">
+                    <span class="friends-title">Tambah Teman (Opsional)</span>
+                    <span class="friends-count" id="friends-count">0 / 4 teman</span>
+                </div>
+                <div id="friends-list"></div>
+                <button class="btn-add-friend" id="btn-add-friend" onclick="addFriend()">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Tambah Teman
+                </button>
             </div>
 
             {{-- Payment methods --}}
@@ -353,6 +498,7 @@
                 method="POST">
                 @csrf
                 <input type="hidden" name="schedule_id" value="{{ $schedule->schedule_id }}">
+                <div id="friend-inputs-container"></div>
 
                 <div class="methods-grid">
                     <div class="method-group-label">E-Wallet</div>
@@ -419,12 +565,90 @@
             <button class="pay-btn" id="pay-btn" onclick="submitPayment()" disabled>
                 <span>Bayar</span>
                 <div class="pay-divider"></div>
-                <span>Rp {{ number_format($schedule->price, 0, ',', '.') }}</span>
+                <span id="pay-btn-price">Rp {{ number_format($schedule->price, 0, ',', '.') }}</span>
             </button>
         </div>
     </div>
 
     <script>
+        const BASE_PRICE = {{ $schedule->price }};
+        const MAX_FRIENDS = 4;
+        let friendCount = 0;
+
+        function formatRupiah(amount) {
+            return 'Rp ' + amount.toLocaleString('id-ID');
+        }
+
+        function updatePrice() {
+            const pax = 1 + friendCount;
+            const total = BASE_PRICE * pax;
+            document.getElementById('display-price').textContent = formatRupiah(total);
+            document.getElementById('pay-btn-price').textContent = formatRupiah(total);
+
+            const note = document.getElementById('display-pax');
+            if (friendCount > 0) {
+                note.textContent = pax + ' peserta × ' + formatRupiah(BASE_PRICE);
+                note.style.display = 'block';
+            } else {
+                note.style.display = 'none';
+            }
+        }
+
+        function updateFriendsCount() {
+            document.getElementById('friends-count').textContent = friendCount + ' / ' + MAX_FRIENDS + ' teman';
+            document.getElementById('btn-add-friend').disabled = friendCount >= MAX_FRIENDS;
+        }
+
+        function addFriend() {
+            if (friendCount >= MAX_FRIENDS) return;
+            friendCount++;
+
+            const idx = friendCount;
+            const row = document.createElement('div');
+            row.className = 'friend-row';
+            row.id = 'friend-row-' + idx;
+            row.innerHTML = `
+                <input
+                    type="text"
+                    class="friend-input"
+                    placeholder="Nama teman ${idx}"
+                    maxlength="100"
+                    oninput="syncFriendInput(${idx}, this.value)"
+                />
+                <button type="button" class="btn-remove-friend" onclick="removeFriend(${idx})">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            `;
+            document.getElementById('friends-list').appendChild(row);
+
+            // Add hidden input in form
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'friends[]';
+            hidden.id = 'friend-hidden-' + idx;
+            hidden.value = '';
+            document.getElementById('friend-inputs-container').appendChild(hidden);
+
+            updateFriendsCount();
+            updatePrice();
+        }
+
+        function removeFriend(idx) {
+            const row = document.getElementById('friend-row-' + idx);
+            const hidden = document.getElementById('friend-hidden-' + idx);
+            if (row) row.remove();
+            if (hidden) hidden.remove();
+            friendCount--;
+            // Re-index remaining rows for display only (IDs stay, no re-render needed)
+            updateFriendsCount();
+            updatePrice();
+        }
+
+        function syncFriendInput(idx, value) {
+            const hidden = document.getElementById('friend-hidden-' + idx);
+            if (hidden) hidden.value = value.trim();
+        }
+
         function selectMethod(label) {
             document.querySelectorAll('.method-item').forEach(el => el.classList.remove('selected'));
             label.classList.add('selected');
@@ -433,24 +657,27 @@
         }
 
         function submitPayment() {
+            // Validate friend names — no empty names allowed if row exists
+            const hiddens = document.querySelectorAll('#friend-inputs-container input[name="friends[]"]');
+            for (const h of hiddens) {
+                if (!h.value.trim()) {
+                    alert('Mohon isi nama semua teman yang ditambahkan, atau hapus baris yang kosong.');
+                    return;
+                }
+            }
             const btn = document.getElementById('pay-btn');
             btn.disabled = true;
             btn.innerHTML = '<span>Memproses...</span>';
             document.getElementById('payment-form').submit();
         }
     </script>
+
     @if (isset($activeQuota) && $activeQuota)
         <div id="quota-dialog"
             style="
-    display:flex;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.45);
-    z-index:100;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-">
+            display:flex;position:fixed;inset:0;
+            background:rgba(0,0,0,.45);z-index:100;
+            align-items:center;justify-content:center;padding:20px;">
             <div style="background:#fff;border-radius:18px;padding:24px;max-width:320px;width:100%;text-align:center;">
                 <div style="font-size:2rem;margin-bottom:12px;">?</div>
                 <div style="font-weight:700;font-size:.95rem;margin-bottom:8px;color:#3A2E28;">
@@ -466,24 +693,10 @@
                         <input type="hidden" name="schedule_id" value="{{ $schedule->schedule_id }}">
                         <input type="hidden" name="quota_id" value="{{ $activeQuota->quota_id }}">
                         <button type="submit"
-                            style="
-                    width:100%;padding:.75rem;
-                    background:#A0522D;color:#fff;
-                    border:none;border-radius:10px;
-                    font-family:'Raleway',sans-serif;
-                    font-size:.82rem;font-weight:600;
-                    cursor:pointer;
-                ">Ya</button>
+                            style="width:100%;padding:.75rem;background:#A0522D;color:#fff;border:none;border-radius:10px;font-family:'Raleway',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;">Ya</button>
                     </form>
                     <button onclick="document.getElementById('quota-dialog').style.display='none'"
-                        style="
-                flex:1;padding:.75rem;
-                background:#F2EFEB;color:#3A2E28;
-                border:1.5px solid #E0D8D0;border-radius:10px;
-                font-family:'Raleway',sans-serif;
-                font-size:.82rem;font-weight:600;
-                cursor:pointer;
-            ">Bayar
+                        style="flex:1;padding:.75rem;background:#F2EFEB;color:#3A2E28;border:1.5px solid #E0D8D0;border-radius:10px;font-family:'Raleway',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;">Bayar
                         Normal</button>
                 </div>
             </div>

@@ -92,13 +92,26 @@ class CustomerController extends Controller
             ->first();
 
         if ($booking) {
-            DB::table('bookings')
-                ->where('booking_id', $bookingId)
-                ->update([
-                    'status' => 'cancelled',
-                    'cancellation_date' => now(),
-                    'updated_at' => now(),
-                ]);
+            if ($booking->group_id) {
+                DB::table('bookings')
+                    ->where('group_id', $booking->group_id)
+                    ->whereIn('status', ['confirmed', 'pending', 'attended'])
+                    ->update([
+                        'status' => 'cancelled',
+                        'cancellation_date' => now(),
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                DB::table('bookings')
+                    ->where('booking_id', $bookingId)
+                    ->update([
+                        'status' => 'cancelled',
+                        'cancellation_date' => now(),
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            \Illuminate\Support\Facades\Cache::forget('schedules_week');
         }
 
         return redirect()->route('admin.customers.detail', $userId)

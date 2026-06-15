@@ -49,11 +49,6 @@
             position: relative;
         }
 
-        .info-field-wrap:has(textarea) .btn-field-edit {
-            top: 14px;
-            transform: none;
-        }
-
         .info-field input,
         .info-field textarea {
             flex: 1;
@@ -65,7 +60,23 @@
             font-size: .85rem;
             color: var(--text);
             outline: none;
-            transition: border-color .2s;
+            transition: border-color .2s, background .2s;
+        }
+
+        /* Readonly state — looks like display */
+        .info-field input[readonly],
+        .info-field textarea[readonly] {
+            background: var(--bg-white);
+            border-color: var(--border);
+            color: var(--text);
+            cursor: default;
+        }
+
+        /* Active edit state */
+        .info-field input:not([readonly]),
+        .info-field textarea:not([readonly]) {
+            border-color: var(--clay);
+            background: #fffdf9;
         }
 
         .info-field select {
@@ -91,13 +102,11 @@
             min-height: 80px;
         }
 
-        .info-field input:focus,
-        .info-field select:focus,
-        .info-field textarea:focus {
+        .info-field select:focus {
             border-color: var(--clay);
         }
 
-        /* Rate field: display span sits inside the input-like box */
+        /* Rate field */
         .rate-display-wrap {
             display: flex;
             align-items: center;
@@ -120,10 +129,9 @@
 
         .rate-input {
             display: none;
-            /* hidden until edit mode */
             flex: 1;
             padding: .7rem 2.5rem .7rem .9rem;
-            background: var(--bg-white);
+            background: #fffdf9;
             border: 1.5px solid var(--clay);
             border-radius: 10px;
             font-family: 'Raleway', sans-serif;
@@ -158,14 +166,6 @@
             fill: none;
             stroke-width: 2;
             stroke-linecap: round;
-        }
-
-        /* Wrapper for rate field row (display + edit btn side by side) */
-        .info-field-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            position: relative;
         }
 
         .date-range-wrap {
@@ -382,8 +382,8 @@
             <div class="info-field">
                 <label>Nama Coach</label>
                 <div class="info-field-wrap">
-                    <input type="text" name="name" value="{{ $coach->name }}" required>
-                    <button type="button" class="btn-field-edit">
+                    <input type="text" name="name" id="input-name" value="{{ $coach->name }}" required readonly>
+                    <button type="button" class="btn-field-edit" onclick="toggleField('input-name', this)">
                         <svg viewBox="0 0 24 24">
                             <path d="M12 20h9" />
                             <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
@@ -396,9 +396,9 @@
             <div class="info-field">
                 <label>Nomor HP</label>
                 <div class="info-field-wrap">
-                    <input type="text" name="phone" value="{{ $coach->phone_number }}"
-                        placeholder="contoh: 08123456789">
-                    <button type="button" class="btn-field-edit">
+                    <input type="text" name="phone" id="input-phone" value="{{ $coach->phone_number }}"
+                        placeholder="contoh: 08123456789" readonly>
+                    <button type="button" class="btn-field-edit" onclick="toggleField('input-phone', this)">
                         <svg viewBox="0 0 24 24">
                             <path d="M12 20h9" />
                             <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
@@ -411,12 +411,10 @@
             <div class="info-field">
                 <label>Pendapatan Per Kelas</label>
                 <div class="info-field-wrap" id="rate-wrap">
-                    {{-- Display mode: formatted --}}
                     <div class="rate-display-wrap">
                         <span class="rate-display" id="rate-display">
                             Rp {{ number_format($coach->rate_per_class ?? 0, 0, ',', '.') }}
                         </span>
-                        {{-- Hidden real input submitted with form --}}
                         <input type="number" name="rate_per_class" id="rate-input" class="rate-input"
                             value="{{ $coach->rate_per_class ?? 0 }}" min="0" step="1000">
                         <button type="button" class="btn-field-edit" id="rate-edit-btn" onclick="toggleRateEdit()">
@@ -445,9 +443,10 @@
             {{-- Deskripsi --}}
             <div class="info-field">
                 <label>Deskripsi</label>
-                <div class="info-field-wrap">
-                    <textarea name="bio">{{ $coach->bio }}</textarea>
-                    <button type="button" class="btn-field-edit" style="align-self:flex-start;margin-top:6px;">
+                <div class="info-field-wrap" style="align-items:flex-start;">
+                    <textarea name="bio" id="input-bio" readonly>{{ $coach->bio }}</textarea>
+                    <button type="button" class="btn-field-edit" style="position:absolute;right:0;top:6px;transform:none;"
+                        onclick="toggleField('input-bio', this)">
                         <svg viewBox="0 0 24 24">
                             <path d="M12 20h9" />
                             <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
@@ -524,23 +523,41 @@
 
 @push('scripts')
     <script>
-        function openModal(id) {
-            document.getElementById(id).classList.add('open');
-            document.body.style.overflow = 'hidden';
-        }
+        const ICON_EDIT =
+            `<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+        const ICON_DONE = `<svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
 
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('open');
-            document.body.style.overflow = '';
-        }
+        function toggleField(inputId, btn) {
+            const el = document.getElementById(inputId);
+            const isReadonly = el.hasAttribute('readonly');
 
-        document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.remove('open');
-                document.body.style.overflow = '';
+            if (isReadonly) {
+                el.removeAttribute('readonly');
+                el.focus();
+                // Move cursor to end
+                const len = el.value.length;
+                el.setSelectionRange(len, len);
+                btn.innerHTML = ICON_DONE;
+            } else {
+                el.setAttribute('readonly', true);
+                btn.innerHTML = ICON_EDIT;
             }
-        }));
+        }
 
+        // Close edit on Enter for text inputs (not textarea)
+        document.querySelectorAll('.info-field input[type="text"]').forEach(input => {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.setAttribute('readonly', true);
+                    // Reset sibling button icon
+                    const btn = this.closest('.info-field-wrap').querySelector('.btn-field-edit');
+                    if (btn) btn.innerHTML = ICON_EDIT;
+                }
+            });
+        });
+
+        // Rate field toggle (separate because it uses display/input swap)
         function toggleRateEdit() {
             const display = document.getElementById('rate-display');
             const input = document.getElementById('rate-input');
@@ -553,14 +570,13 @@
                 display.textContent = 'Rp ' + raw.toLocaleString('id-ID');
                 display.style.display = '';
                 input.style.display = 'none';
-                btn.innerHTML =
-                    `<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+                btn.innerHTML = ICON_EDIT;
             } else {
                 display.style.display = 'none';
                 input.style.display = 'block';
                 input.focus();
                 input.select();
-                btn.innerHTML = `<svg viewBox="0 0 24 24" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+                btn.innerHTML = ICON_DONE;
             }
         }
 

@@ -146,7 +146,7 @@
                         <tr>
                             <td>{{ $p->name }}</td>
                             <td>
-                                @if ($p->coach_verification == 1)
+                                @if ($p->status === 'attended')
                                     <span
                                         style="display:inline-block;padding:3px 10px;background:rgba(39,174,96,.12);color:#27AE60;border-radius:20px;font-size:.7rem;font-weight:700;">Hadir</span>
                                 @else

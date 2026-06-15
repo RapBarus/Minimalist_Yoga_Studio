@@ -240,6 +240,28 @@
             text-align: right;
         }
 
+        /* Group members */
+        .friends-list {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            text-align: right;
+        }
+
+        .friend-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: .75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .friend-chip::before {
+            content: '·';
+            color: var(--clay);
+        }
+
         .bottom-bar {
             position: fixed;
             bottom: 0;
@@ -345,10 +367,27 @@
                         <span class="receipt-label">Nama Kelas</span>
                         <span class="receipt-value">{{ strtoupper($schedule->class_name) }}</span>
                     </div>
+
+                    {{-- Peserta --}}
                     <div class="receipt-row">
-                        <span class="receipt-label">Nama</span>
-                        <span class="receipt-value">{{ $user->name }}</span>
+                        <span class="receipt-label">Peserta</span>
+                        <div class="friends-list">
+                            <span class="receipt-value">{{ $user->name }}</span>
+                            @if (!empty($groupMembers))
+                                @foreach ($groupMembers as $friend)
+                                    <span class="friend-chip">{{ $friend }}</span>
+                                @endforeach
+                            @endif
+                        </div>
                     </div>
+
+                    @if (!empty($groupMembers))
+                        <div class="receipt-row">
+                            <span class="receipt-label">Total Peserta</span>
+                            <span class="receipt-value">{{ 1 + count($groupMembers) }} orang</span>
+                        </div>
+                    @endif
+
                     <div class="receipt-row">
                         <span class="receipt-label">Pembayaran</span>
                         <span class="receipt-value">
