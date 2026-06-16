@@ -28,7 +28,7 @@ class ActivityController extends Controller
                 'schedules.start_time',
                 'schedules.end_time',
                 'schedules.coach_id',
-                'classes.class_name',
+                DB::raw('COALESCE(schedules.title, classes.class_name) as class_name'),
                 'coaches.rate_per_class',
                 'users.name as coach_name',
                 'transactions.amount'

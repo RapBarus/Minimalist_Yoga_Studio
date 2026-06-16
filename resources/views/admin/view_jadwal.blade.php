@@ -222,6 +222,17 @@
             letter-spacing: .06em;
         }
 
+        .status-cancelled {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(192, 57, 43, .1);
+            color: #C0392B;
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .06em;
+        }
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -461,9 +472,12 @@
                     @forelse($participants as $p)
                         <tr>
                             <td>{{ $p->name }}</td>
-                            <td>{{ strtoupper($p->payment_type ?? '—') }}</td>
+                            <td>{{ strtoupper($p->payment_channel ?? ($p->payment_type ?? '—')) }}</td>
                             <td>
-                                @if (in_array($p->transaction_status, ['settlement', 'settled', 'capture', 'cash_paid']))
+                                @if ($p->booking_status === 'cancelled')
+                                    <span class="status-cancelled">DIBATALKAN</span>
+                                @elseif (in_array($p->transaction_status, ['settlement', 'settled', 'capture', 'cash_paid']) ||
+                                        in_array($p->booking_status, ['confirmed', 'attended']))
                                     <span class="status-valid">VALID</span>
                                 @else
                                     <span class="status-pending">PENDING</span>

@@ -141,9 +141,11 @@ class ScheduleController extends Controller
             ->where('bookings.schedule_id', $scheduleId)
             ->select(
                 'bookings.booking_id',
+                'bookings.status as booking_status',
                 DB::raw('COALESCE(users.name, bookings.participant_name) as name'),
                 'users.phone_number',
                 'transactions.payment_type',
+                'transactions.payment_channel',
                 'transactions.status as transaction_status',
                 'transactions.amount'
             )
@@ -360,6 +362,7 @@ class ScheduleController extends Controller
 
         abort_if(!$schedule, 404);
 
+        // Include guest bookings (participant_name) via COALESCE — one row per person
         $bookings = DB::table('bookings')
             ->leftJoin('users', 'bookings.user_id', '=', 'users.user_id')
             ->leftJoin('attendance', 'attendance.booking_id', '=', 'bookings.booking_id')
@@ -374,6 +377,7 @@ class ScheduleController extends Controller
             )
             ->get();
 
+        // Use bookings.status as source of truth (synced by coach via toggle)
         $present = $bookings->filter(fn($b) => $b->status === 'attended');
         $absent = $bookings->filter(fn($b) => $b->status !== 'attended');
 

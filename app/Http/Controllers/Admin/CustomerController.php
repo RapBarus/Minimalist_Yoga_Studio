@@ -57,11 +57,11 @@ class CustomerController extends Controller
             ->join('users as coach_users', 'coaches.user_id', '=', 'coach_users.user_id')
             ->leftJoin('transactions', 'transactions.booking_id', '=', 'bookings.booking_id')
             ->where('bookings.user_id', $userId)
-            ->where('bookings.status', 'confirmed')
+            ->whereIn('bookings.status', ['confirmed', 'attended'])
             ->where('schedules.schedule_date', '>=', now()->toDateString())
             ->select(
                 'bookings.booking_id',
-                'classes.class_name',
+                DB::raw('COALESCE(schedules.title, classes.class_name) as class_name'),
                 'coach_users.name as coach_name',
                 'schedules.schedule_date',
                 'schedules.start_time',
@@ -93,6 +93,11 @@ class CustomerController extends Controller
 
         if ($booking) {
             if ($booking->group_id) {
+                $affectedBookingIds = DB::table('bookings')
+                    ->where('group_id', $booking->group_id)
+                    ->whereIn('status', ['confirmed', 'pending', 'attended'])
+                    ->pluck('booking_id');
+
                 DB::table('bookings')
                     ->where('group_id', $booking->group_id)
                     ->whereIn('status', ['confirmed', 'pending', 'attended'])
@@ -102,6 +107,8 @@ class CustomerController extends Controller
                         'updated_at' => now(),
                     ]);
             } else {
+                $affectedBookingIds = [$bookingId];
+
                 DB::table('bookings')
                     ->where('booking_id', $bookingId)
                     ->update([
@@ -110,6 +117,14 @@ class CustomerController extends Controller
                         'updated_at' => now(),
                     ]);
             }
+
+            DB::table('transactions')
+                ->whereIn('booking_id', $affectedBookingIds)
+                ->whereIn('status', ['settlement', 'capture', 'paid'])
+                ->update([
+                    'status' => 'failed',
+                    'updated_at' => now(),
+                ]);
 
             \Illuminate\Support\Facades\Cache::forget('schedules_week');
         }
