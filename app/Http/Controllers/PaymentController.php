@@ -31,7 +31,7 @@ class PaymentController extends Controller
                 'schedules.start_time',
                 'schedules.end_time',
                 'schedules.available_slots',
-                'classes.class_name',
+                DB::raw('COALESCE(schedules.title, classes.class_name) as class_name'),
                 'users.name as coach_name',
                 'coaches.rate_per_class as price'
             )
@@ -61,7 +61,7 @@ class PaymentController extends Controller
                 'schedules.end_time',
                 'schedules.available_slots',
                 'schedules.class_id',
-                'classes.class_name',
+                DB::raw('COALESCE(schedules.title, classes.class_name) as class_name'),
                 'users.name as coach_name',
                 'coaches.rate_per_class as price'
             )
@@ -185,7 +185,11 @@ class PaymentController extends Controller
             ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
             ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
             ->where('schedules.schedule_id', $schedule_id)
-            ->select('schedules.*', 'coaches.rate_per_class', 'classes.class_name')
+            ->select(
+                'schedules.*',
+                'coaches.rate_per_class',
+                DB::raw('COALESCE(schedules.title, classes.class_name) as class_name')
+            )
             ->first();
 
         if (!$schedule || $schedule->available_slots < $totalPax) {
@@ -302,7 +306,7 @@ class PaymentController extends Controller
             ->join('schedules', 'bookings.schedule_id', '=', 'schedules.schedule_id')
             ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
             ->where('bookings.booking_id', $transaction->booking_id)
-            ->select('bookings.*', 'classes.class_name')
+            ->select('bookings.*', DB::raw('COALESCE(schedules.title, classes.class_name) as class_name'))
             ->first();
 
         $schedule = DB::table('schedules')
@@ -310,7 +314,12 @@ class PaymentController extends Controller
             ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
             ->where('schedules.schedule_id', $booking->schedule_id)
-            ->select('schedules.*', 'classes.class_name', 'users.name as coach_name', 'coaches.rate_per_class as price')
+            ->select(
+                'schedules.*',
+                DB::raw('COALESCE(schedules.title, classes.class_name) as class_name'),
+                'users.name as coach_name',
+                'coaches.rate_per_class as price'
+            )
             ->first();
 
         $qrCode = Session::get('payment_qr');
@@ -546,7 +555,11 @@ class PaymentController extends Controller
             ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
             ->where('schedules.schedule_id', $booking->schedule_id)
-            ->select('schedules.*', 'classes.class_name', 'users.name as coach_name')
+            ->select(
+                'schedules.*',
+                DB::raw('COALESCE(schedules.title, classes.class_name) as class_name'),
+                'users.name as coach_name'
+            )
             ->first();
         $user = DB::table('users')->where('user_id', $userId)->first();
 

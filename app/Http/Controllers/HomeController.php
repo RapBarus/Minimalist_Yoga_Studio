@@ -50,7 +50,6 @@ class HomeController extends Controller
                 ->get();
         });
 
-        // User-specific booking marks — NOT cached (per user)
         // Only confirmed/attended count as "already booked" — pending does not block rebooking
         $bookedScheduleIds = DB::table('bookings')
             ->where('user_id', $userId)
@@ -151,7 +150,6 @@ class HomeController extends Controller
                 ->update(['status' => 'failed', 'updated_at' => now()]);
         }
 
-        // Clear schedule cache so updated available_slots are reflected
         if ($expired->isNotEmpty()) {
             Cache::forget('schedules_week');
         }
@@ -181,7 +179,6 @@ class HomeController extends Controller
             ->where('schedules.coach_id', $coachId)
             ->where('schedules.status', 'upcoming')
             ->where('schedules.schedule_date', '>=', now()->toDateString())
-            // Exclude kelas hari ini yang end_time-nya sudah lewat
             ->where(function ($query) {
                 $nowJkt = now('Asia/Jakarta');
                 $query->where('schedules.schedule_date', '>', $nowJkt->toDateString())
@@ -194,7 +191,7 @@ class HomeController extends Controller
                 'schedules.start_time',
                 'schedules.end_time',
                 'schedules.available_slots',
-                'classes.class_name'
+                DB::raw('COALESCE(schedules.title, classes.class_name) as class_name')
             )
             ->get();
 
