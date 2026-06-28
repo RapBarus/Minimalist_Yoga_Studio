@@ -3,25 +3,26 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use App\Models\Coach;
 use App\Models\Schedule;
 use App\Models\Booking;
-use App\Models\Class as ClassModel;
+use App\Models\Coach;
 use Carbon\Carbon;
 
 class CoachTest extends TestCase
 {
-	private $coach;
+	use RefreshDatabase;
+
 	private $coachUser;
 
 	protected function setUp(): void
 	{
 		parent::setUp();
-		
 		// Create a coach user for testing
 		$this->coachUser = User::factory()->create(['role' => 'coach']);
-		$this->coach = Coach::factory()->create(['user_id' => $this->coachUser->id]);
+		//$this->coach = Coach::factory()->create(['user_id' => $this->coachUser->id]);
 	}
 
 	public function test_coach_dashboard_redirects_guest_to_login(): void
@@ -54,10 +55,19 @@ class CoachTest extends TestCase
 	public function test_coach_can_view_schedules(): void
 	{
 		// Create a schedule for this coach
-		$class = ClassModel::factory()->create();
+		$classId = DB::table('classes')->insertGetId([
+        'class_name' => 'Yoga',
+        'description' => 'Yoga class'
+    	]);
+
 		$schedule = Schedule::factory()->create([
-			'coach_id' => $this->coach->id,
-			'class_id' => $class->id,
+			'coach_id' => $this->coachUser->id,
+			'class_id' => $classId, // Gunakan ID dari insertGetId
+			'schedule_date' => now()->addDays(5)->toDateString(),
+		]);
+		$schedule = Schedule::factory()->create([
+			'coach_id' => $this->coachUser->id,
+			'class_id' => $classId,
 			'schedule_date' => now()->addDays(5)->toDateString(),
 		]);
 
@@ -72,18 +82,21 @@ class CoachTest extends TestCase
 
 	public function test_minggu_jadwal_filter_shows_only_this_weeks_schedule(): void
 	{
-		$class = ClassModel::factory()->create();
-		
+		$classId = DB::table('classes')->insertGetId([
+        'class_name' => 'Yoga',
+        'description' => 'Yoga class'
+    	]);
+
 		// Create schedules for different time periods
 		$thisWeekSchedule = Schedule::factory()->create([
-			'coach_id' => $this->coach->id,
-			'class_id' => $class->id,
+			'coach_id' => $this->coachUser->id,
+			'class_id' => $classId,
 			'schedule_date' => now()->addDays(2)->toDateString(),
 		]);
 
 		$nextWeekSchedule = Schedule::factory()->create([
-			'coach_id' => $this->coach->id,
-			'class_id' => $class->id,
+			'coach_id' => $this->coachUser->id,
+			'class_id' => $classId,
 			'schedule_date' => now()->addDays(10)->toDateString(),
 		]);
 
@@ -102,18 +115,21 @@ class CoachTest extends TestCase
 
 	public function test_bulan_ini_filter_shows_only_this_months_schedule(): void
 	{
-		$class = ClassModel::factory()->create();
-		
+		$classId = DB::table('classes')->insertGetId([
+        'class_name' => 'Yoga',
+        'description' => 'Yoga class'
+    	]);
+
 		// Create schedules for different months
 		$thisMonthSchedule = Schedule::factory()->create([
-			'coach_id' => $this->coach->id,
-			'class_id' => $class->id,
+			'coach_id' => $this->coachUser->id,
+			'class_id' => $classId,
 			'schedule_date' => now()->addDays(5)->toDateString(),
 		]);
 
 		$nextMonthSchedule = Schedule::factory()->create([
-			'coach_id' => $this->coach->id,
-			'class_id' => $class->id,
+			'coach_id' => $this->coachUser->id,
+			'class_id' => $classId,
 			'schedule_date' => now()->addMonth()->toDateString(),
 		]);
 
@@ -132,10 +148,14 @@ class CoachTest extends TestCase
 
 	public function test_coach_can_view_schedule_details_and_attendance(): void
 	{
-		$class = ClassModel::factory()->create();
+		$classId = DB::table('classes')->insertGetId([
+        'class_name' => 'Yoga',
+        'description' => 'Yoga class'
+    	]);
+
 		$schedule = Schedule::factory()->create([
-			'coach_id' => $this->coach->id,
-			'class_id' => $class->id,
+			'coach_id' => $this->coachUser->id,
+			'class_id' => $classId,
 			'schedule_date' => now()->toDateString(),
 			'status' => 'upcoming',
 		]);
@@ -168,10 +188,14 @@ class CoachTest extends TestCase
 
 	public function test_coach_can_mark_attendance(): void
 	{
-		$class = ClassModel::factory()->create();
+		$classId = DB::table('classes')->insertGetId([
+        'class_name' => 'Yoga',
+        'description' => 'Yoga class'
+    	]);
+
 		$schedule = Schedule::factory()->create([
-			'coach_id' => $this->coach->id,
-			'class_id' => $class->id,
+			'coach_id' => $this->coachUser->id,
+			'class_id' => $classId,
 			'schedule_date' => now()->toDateString(),
 			'status' => 'upcoming',
 		]);
@@ -200,10 +224,14 @@ class CoachTest extends TestCase
 
 	public function test_coach_can_mark_absence(): void
 	{
-		$class = ClassModel::factory()->create();
+		$classId = DB::table('classes')->insertGetId([
+        'class_name' => 'Yoga',
+        'description' => 'Yoga class'
+    	]);
+
 		$schedule = Schedule::factory()->create([
-			'coach_id' => $this->coach->id,
-			'class_id' => $class->id,
+			'coach_id' => $this->coachUser->id,
+			'class_id' => $classId,
 			'schedule_date' => now()->toDateString(),
 			'status' => 'upcoming',
 		]);
@@ -232,10 +260,14 @@ class CoachTest extends TestCase
 
 	public function test_marking_attendance_updates_schedule_status_to_completed(): void
 	{
-		$class = ClassModel::factory()->create();
+		$classId = DB::table('classes')->insertGetId([
+        'class_name' => 'Yoga',
+        'description' => 'Yoga class'
+    	]);
+
 		$schedule = Schedule::factory()->create([
-			'coach_id' => $this->coach->id,
-			'class_id' => $class->id,
+			'coach_id' => $this->coachUser->id,
+			'class_id' => $classId,
 			'schedule_date' => now()->toDateString(),
 			'status' => 'upcoming',
 		]);
