@@ -7,6 +7,12 @@
     <meta name="theme-color" content="#F2EFEB">
     <title>@yield('title', 'Minimalist Studio')</title>
 
+    {{-- Favicon --}}
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/icon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('images/icon-192.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/apple-touch-icon.png') }}">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -98,15 +104,36 @@
         </script>
     @endif
 
+    {{-- PWA Install Banner --}}
+    <div id="pwa-install-banner"
+        style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9000;
+               background:#fff;border:1px solid #e8e0d8;border-radius:16px;padding:14px 18px;
+               box-shadow:0 4px 20px rgba(0,0,0,0.12);display:none;align-items:center;gap:12px;
+               max-width:340px;width:calc(100% - 32px);">
+        <img src="{{ asset('images/minimalist-logo.png') }}"
+            style="width:40px;height:40px;object-fit:contain;border-radius:8px;">
+        <div style="flex:1;">
+            <div style="font-family:'Raleway',sans-serif;font-weight:600;font-size:13px;color:#2c2c2c;">Minimalist
+                Studio</div>
+            <div style="font-family:'Raleway',sans-serif;font-size:11px;color:#888;margin-top:1px;">Pasang aplikasi
+                untuk akses lebih mudah</div>
+        </div>
+        <button id="pwa-install-btn"
+            style="background:#A0522D;color:#fff;border:none;border-radius:8px;padding:7px 14px;
+                   font-family:'Raleway',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">
+            Pasang
+        </button>
+        <button id="pwa-dismiss-btn"
+            style="background:none;border:none;cursor:pointer;padding:4px;color:#aaa;font-size:16px;line-height:1;">
+            ✕
+        </button>
+    </div>
+
     <div class="page">
 
         {{-- Header --}}
         <div class="header">
             <img src="{{ asset('images/minimalist-logo-2.png') }}" alt="Minimalist Studio">
-            <div class="header-greeting">
-                Selamat datang
-                <strong>{{ Session::get('user_name', 'Member') }}</strong>
-            </div>
         </div>
 
         @yield('content')
@@ -116,9 +143,9 @@
     <x-navbar />
 
     <script>
+        // ── Service Worker Registration ──
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-
                 const params = new URLSearchParams(window.location.search);
                 const swParam = params.get('sw');
                 if (swParam === 'cache-first' || swParam === 'network-first') {
@@ -138,15 +165,53 @@
                             .catch(err => console.warn('[SW] Registration failed:', err));
                     });
                 });
-
             });
+        }
+
+        // ── PWA Install Prompt ──
+        let deferredPrompt = null;
+        const banner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('pwa-install-btn');
+        const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+        // Don't show if already dismissed or installed
+        const dismissed = localStorage.getItem('pwa-install-dismissed');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            if (!dismissed) {
+                setTimeout(() => {
+                    banner.style.display = 'flex';
+                }, 3000); // show after 3s so it doesn't feel intrusive
+            }
+        });
+
+        installBtn && installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            banner.style.display = 'none';
+            deferredPrompt.prompt();
+            const {
+                outcome
+            } = await deferredPrompt.userChoice;
+            console.log('[PWA] Install outcome:', outcome);
+            deferredPrompt = null;
+        });
+
+        dismissBtn && dismissBtn.addEventListener('click', () => {
+            banner.style.display = 'none';
+            localStorage.setItem('pwa-install-dismissed', '1');
+        });
+
+        // Hide banner if already installed (standalone mode)
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            if (banner) banner.style.display = 'none';
         }
     </script>
 
     @stack('scripts')
 
 </body>
-
-
 
 </html>

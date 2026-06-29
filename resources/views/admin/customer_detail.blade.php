@@ -336,7 +336,7 @@
         </a>
 
         <div class="info-field">
-            <label>Nama Customer</label>
+            <label>Nama Pelanggan</label>
             <div class="info-field-value">{{ $customer->name }}</div>
         </div>
 

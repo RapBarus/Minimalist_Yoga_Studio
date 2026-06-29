@@ -335,7 +335,7 @@
                     <div class="receipt-top-row" style="margin-top:8px;">
                         <span class="receipt-top-label">Status Pembayaran</span>
                         <span class="status-badge {{ $isSuccess ? 'success' : 'failed' }}">
-                            {{ $isSuccess ? 'Success' : 'Gagal' }}
+                            {{ $isSuccess ? 'Berhasil' : 'Gagal' }}
                         </span>
                     </div>
                 </div>

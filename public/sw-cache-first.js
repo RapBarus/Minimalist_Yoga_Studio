@@ -4,11 +4,11 @@
 // TTL: 5 minutes for dynamic pages
 // ============================================================
 
-const CACHE_NAME = "minimalist-cache-first-v2";
-const STATIC_CACHE = "minimalist-cf-static-v2";
-const DYNAMIC_CACHE = "minimalist-cf-dynamic-v2";
+const CACHE_NAME = "minimalist-cache-first-v3";
+const STATIC_CACHE = "minimalist-cf-static-v3";
+const DYNAMIC_CACHE = "minimalist-cf-dynamic-v3";
 
-const CACHE_TTL_MS = 30 * 1000; // 5 minutes
+const CACHE_TTL_MS = 30 * 1000;
 
 // ── Static assets ──
 const STATIC_ASSETS = [
@@ -90,7 +90,7 @@ self.addEventListener("fetch", (event) => {
     )
         return;
     if (url.pathname === "/payment/webhook") return;
-    if (/\/\d+/.test(url.pathname)) return; // Skip dynamic ID routes
+    if (/\/\d+/.test(url.pathname)) return;
     if (["/login", "/register", "/"].includes(url.pathname)) return;
 
 
@@ -126,7 +126,6 @@ async function cacheFirstWithTTL(request) {
     try {
         const networkResponse = await fetch(request);
 
-        // Don't cache redirects or error responses
         if (networkResponse.ok && networkResponse.status === 200) {
             const clone = networkResponse.clone();
             const text = await clone.text();
@@ -143,10 +142,8 @@ async function cacheFirstWithTTL(request) {
         }
         return networkResponse;
     } catch (err) {
-        // Only go offline if it's actually a network failure
         if (cachedResponse) return cachedResponse;
 
-        // Check it's really offline before showing offline page
         const offlinePage = await caches.match("/offline");
         if (offlinePage) return offlinePage;
         return new Response("Offline", { status: 503 });

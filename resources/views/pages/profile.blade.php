@@ -206,6 +206,12 @@
 @endpush
 
 @section('content')
+    @php
+        $roleMap = ['customer' => 'Pelanggan', 'coach' => 'Pelatih', 'admin' => 'Admin'];
+        $roleLabel = $roleMap[$user->role] ?? ucfirst($user->role);
+        $statusLabel = $user->status === 'active' ? 'Aktif' : 'Tidak Aktif';
+    @endphp
+
     <div class="content">
 
         <div class="profile-hero">
@@ -217,7 +223,7 @@
                 </svg>
             </div>
             <div class="profile-name">{{ $user->name }}</div>
-            <span class="profile-role">{{ ucfirst($user->role) }}</span>
+            <span class="profile-role">{{ $roleLabel }}</span>
             @if ($user->phone_number)
                 <div class="profile-phone">
                     <svg viewBox="0 0 24 24">
@@ -257,7 +263,7 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="info-label">Username</div>
+                        <div class="info-label">Nama Pengguna</div>
                         <div class="info-value">{{ $user->username }}</div>
                     </div>
                 </div>
@@ -336,7 +342,7 @@
                         </svg>
                     </div>
                     <div style="width:100%;">
-                        <div class="info-label">Password</div>
+                        <div class="info-label">Kata Sandi</div>
 
                         {{-- password baru --}}
                         <div class="input-wrap" style="position:relative;margin-bottom:6px;" hidden>
@@ -390,7 +396,7 @@
                         </svg></div>
                     <div>
                         <div class="info-label">Status</div>
-                        <div class="info-value">{{ ucfirst($user->status) }}</div>
+                        <div class="info-value">{{ $statusLabel }}</div>
                     </div>
                 </div>
             </div>

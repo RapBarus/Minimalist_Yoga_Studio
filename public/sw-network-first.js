@@ -4,11 +4,11 @@
 // Network timeout: 3 seconds before falling back to cache
 // ============================================================
 
-const CACHE_NAME = "minimalist-network-first-v2";
-const STATIC_CACHE = "minimalist-nf-static-v2";
-const DYNAMIC_CACHE = "minimalist-nf-dynamic-v2";
+const CACHE_NAME = "minimalist-network-first-v3";
+const STATIC_CACHE = "minimalist-nf-static-v3";
+const DYNAMIC_CACHE = "minimalist-nf-dynamic-v3";
 
-const NETWORK_TIMEOUT_MS = 8000; // 3 seconds
+const NETWORK_TIMEOUT_MS = 8000;
 
 // ── Static assets ──
 const STATIC_ASSETS = [
@@ -90,7 +90,7 @@ self.addEventListener("fetch", (event) => {
     )
         return;
     if (url.pathname === "/payment/webhook") return;
-    if (/\/\d+/.test(url.pathname)) return; // Skip dynamic ID routes
+    if (/\/\d+/.test(url.pathname)) return;
     if (["/login", "/register", "/"].includes(url.pathname)) return;
 
     if (url.pathname.startsWith("/payment")) return;
@@ -112,7 +112,6 @@ self.addEventListener("fetch", (event) => {
 async function networkFirstWithTimeout(request) {
     const cache = await caches.open(DYNAMIC_CACHE);
 
-    // Race: network vs timeout
     const networkPromise = fetchAndCache(request, cache);
     const timeoutPromise = new Promise((_, reject) =>
         setTimeout(
@@ -132,7 +131,6 @@ async function networkFirstWithTimeout(request) {
             err.message,
         );
 
-        // Fallback: check dynamic cache first, then static cache
         const cached =
             (await cache.match(request)) || (await caches.match(request));
         if (cached) return cached;
@@ -147,7 +145,6 @@ async function networkFirstWithTimeout(request) {
 async function fetchAndCache(request, cache) {
     const response = await fetch(request);
 
-    // Only cache actual page responses, not redirects or errors
     if (
         response.ok &&
         response.status === 200 &&

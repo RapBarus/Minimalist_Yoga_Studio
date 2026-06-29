@@ -402,7 +402,7 @@
             </div>
 
             <div class="info-field">
-                <label>Coach</label>
+                <label>Pelatih</label>
                 <div class="select-wrap">
                     <select name="coach_id" required>
                         @foreach ($coaches as $coach)

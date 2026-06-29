@@ -296,7 +296,7 @@
 
         {{-- Header row --}}
         <div class="section-row">
-            <div class="section-label">Membership</div>
+            <div class="section-label">Berlangganan</div>
             <span class="section-count" id="member-count">{{ $promotions->count() }} paket tersedia</span>
         </div>
 

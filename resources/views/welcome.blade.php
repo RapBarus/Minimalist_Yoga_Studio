@@ -151,8 +151,8 @@
             <img src="{{ asset('images/minimalist-logo.png') }}" alt="Minimalist Studio">
         </div>
         <div class="btn-group">
-            <a href="{{ route('login') }}" class="btn btn-primary">Log In</a>
-            <a href="{{ route('register') }}" class="btn btn-secondary">Register</a>
+            <a href="{{ route('login') }}" class="btn btn-primary">Masuk</a>
+            <a href="{{ route('register') }}" class="btn btn-secondary">Daftar</a>
         </div>
     </div>
 
