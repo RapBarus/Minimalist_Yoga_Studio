@@ -6,17 +6,19 @@ services:
       context: .
       dockerfile: Dockerfile.nfr
     container_name: yoga_app_sandbox
+    restart: always
     ports:
       - "8000:80"
-    # Menggunakan file env khusus testing
+    # Batasan yang lebih kompatibel dengan docker-compose up
+    cpus: '1.0'
+    mem_limit: 1024M
+    
     env_file:
       - .env.productiontesting
-    # Membuka jalur agar Docker bisa baca MySQL di PC asli lu
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    # INI KUNCINYA: Membatasi resource agar simulasi valid
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'      # Maksimal 1 Core CPU
-          memory: 1024M    # Maksimal 1 GB RAM
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"] # Ubah sedikit formatnya
+      interval: 30s
+      timeout: 10s
+      retries: 3
