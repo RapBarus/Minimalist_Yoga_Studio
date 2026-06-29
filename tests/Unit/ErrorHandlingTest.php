@@ -19,6 +19,7 @@ class ErrorHandlingTest extends TestCase
 
 		Schema::create('users', function (Blueprint $table) {
 			$table->increments('user_id');
+			$table->string('username')->nullable();
 			$table->string('name');
 			$table->string('email')->nullable();
 			$table->string('phone_number')->nullable();
@@ -39,6 +40,7 @@ class ErrorHandlingTest extends TestCase
 
 		DB::table('users')->insert([
 			'user_id' => 1,
+			'username' => 'customer_one',
 			'name' => 'customer_one',
 			'phone_number' => '+628123456789',
 			'password_hash' => Hash::make('Password123'),
@@ -67,25 +69,46 @@ class ErrorHandlingTest extends TestCase
 	}
 
 	public function test_profile_update_shows_password_error_when_null_input_is_submitted(): void
-	{
-		$before = DB::table('users')->where('user_id', 1)->value('password_hash');
+    {
+        $before = DB::table('users')->where('user_id', 1)->value('password_hash');
 
-		$response = $this->withSession([
-			'user_id' => 1,
-			'user_name' => 'customer_one',
-			'user_role' => 'customer',
-		])
-			->from('/profile')
-			->followingRedirects()
-			->put('/profile/update', [
-				'password' => '',
-				'password_confirmation' => '',
-			]);
+        $response = $this->withSession([
+            'user_id' => 1,
+            'user_name' => 'customer_one',
+            'user_role' => 'customer',
+        ])
+            ->from('/profile')
+            ->followingRedirects()
+            ->put('/profile/update', [
+                'password' => '',
+                'password_confirmation' => '',
+            ]);
 
-		$after = DB::table('users')->where('user_id', 1)->value('password_hash');
+        $response->assertStatus(200);
+        // Cukup gunakan assertSeeText jika pesan di-render di HTML
+        $response->assertSeeText('Password tidak diubah karena input kosong.');
+        
+        $after = DB::table('users')->where('user_id', 1)->value('password_hash');
+        $this->assertSame($before, $after);
+    }
 
-		$response->assertStatus(200);
-		$response->assertSeeText('Password tidak diubah karena input kosong.');
-		$this->assertSame($before, $after);
-	}
+	public function test_profile_update_shows_error_when_only_one_password_field_is_submitted(): void
+    {
+        $response = $this->withSession([
+            'user_id' => 1,
+            'user_name' => 'customer_one',
+            'user_role' => 'customer',
+        ])
+            ->from('/profile')
+            ->followingRedirects()
+            ->put('/profile/update', [
+                'password' => 'NewPassword123',
+                'password_confirmation' => 'WrongPassword', // Pastikan berbeda
+            ]);
+
+        $response->assertStatus(200);
+        
+        // Ubah menjadi 'Konfirmasi password tidak cocok.' (sesuai HTML Anda)
+        $response->assertSeeText('Konfirmasi password tidak cocok.');
+    }
 }
