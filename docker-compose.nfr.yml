@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  yoga_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.nfr
+    container_name: yoga_app_sandbox
+    ports:
+      - "8000:80"
+    # Menggunakan file env khusus testing
+    env_file:
+      - .env.productiontesting
+    # Membuka jalur agar Docker bisa baca MySQL di PC asli lu
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # INI KUNCINYA: Membatasi resource agar simulasi valid
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'      # Maksimal 1 Core CPU
+          memory: 1024M    # Maksimal 1 GB RAM
