@@ -6,61 +6,158 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class CoachDashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $userId = Session::get('user_id');
-
         $coach = DB::table('coaches')->where('user_id', $userId)->first();
-
-        if (!$coach) {
+        if (!$coach)
             return redirect()->route('login');
-        }
 
         $coachId = $coach->coach_id;
+        $filter = $request->get('filter', 'all');
 
-        $totalSchedules = DB::table('schedules')
+        $query = DB::table('vw_coach_schedule')
             ->where('coach_id', $coachId)
-            ->where('status', 'upcoming')
-            ->count();
+            ->where('schedule_date', '>=', now()->toDateString())
+            ->orderBy('schedule_date', 'asc');
 
-        $completedClasses = DB::table('schedules')
-            ->where('coach_id', $coachId)
-            ->where('status', 'completed')
-            ->count();
+        if ($filter === 'today') {
+            $query->whereDate('schedule_date', today());
+        } elseif ($filter === 'week') {
+            $query->where('schedule_date', '<=', now()->addDays(7)->toDateString());
+        }
 
-        $totalBookings = DB::table('bookings')
-            ->join('schedules', 'bookings.schedule_id', '=', 'schedules.schedule_id')
-            ->where('schedules.coach_id', $coachId)
-            ->count();
+        $schedules = $query->get();
 
-        $totalEarnings = $completedClasses * $coach->rate_per_class;
+        return view('coach.coach_dashboard', compact('schedules', 'filter'));
+    }
 
-        $schedules = DB::table('schedules')
+    public function scheduleDetail($scheduleId)
+    {
+        $userId = Session::get('user_id');
+        $coach = DB::table('coaches')->where('user_id', $userId)->first();
+        if (!$coach)
+            return redirect()->route('login');
+
+        $schedule = DB::table('schedules')
             ->join('classes', 'schedules.class_id', '=', 'classes.class_id')
-            ->where('schedules.coach_id', $coachId)
-            ->where('schedules.status', 'upcoming')
-            ->where('schedules.schedule_date', '>=', now()->toDateString())
-            ->orderBy('schedules.schedule_date', 'asc')
+            ->where('schedules.schedule_id', $scheduleId)
+            ->where('schedules.coach_id', $coach->coach_id)
             ->select(
                 'schedules.schedule_id',
                 'schedules.schedule_date',
                 'schedules.start_time',
                 'schedules.end_time',
-                'schedules.available_slots',
                 'schedules.capacity',
-                'classes.class_name'
+                'schedules.available_slots',
+                'schedules.status',
+                'classes.class_name',
+                'coaches.rate_per_class'
+            )
+            ->join('coaches', 'schedules.coach_id', '=', 'coaches.coach_id')
+            ->first();
+
+        abort_if(!$schedule, 404);
+
+        $participants = DB::table('bookings')
+            ->leftJoin('users', 'bookings.user_id', '=', 'users.user_id')
+            ->where('bookings.schedule_id', $scheduleId)
+            ->whereIn('bookings.status', ['confirmed', 'attended', 'pending'])
+            ->select(
+                'bookings.booking_id',
+                'bookings.status',
+                DB::raw('COALESCE(users.name, bookings.participant_name) as name')
             )
             ->get();
 
-        return view('coach.coach_dashboard', [
-            'totalSchedules' => $totalSchedules,
-            'totalBookings' => $totalBookings,
-            'completedClasses' => $completedClasses,
-            'totalEarnings' => $totalEarnings,
-            'schedules' => $schedules,
-        ]);
+        $hadir = $participants->where('status', 'attended');
+        $tidakHadir = $participants->whereNotIn('status', ['attended']);
+
+        $existingPhoto = DB::table('attendance')
+            ->join('bookings', 'attendance.booking_id', '=', 'bookings.booking_id')
+            ->where('bookings.schedule_id', $scheduleId)
+            ->whereNotNull('attendance.photo_url')
+            ->value('attendance.photo_url');
+
+        return view('coach.coach_schedule_detail', compact(
+            'schedule',
+            'participants',
+            'hadir',
+            'tidakHadir',
+            'existingPhoto'
+        ));
+    }
+
+    public function updateSchedule(Request $request, $scheduleId)
+    {
+        $userId = Session::get('user_id');
+        $coach = DB::table('coaches')->where('user_id', $userId)->first();
+        if (!$coach)
+            return redirect()->route('login');
+
+        if ($request->has('attendance')) {
+            foreach ($request->attendance as $bookingId => $status) {
+                $bookingStatus = $status === 'hadir' ? 'attended' : 'confirmed';
+                DB::table('bookings')
+                    ->where('booking_id', $bookingId)
+                    ->update(['status' => $bookingStatus]);
+            }
+        }
+
+        if ($request->hasFile('bukti_hadir')) {
+            $file = $request->file('bukti_hadir');
+            $path = $file->store('bukti_hadir', 'public');
+            $url = asset('storage/' . $path);
+
+            $bookings = DB::table('bookings')
+                ->where('schedule_id', $scheduleId)
+                ->select('booking_id', 'status')
+                ->get();
+
+            foreach ($bookings as $booking) {
+                DB::table('attendance')->updateOrInsert(
+                    ['booking_id' => $booking->booking_id],
+                    [
+                        'coach_verification' => $booking->status === 'attended' ? 1 : 0,
+                        'admin_verification' => 0,
+                        'check_in_time' => $booking->status === 'attended' ? now() : null,
+                        'photo_url' => $url,
+                        'photo_uploaded_at' => now(),
+                    ]
+                );
+            }
+        }
+
+        if ($request->hasFile('bukti_hadir')) {
+            DB::table('schedules')
+                ->where('schedule_id', $scheduleId)
+                ->update(['status' => 'completed']);
+        }
+        return redirect()->route('coach.schedule.detail', $scheduleId)
+            ->with('success', 'Jadwal berhasil diupdate!');
+    }
+
+    public function deletePhoto($scheduleId)
+    {
+        $userId = Session::get('user_id');
+        $coach = DB::table('coaches')->where('user_id', $userId)->first();
+        if (!$coach)
+            return redirect()->route('login');
+
+        DB::table('attendance')
+            ->join('bookings', 'attendance.booking_id', '=', 'bookings.booking_id')
+            ->where('bookings.schedule_id', $scheduleId)
+            ->update(['attendance.photo_url' => null, 'attendance.photo_uploaded_at' => null]);
+
+        DB::table('schedules')
+            ->where('schedule_id', $scheduleId)
+            ->update(['status' => 'upcoming']);
+
+        return redirect()->route('coach.schedule.detail', $scheduleId)
+            ->with('success', 'Foto berhasil dihapus.');
     }
 }

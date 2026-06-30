@@ -1,270 +1,903 @@
-<!DOCTYPE html>
-<html lang="id">
+@extends('layouts.admin')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Minimalist Studio</title>
+@section('title', 'Dashboard | Minimalist Studio')
+@section('page-title', 'Menu Jadwal')
+@section('page-sub', 'Kelola jadwal kelas studio')
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
-</head>
+@push('styles')
+    <style>
+        /* ── Calendar ── */
+        .calendar-wrap {
+            background: var(--bg-white);
+            border-radius: 16px;
+            border: 1.5px solid var(--border);
+            padding: 20px;
+        }
 
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
 
+        .calendar-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+        }
 
-<body>
-    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
-    {{-- Sidebar --}}
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <img src="{{ asset('images/minimalist-logo-2.png') }}" alt="Minimalist Studio">
-        </div>
+        .cal-nav-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 8px;
+            color: var(--clay);
+            font-size: 1.2rem;
+            transition: background .15s;
+        }
 
-        <div class="sidebar-admin">Admin Panel<strong>{{ Session::get('user_name') }}</strong></div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">Menu</div>
-            <a href="{{ route('admin.dashboard') }}" class="nav-link active">
-                <svg viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="7" height="7" />
-                    <rect x="14" y="3" width="7" height="7" />
-                    <rect x="14" y="14" width="7" height="7" />
-                    <rect x="3" y="14" width="7" height="7" />
-                </svg>
-                Dashboard
-            </a>
-            <a href="{{ route('admin.coaches') }}" class="nav-link">
-                <svg viewBox="0 0 24 24">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                Coach
-            </a>
-            <a href="#" class="nav-link">
-                <svg viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-                Jadwal
-            </a>
-            <a href="#" class="nav-link">
-                <svg viewBox="0 0 24 24">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                </svg>
-                Booking
-            </a>
+        .cal-nav-btn:hover {
+            background: var(--clay-pale);
+        }
 
-            <div class="nav-section">Konten</div>
-            <a href="#" class="nav-link">
-                <svg viewBox="0 0 24 24">
-                    <polygon
-                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                Penawaran
-            </a>
-            <a href="#" class="nav-link">
-                <svg viewBox="0 0 24 24">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
-                </svg>
-                Kelas
-            </a>
-        </nav>
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
 
-        <div class="sidebar-logout">
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="btn-sidebar-logout">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <polyline points="16 17 21 12 16 7" />
-                        <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    Keluar
-                </button>
-            </form>
-        </div>
-    </aside>
+        .cal-day-label {
+            text-align: center;
+            font-size: .6rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 4px 0 8px;
+        }
 
-    {{-- Main --}}
-    <div class="main">
+        .cal-day {
+            text-align: center;
+            padding: 6px 2px;
+            border-radius: 8px;
+            font-size: .78rem;
+            color: var(--text);
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
 
-        <div class="topbar">
-            <div>
-                <div class="topbar-title">Dashboard</div>
-                <div class="topbar-sub">{{ now()->translatedFormat('l, d F Y') }}</div>
+        .cal-day.other-month {
+            color: var(--text-muted);
+            opacity: .35;
+        }
+
+        .cal-day.today {
+            background: var(--clay);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .cal-day.has-schedule {
+            background: rgba(160, 82, 45, .12);
+            color: var(--clay);
+            font-weight: 600;
+        }
+
+        .cal-day.today.has-schedule {
+            background: var(--clay);
+            color: #fff;
+        }
+
+        .cal-dot {
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--clay);
+        }
+
+        .cal-day.today .cal-dot {
+            background: #fff;
+        }
+
+        .cal-day.selected {
+            background: var(--clay-dark);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        /* ── Tabs ── */
+        .tab-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1.5px solid var(--clay);
+            background: transparent;
+            color: var(--clay);
+            font-family: 'Raleway', sans-serif;
+            font-size: .8rem;
+            font-weight: 600;
+            letter-spacing: .06em;
+            cursor: pointer;
+            transition: background .18s, color .18s;
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            background: var(--clay);
+            color: #fff;
+        }
+
+        /* ── Add button ── */
+        .btn-tambah {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            font-family: 'Raleway', sans-serif;
+            font-size: .8rem;
+            font-weight: 600;
+            letter-spacing: .06em;
+            cursor: pointer;
+            transition: background .18s;
+            font-size: .9rem;
+        }
+
+        .btn-tambah:hover {
+            background: var(--clay-dark);
+        }
+
+        .btn-tambah svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ── Schedule cards ── */
+        .schedule-card {
+            background: var(--clay);
+            border-radius: 14px;
+            padding: 16px 18px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .schedule-card::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 90px;
+            height: 90px;
+            background: rgba(255, 255, 255, .08);
+            border-radius: 50%;
+        }
+
+        .sc-title {
+            font-weight: 700;
+            font-size: .95rem;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .sc-coach {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, .15);
+            border-radius: 20px;
+            padding: 3px 10px 3px 3px;
+            font-size: .73rem;
+            margin-bottom: 8px;
+        }
+
+        .sc-coach-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .6rem;
+            font-weight: 700;
+        }
+
+        .sc-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-bottom: 10px;
+        }
+
+        .sc-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .75rem;
+            opacity: .9;
+        }
+
+        .sc-meta-row svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        .sc-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .sc-price {
+            font-weight: 700;
+            font-size: .9rem;
+        }
+
+        .sc-quota {
+            font-size: .72rem;
+            opacity: .85;
+        }
+
+        .sc-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-view-jadwal {
+            flex: 1;
+            padding: .55rem;
+            background: rgba(255, 255, 255, .2);
+            color: #fff;
+            border: 1.5px solid rgba(255, 255, 255, .35);
+            border-radius: 8px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .72rem;
+            font-weight: 600;
+            letter-spacing: .06em;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s;
+            cursor: pointer;
+        }
+
+        .btn-view-jadwal:hover {
+            background: rgba(255, 255, 255, .32);
+        }
+
+        .btn-hapus-jadwal {
+            flex: 1;
+            padding: .55rem;
+            background: rgba(220, 38, 38, .25);
+            color: #fff;
+            border: 1.5px solid rgba(220, 38, 38, .4);
+            border-radius: 8px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .72rem;
+            font-weight: 600;
+            letter-spacing: .06em;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .btn-hapus-jadwal:hover {
+            background: rgba(220, 38, 38, .4);
+        }
+
+        .empty-schedule {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: .85rem;
+            background: var(--bg-white);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+        }
+
+        .section-label-page {
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        /* ── Modals ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 18px;
+            width: 100%;
+            max-width: 420px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            animation: modalIn .2s ease both;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--text-muted);
+            border-radius: 6px;
+        }
+
+        .modal-close svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .modal-field label {
+            display: block;
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: .35rem;
+        }
+
+        .modal-field input,
+        .modal-field select,
+        .modal-field textarea {
+            width: 100%;
+            padding: .72rem .9rem;
+            background: #faf8f6;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .85rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .modal-field input:focus,
+        .modal-field select:focus,
+        .modal-field textarea:focus {
+            border-color: var(--clay);
+        }
+
+        .modal-field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-modal-submit {
+            width: 100%;
+            padding: .85rem;
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .82rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: background .18s;
+        }
+
+        .btn-modal-submit:hover {
+            background: var(--clay-dark);
+        }
+    </style>
+@endpush
+
+@section('content')
+    <div class="content">
+
+        {{-- Calendar --}}
+        <div class="calendar-wrap">
+            <div class="calendar-header">
+                <button class="cal-nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+                <div class="calendar-title" id="cal-title"></div>
+                <button class="cal-nav-btn" onclick="changeMonth(1)">&#8250;</button>
             </div>
-            <button class="topbar-menu-btn" onclick="toggleSidebar()">
+            <div class="calendar-grid" id="cal-grid"></div>
+        </div>
+
+        {{-- Tabs --}}
+        <div class="tab-row">
+            <button class="tab-btn active" id="tab-kelas" onclick="switchTab('kelas')">Kelas</button>
+            <button class="tab-btn" id="tab-keanggotaan" onclick="switchTab('keanggotaan')">Keanggotaan</button>
+        </div>
+
+        {{-- Tambah button (changes based on active tab) --}}
+        <button class="btn-tambah" id="btn-tambah" onclick="handleTambah()">
+            <span id="btn-tambah-label">Tambah Kelas</span>
+            <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+        </button>
+
+        {{-- Jadwal Kelas Section --}}
+        <div id="section-kelas" style="display:flex;flex-direction:column;gap:16px;">
+            <div class="section-label-page">Jadwal Kelas</div>
+            @forelse($schedules as $schedule)
+                @php $initial = strtoupper(substr($schedule->coach_name ?? 'C', 0, 1)); @endphp
+                <div class="schedule-card" data-date="{{ $schedule->schedule_date }}">
+                    <div class="sc-title">{{ $schedule->title ?? $schedule->class_name }}</div>
+                    <div class="sc-coach">
+                        <div class="sc-coach-avatar">{{ $initial }}</div>
+                        {{ $schedule->coach_name }}
+                    </div>
+                    <div class="sc-meta">
+                        <div class="sc-meta-row">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            {{ \Carbon\Carbon::parse($schedule->schedule_date)->translatedFormat('l, d F Y') }}
+                        </div>
+                        <div class="sc-meta-row">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }} –
+                            {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }} WIB
+                        </div>
+                    </div>
+                    <div class="sc-footer">
+                        <span class="sc-price">Rp {{ number_format($schedule->rate_per_class ?? 0, 0, ',', '.') }}</span>
+                        <span class="sc-quota">
+                            @if ($schedule->available_slots > 0)
+                                Kuota tersedia: {{ $schedule->available_slots }} / {{ $schedule->capacity }}
+                            @else
+                                <span style="color:#fee2e2;font-weight:bold;">Kuota penuh</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="sc-buttons">
+                        <a href="{{ route('admin.schedules.view', $schedule->schedule_id) }}" class="btn-view-jadwal">Lihat
+                            Jadwal</a>
+                        <form action="{{ route('admin.schedules.destroy', $schedule->schedule_id) }}" method="POST"
+                            style="flex:1;" onsubmit="return confirm('Hapus jadwal ini?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn-hapus-jadwal" style="width:100%;">Hapus Jadwal</button>
+                        </form>
+                    </div>
+                </div>
+            @empty
+                <div class="empty-schedule">Belum ada jadwal kelas untuk ditampilkan.</div>
+            @endforelse
+        </div>
+
+        {{-- Keanggotaan Section --}}
+        <div id="section-keanggotaan" style="display:none;flex-direction:column;gap:16px;">
+            <div class="section-label-page">Keanggotaan</div>
+            @forelse($packages as $package)
+                <div class="schedule-card">
+                    <div class="sc-title">{{ $package->name }}</div>
+                    @if ($package->class_name)
+                        <div class="sc-coach" style="pointer-events:none;">
+                            <div class="sc-coach-avatar">M</div>
+                            {{ $package->class_name }}
+                        </div>
+                    @endif
+                    <div class="sc-meta">
+                        <div class="sc-meta-row">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            Masa Aktif : {{ $package->validity_months * 30 }} Hari
+                        </div>
+                    </div>
+                    <div class="sc-footer">
+                        <div style="display:flex;flex-direction:column;gap:2px;">
+                            @if ($package->original_price)
+                                <span style="font-size:.75rem;opacity:.65;text-decoration:line-through;">Rp
+                                    {{ number_format($package->original_price, 0, ',', '.') }}</span>
+                            @endif
+                            <span class="sc-price">Rp {{ number_format($package->price, 0, ',', '.') }}</span>
+                        </div>
+                        <span class="sc-quota">pertemuan : {{ $package->quota_amount }}</span>
+                    </div>
+                    <div class="sc-buttons">
+                        <a href="{{ route('admin.membership.view', $package->package_id) }}" class="btn-view-jadwal">Lihat
+                            Keanggotaan</a>
+                        <form action="{{ route('admin.membership.destroy', $package->package_id) }}" method="POST"
+                            style="flex:1;" onsubmit="return confirm('Hapus paket ini?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn-hapus-jadwal" style="width:100%;">Hapus</button>
+                        </form>
+                    </div>
+                </div>
+            @empty
+                <div class="empty-schedule">Belum ada paket keanggotaan.</div>
+            @endforelse
+        </div>
+
+    </div>
+@endsection
+
+@push('scripts')
+    <script>
+        // ── Tab switching ──
+        let activeTab = 'kelas';
+
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('tab-kelas').classList.toggle('active', tab === 'kelas');
+            document.getElementById('tab-keanggotaan').classList.toggle('active', tab === 'keanggotaan');
+            document.getElementById('section-kelas').style.display = tab === 'kelas' ? 'flex' : 'none';
+            document.getElementById('section-keanggotaan').style.display = tab === 'keanggotaan' ? 'flex' : 'none';
+            document.getElementById('btn-tambah-label').textContent = tab === 'kelas' ? 'Tambah Kelas' :
+                'Tambah Keanggotaan';
+        }
+
+        function handleTambah() {
+            openModal(activeTab === 'kelas' ? 'modal-kelas' : 'modal-member');
+        }
+
+        // ── Modal ──
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        }));
+
+        // ── Calendar ──
+        const scheduleDates = @json($scheduleDates);
+        let currentDate = new Date();
+        let currentYear = currentDate.getFullYear();
+        let currentMonth = currentDate.getMonth();
+
+        const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
+            'Oktober', 'November', 'Desember'
+        ];
+        const dayNames = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
+
+        function renderCalendar(year, month) {
+            document.getElementById('cal-title').textContent = monthNames[month] + ' ' + year;
+            const grid = document.getElementById('cal-grid');
+            grid.innerHTML = '';
+
+            dayNames.forEach(d => {
+                const el = document.createElement('div');
+                el.className = 'cal-day-label';
+                el.textContent = d;
+                grid.appendChild(el);
+            });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const prevDays = new Date(year, month, 0).getDate();
+            const today = new Date();
+
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const el = document.createElement('div');
+                el.className = 'cal-day other-month';
+                el.textContent = prevDays - i;
+                grid.appendChild(el);
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const el = document.createElement('div');
+                el.className = 'cal-day';
+                const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+                if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear())
+                    el.classList.add('today');
+                if (scheduleDates.includes(dateStr)) {
+                    el.classList.add('has-schedule');
+                    const dot = document.createElement('div');
+                    dot.className = 'cal-dot';
+                    el.appendChild(dot);
+                }
+                el.insertBefore(document.createTextNode(d), el.firstChild);
+                el.dataset.date = dateStr;
+                el.style.cursor = 'pointer';
+                el.addEventListener('click', () => filterByDate(dateStr));
+                grid.appendChild(el);
+            }
+
+            const total = firstDay + daysInMonth;
+            const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+            for (let d = 1; d <= remaining; d++) {
+                const el = document.createElement('div');
+                el.className = 'cal-day other-month';
+                el.textContent = d;
+                grid.appendChild(el);
+            }
+        }
+
+        function changeMonth(dir) {
+            currentMonth += dir;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar(currentYear, currentMonth);
+        }
+
+        renderCalendar(currentYear, currentMonth);
+
+        // Re-open modal on validation error
+        @if ($errors->has('class_id') || $errors->has('coach_id') || $errors->has('capacity') || $errors->has('schedule_date'))
+            openModal('modal-kelas');
+        @endif
+        @if ($errors->has('name') || $errors->has('quota_amount') || $errors->has('price'))
+            switchTab('keanggotaan');
+            openModal('modal-member');
+        @endif
+
+        // ── Calendar filter ──
+        let activeDate = null;
+
+        function filterByDate(dateStr) {
+            switchTab('kelas');
+
+            const cards = document.querySelectorAll('#section-kelas .schedule-card');
+
+            if (activeDate === dateStr) {
+                activeDate = null;
+                cards.forEach(card => card.style.display = '');
+                document.querySelectorAll('.cal-day.selected').forEach(el => el.classList.remove('selected'));
+                document.getElementById('no-schedule-msg')?.remove();
+                return;
+            }
+
+            activeDate = dateStr;
+            document.querySelectorAll('.cal-day.selected').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`.cal-day[data-date="${dateStr}"]`)?.classList.add('selected');
+
+            document.getElementById('no-schedule-msg')?.remove();
+
+            let anyVisible = false;
+            cards.forEach(card => {
+                const show = card.dataset.date === dateStr;
+                card.style.display = show ? '' : 'none';
+                if (show) anyVisible = true;
+            });
+
+            if (!anyVisible) {
+                const section = document.getElementById('section-kelas');
+                const msg = document.createElement('div');
+                msg.id = 'no-schedule-msg';
+                msg.className = 'empty-schedule';
+                msg.textContent = 'Tidak ada jadwal kelas pada tanggal ini.';
+                section.appendChild(msg);
+            }
+        }
+    </script>
+@endpush
+
+{{-- Modal: Tambah Kelas --}}
+<div class="modal-overlay" id="modal-kelas">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Tambah Kelas</div>
+            <button class="modal-close" onclick="closeModal('modal-kelas')">
                 <svg viewBox="0 0 24 24">
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <line x1="3" y1="12" x2="21" y2="12" />
-                    <line x1="3" y1="18" x2="21" y2="18" />
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
             </button>
         </div>
-
-        <div class="content">
-
-            {{-- Stats --}}
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon clay">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                            <circle cx="9" cy="7" r="4" />
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="stat-number">{{ $totalUsers }}</div>
-                        <div class="stat-label">Total Member</div>
-                    </div>
+        <form action="{{ route('admin.schedules.store') }}" method="POST" class="modal-form">
+            @csrf
+            <div class="modal-field">
+                <label>Nama Kustom (Opsional)</label>
+                <input type="text" name="custom_name" placeholder="contoh: Hatha Yoga With Nima"
+                    value="{{ old('custom_name') }}">
+            </div>
+            <div class="modal-field">
+                <label>Kelas</label>
+                <select name="class_id" required>
+                    <option value="">Pilih Kelas</option>
+                    @foreach ($classes as $class)
+                        <option value="{{ $class->class_id }}"
+                            {{ old('class_id') == $class->class_id ? 'selected' : '' }}>
+                            {{ $class->class_name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Pelatih</label>
+                <select name="coach_id" required>
+                    <option value="">Pilih Pelatih</option>
+                    @foreach ($coaches as $coach)
+                        <option value="{{ $coach->coach_id }}"
+                            {{ old('coach_id') == $coach->coach_id ? 'selected' : '' }}>
+                            {{ $coach->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Tanggal</label>
+                <input type="date" name="schedule_date" value="{{ old('schedule_date') }}"
+                    min="{{ date('Y-m-d') }}" required>
+            </div>
+            <div class="modal-field-row">
+                <div class="modal-field">
+                    <label>Jam Mulai</label>
+                    <input type="time" name="start_time" value="{{ old('start_time') }}" required>
                 </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon blue">
-                        <svg viewBox="0 0 24 24">
-                            <rect x="3" y="4" width="18" height="18" rx="2" />
-                            <line x1="16" y1="2" x2="16" y2="6" />
-                            <line x1="8" y1="2" x2="8" y2="6" />
-                            <line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="stat-number">{{ $totalSchedules }}</div>
-                        <div class="stat-label">Jadwal Aktif</div>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon green">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                            <line x1="16" y1="13" x2="8" y2="13" />
-                            <line x1="16" y1="17" x2="8" y2="17" />
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="stat-number">{{ $totalBookings }}</div>
-                        <div class="stat-label">Total Booking</div>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon amber">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="stat-number">{{ $totalClasses }}</div>
-                        <div class="stat-label">Jenis Kelas</div>
-                    </div>
+                <div class="modal-field">
+                    <label>Jam Selesai</label>
+                    <input type="time" name="end_time" value="{{ old('end_time') }}" required>
                 </div>
             </div>
-
-            {{-- Two column --}}
-            <div class="two-col">
-
-                {{-- Recent bookings --}}
-                <div class="section-card">
-                    <div class="section-header">
-                        <div>
-                            <div class="section-header-title">Booking Terbaru</div>
-                            <div class="section-header-sub">10 transaksi terakhir</div>
-                        </div>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Member</th>
-                                <th>Kelas</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($recentBookings as $booking)
-                                <tr>
-                                    <td>{{ $booking->user_name }}</td>
-                                    <td>
-                                        {{ $booking->class_name }}<br>
-                                        <span
-                                            style="font-size:.72rem;color:var(--text-muted)">{{ \Carbon\Carbon::parse($booking->schedule_date)->format('d M') }}</span>
-                                    </td>
-                                    <td>
-                                        <span
-                                            class="badge badge-{{ $booking->status }}">{{ $booking->status }}</span>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3"
-                                        style="text-align:center;color:var(--text-muted);padding:2rem;">Belum ada
-                                        booking</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- Upcoming schedules --}}
-                <div class="section-card">
-                    <div class="section-header">
-                        <div>
-                            <div class="section-header-title">Jadwal Mendatang</div>
-                            <div class="section-header-sub">5 jadwal terdekat</div>
-                        </div>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Kelas</th>
-                                <th>Tanggal</th>
-                                <th>Kuota</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($upcomingSchedules as $schedule)
-                                <tr>
-                                    <td>
-                                        {{ $schedule->class_name }}<br>
-                                        <span
-                                            style="font-size:.72rem;color:var(--text-muted)">{{ $schedule->coach_name }}</span>
-                                    </td>
-                                    <td>
-                                        {{ \Carbon\Carbon::parse($schedule->schedule_date)->format('d M') }}<br>
-                                        <span
-                                            style="font-size:.72rem;color:var(--text-muted)">{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}</span>
-                                    </td>
-                                    <td>{{ $schedule->available_slots }}/{{ $schedule->capacity }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3"
-                                        style="text-align:center;color:var(--text-muted);padding:2rem;">Tidak ada
-                                        jadwal</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
+            <div class="modal-field">
+                <label>Kuota Kelas</label>
+                <input type="number" name="capacity" placeholder="Maks: 100" value="{{ old('capacity') }}"
+                    min="1" max="100" required>
             </div>
-        </div>
+            <button type="submit" class="btn-modal-submit">Tambah Kelas</button>
+        </form>
     </div>
+</div>
 
-    <script>
-        function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('open');
-            document.getElementById('overlay').classList.toggle('open');
-        }
-    </script>
-</body>
-
-</html>
+{{-- Modal: Tambah Keanggotaan --}}
+<div class="modal-overlay" id="modal-member">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Tambah Keanggotaan</div>
+            <button class="modal-close" onclick="closeModal('modal-member')">
+                <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+        <form action="{{ route('admin.membership.store') }}" method="POST" class="modal-form">
+            @csrf
+            <div class="modal-field">
+                <label>Nama Membership</label>
+                <input type="text" name="name" placeholder="contoh: Member Platinum Yoga"
+                    value="{{ old('name') }}" required>
+            </div>
+            <div class="modal-field">
+                <label>Kelas</label>
+                <select name="class_id" required>
+                    <option value="">Pilih Kelas</option>
+                    @foreach ($classes as $class)
+                        <option value="{{ $class->class_id }}"
+                            {{ old('class_id') == $class->class_id ? 'selected' : '' }}>
+                            {{ $class->class_name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="modal-field-row">
+                <div class="modal-field">
+                    <label>Harga Asli (Rp)</label>
+                    <input type="number" name="original_price" placeholder="150000"
+                        value="{{ old('original_price') }}" min="0" step="1000">
+                </div>
+                <div class="modal-field">
+                    <label>Harga Diskon (Rp)</label>
+                    <input type="number" name="price" placeholder="120000" value="{{ old('price') }}"
+                        min="0" step="1000" required>
+                </div>
+            </div>
+            <div class="modal-field">
+                <label>Kuota Keanggotaan (Jumlah Sesi)</label>
+                <input type="number" name="quota_amount" placeholder="8" value="{{ old('quota_amount') }}"
+                    min="1" required>
+            </div>
+            <div class="modal-field">
+                <label>Masa Aktif (Bulan)</label>
+                <input type="number" name="validity_months" placeholder="2"
+                    value="{{ old('validity_months', 2) }}" min="1" required>
+            </div>
+            <div class="modal-field">
+                <label>Deskripsi</label>
+                <textarea name="description" rows="3" placeholder="Deskripsi paket...">{{ old('description') }}</textarea>
+            </div>
+            <button type="submit" class="btn-modal-submit">Tambah Anggota</button>
+        </form>
+    </div>
+</div>

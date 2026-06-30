@@ -159,10 +159,59 @@
             stroke-linecap: round;
             stroke-linejoin: round;
         }
+
+        .info-input {
+            font-size: .8rem;
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            width: 100%;
+        }
+
+        .save-btn {
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+        }
+
+        .edit-btn:hover {
+            background: var(--clay-pale);
+        }
+
+        .edit-icon {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .editable.editing .edit-btn {
+            display: none;
+        }
     </style>
 @endpush
 
 @section('content')
+    @php
+        $roleMap = ['customer' => 'Pelanggan', 'coach' => 'Pelatih', 'admin' => 'Admin'];
+        $roleLabel = $roleMap[$user->role] ?? ucfirst($user->role);
+        $statusLabel = $user->status === 'active' ? 'Aktif' : 'Tidak Aktif';
+    @endphp
+
     <div class="content">
 
         <div class="profile-hero">
@@ -174,7 +223,7 @@
                 </svg>
             </div>
             <div class="profile-name">{{ $user->name }}</div>
-            <span class="profile-role">{{ ucfirst($user->role) }}</span>
+            <span class="profile-role">{{ $roleLabel }}</span>
             @if ($user->phone_number)
                 <div class="profile-phone">
                     <svg viewBox="0 0 24 24">
@@ -186,7 +235,7 @@
             @endif
         </div>
 
-        <div class="stats-row">
+        {{-- <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-number">{{ $totalBookings }}</div>
                 <div class="stat-label">Total Kelas</div>
@@ -199,28 +248,60 @@
                 <div class="stat-number">{{ $upcomingBookings }}</div>
                 <div class="stat-label">Mendatang</div>
             </div>
-        </div>
+        </div> --}}
 
         <div class="info-card">
             <div class="info-card-title">Informasi Akun</div>
 
+            {{-- Username — read only --}}
             <div class="info-row">
                 <div class="info-row-left">
-                    <div class="info-icon"><svg viewBox="0 0 24 24">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                             <circle cx="12" cy="7" r="4" />
-                        </svg></div>
+                        </svg>
+                    </div>
                     <div>
-                        <div class="info-label">Username</div>
-                        <div class="info-value">{{ $user->name }}</div>
+                        <div class="info-label">Nama Pengguna</div>
+                        <div class="info-value">{{ $user->username }}</div>
                     </div>
                 </div>
-                <svg class="info-chevron" viewBox="0 0 24 24">
-                    <polyline points="9 18 15 12 9 6" />
-                </svg>
             </div>
 
-            <div class="info-row">
+            {{-- Nama Lengkap — editable --}}
+            <form action="{{ route('profile.update') }}" method="POST" class="info-row editable">
+                @csrf
+                @method('PUT')
+                <div class="info-row-left">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="info-label">Nama Lengkap</div>
+                        <input type="text" name="name" value="{{ $user->name }}" class="info-input" hidden>
+                        @error('name')
+                            <div style="color:#c0392b;font-size:.72rem;margin-top:4px;">{{ $message }}</div>
+                        @enderror
+                        <div class="info-value value-text">{{ $user->name }}</div>
+                    </div>
+                </div>
+                <button type="button" class="edit-btn">
+                    <svg viewBox="0 0 24 24" class="edit-icon">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                </button>
+                <button type="submit" class="save-btn" hidden>✔</button>
+            </form>
+
+            <form action="{{ route('profile.update') }}" method="POST" class="info-row editable">
+                @csrf
+                @method('PUT')
+
                 <div class="info-row-left">
                     <div class="info-icon"><svg viewBox="0 0 24 24">
                             <path
@@ -228,29 +309,85 @@
                         </svg></div>
                     <div>
                         <div class="info-label">Nomor HP</div>
-                        <div class="info-value">{{ $user->phone_number ?? '—' }}</div>
+
+                        <input type="text" name="phone_number" value="{{ $user->phone_number }}" class="info-input"
+                            hidden>
+                        @error('phone_number')
+                            <div style="color:#c0392b;font-size:.72rem;margin-top:4px;">{{ $message }}</div>
+                        @enderror
+
+                        <div class="info-value value-text">{{ $user->phone_number ?? '—' }}</div>
                     </div>
                 </div>
-                <svg class="info-chevron" viewBox="0 0 24 24">
-                    <polyline points="9 18 15 12 9 6" />
-                </svg>
-            </div>
 
-            <div class="info-row">
+                <button type="button" class="edit-btn">
+                    <svg viewBox="0 0 24 24" class="edit-icon">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                </button>
+
+                <button type="submit" class="save-btn" hidden>✔</button>
+            </form>
+
+            <form action="{{ route('profile.update') }}" method="POST" class="info-row editable">
+                @csrf
+                @method('PUT')
+
                 <div class="info-row-left">
-                    <div class="info-icon"><svg viewBox="0 0 24 24">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24">
                             <rect x="3" y="11" width="18" height="11" rx="2" />
                             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </svg></div>
-                    <div>
-                        <div class="info-label">Password</div>
-                        <div class="info-value">••••••••</div>
+                        </svg>
+                    </div>
+                    <div style="width:100%;">
+                        <div class="info-label">Kata Sandi</div>
+
+                        {{-- password baru --}}
+                        <div class="input-wrap" style="position:relative;margin-bottom:6px;" hidden>
+                            <input type="password" name="password" placeholder="Password baru" class="info-input pw-field"
+                                id="pw-new">
+                            <button type="button" class="eye-btn" onclick="togglePw('pw-new', this)"
+                                style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:#9A8C82;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"
+                                    stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {{-- konfirmasi --}}
+                        <div class="input-wrap" style="position:relative;" hidden>
+                            <input type="password" name="password_confirmation" placeholder="Konfirmasi password"
+                                class="info-input pw-field" id="pw-confirm">
+                            <button type="button" class="eye-btn" onclick="togglePw('pw-confirm', this)"
+                                style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:#9A8C82;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor"
+                                    stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+                                    viewBox="0 0 24 24">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                        @error('password')
+                            <div style="color:#c0392b;font-size:.72rem;margin-top:4px;">{{ $message }}</div>
+                        @enderror
+
+                        <div class="info-value value-text">••••••••</div>
                     </div>
                 </div>
-                <svg class="info-chevron" viewBox="0 0 24 24">
-                    <polyline points="9 18 15 12 9 6" />
-                </svg>
-            </div>
+
+                <button type="button" class="edit-btn">
+                    <svg viewBox="0 0 24 24" class="edit-icon">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                </button>
+                <button type="submit" class="save-btn" hidden>✔</button>
+            </form>
 
             <div class="info-row">
                 <div class="info-row-left">
@@ -259,7 +396,7 @@
                         </svg></div>
                     <div>
                         <div class="info-label">Status</div>
-                        <div class="info-value">{{ ucfirst($user->status) }}</div>
+                        <div class="info-value">{{ $statusLabel }}</div>
                     </div>
                 </div>
             </div>
@@ -281,17 +418,55 @@
             </div>
         </div>
 
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="btn-logout">
-                <svg viewBox="0 0 24 24">
+        <form action="{{ route('logout') }}" method="POST"> @csrf <button type="submit" class="btn-logout"> <svg
+                    viewBox="0 0 24 24">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                     <polyline points="16 17 21 12 16 7" />
                     <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-                Keluar
-            </button>
-        </form>
+                </svg> Keluar </button> </form>
 
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('.editable').forEach(row => {
+                        const editBtn = row.querySelector('.edit-btn');
+                        const saveBtn = row.querySelector('.save-btn');
+                        const inputs = row.querySelectorAll('.info-input');
+                        const valueText = row.querySelector('.value-text');
+
+                        editBtn.addEventListener('click', () => {
+                            row.classList.add('editing');
+                            inputs.forEach(i => i.hidden = false);
+                            valueText.hidden = true;
+                            saveBtn.hidden = false;
+                        });
+                    });
+                });
+            </script>
+            <script>
+                document.querySelectorAll('.editable').forEach(row => {
+                    const editBtn = row.querySelector('.edit-btn');
+                    const saveBtn = row.querySelector('.save-btn');
+                    const valueText = row.querySelector('.value-text');
+
+                    if (!editBtn) return;
+
+                    editBtn.addEventListener('click', () => {
+                        row.classList.add('editing');
+                        row.querySelectorAll('.info-input, .input-wrap').forEach(el => el.hidden = false);
+                        if (valueText) valueText.hidden = true;
+                        if (saveBtn) saveBtn.hidden = false;
+                    });
+                });
+            </script>
+            <script>
+                function togglePw(id, btn) {
+                    const input = document.getElementById(id);
+                    input.type = input.type === 'password' ? 'text' : 'password';
+                    btn.style.opacity = input.type === 'text' ? '1' : '.5';
+                }
+            </script>
+        @endpush
     </div>
+
 @endsection

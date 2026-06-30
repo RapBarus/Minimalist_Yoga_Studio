@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  yoga_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.nfr
+    container_name: yoga_app_sandbox
+    restart: always
+    ports:
+      - "8000:80"
+    # Batasan yang lebih kompatibel dengan docker-compose up
+    cpus: '1.0'
+    mem_limit: 1024M
+    
+    env_file:
+      - .env.productiontesting
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"] # Ubah sedikit formatnya
+      interval: 30s
+      timeout: 10s
+      retries: 3

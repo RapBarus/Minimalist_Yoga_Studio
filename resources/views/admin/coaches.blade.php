@@ -1,225 +1,477 @@
-<!DOCTYPE html>
-<html lang="id">
+@extends('layouts.admin')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelola Coach | Minimalist Studio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Raleway:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
-</head>
+@section('title', 'Data Pelatih | Minimalist Studio')
+@section('page-title', 'Data Pelatih')
+@section('page-sub', 'Kelola pelatih studio')
 
-<body>
-
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <img src="{{ asset('images/minimalist-logo-2.png') }}" alt="Minimalist Studio">
-        </div>
-        <div class="sidebar-admin">Admin Panel<strong>{{ Session::get('user_name') }}</strong></div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">Menu</div>
-            <a href="{{ route('admin.dashboard') }}" class="nav-link"><svg viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="7" height="7" />
-                    <rect x="14" y="3" width="7" height="7" />
-                    <rect x="14" y="14" width="7" height="7" />
-                    <rect x="3" y="14" width="7" height="7" />
-                </svg>Dashboard</a>
-            <a href="{{ route('admin.coaches') }}" class="nav-link active"><svg viewBox="0 0 24 24">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>Coach</a>
-            <a href="#" class="nav-link"><svg viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>Jadwal</a>
-            <a href="#" class="nav-link"><svg viewBox="0 0 24 24">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                </svg>Booking</a>
-            <div class="nav-section">Konten</div>
-            <a href="#" class="nav-link"><svg viewBox="0 0 24 24">
-                    <polygon
-                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>Penawaran</a>
-            <a href="#" class="nav-link"><svg viewBox="0 0 24 24">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>Kelas</a>
-        </nav>
-        <div class="sidebar-logout">
-            <form action="{{ route('logout') }}" method="POST">@csrf
-                <button type="submit" class="btn-sidebar-logout"><svg viewBox="0 0 24 24">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <polyline points="16 17 21 12 16 7" />
-                        <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>Keluar</button>
-            </form>
-        </div>
-    </aside>
-
-    <div class="main">
-        <div class="topbar">
-            <div>
-                <div class="topbar-title">Kelola Coach</div>
-                <div class="topbar-sub">Tambah dan kelola akun coach</div>
-            </div>
-        </div>
-
-        <div class="content">
-
-            @if (session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
-            @if ($errors->any())
-                <div class="alert alert-error">{{ $errors->first() }}</div>
-            @endif
-
-            <div class="two-col">
-
-                {{-- Add coach form --}}
-                <div class="section-card">
-                    <div class="section-header">
-                        <div class="section-header-title">Tambah Coach Baru</div>
-                    </div>
-                    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
-
-                        <div class="login-hint">
-                            Coach akan login dengan:<br>
-                            <strong>namacoach@coach.com</strong>
-                        </div>
-
-                        <form action="{{ route('admin.coaches.store') }}" method="POST"
-                            style="display:flex;flex-direction:column;gap:14px;">
-                            @csrf
-                            <div class="field">
-                                <label>Nama / Username</label>
-                                <input type="text" name="name" placeholder="contoh: nima"
-                                    value="{{ old('name') }}" required>
-                                @error('name')
-                                    <div class="field-error">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="field">
-                                <label>Nomor HP</label>
-                                <input type="tel" name="phone" placeholder="81234567890"
-                                    value="{{ old('phone') }}" required>
-                            </div>
-                            <div class="field">
-                                <label>Password</label>
-                                <div style="position:relative;">
-                                    <input type="password" name="password" id="coach-password"
-                                        placeholder="Minimal 6 karakter" required style="padding-right:2.5rem;">
-                                    <button type="button" onclick="toggleCoachPassword()"
-                                        style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:var(--text-muted);display:flex;align-items:center;">
-                                        <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18"
-                                            height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                            <path
-                                                d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="field">
-                                <label>Spesialisasi</label>
-                                <input type="text" name="specialization" placeholder="contoh: Yoga, Zumba"
-                                    value="{{ old('specialization') }}" required>
-                            </div>
-                            <div class="field-row">
-                                <div class="field">
-                                    <label>Tarif / Kelas (Rp)</label>
-                                    <input type="number" name="rate_per_class" placeholder="150000"
-                                        value="{{ old('rate_per_class') }}" min="0" required>
-                                </div>
-                                <div class="field">
-                                    <label>Pengalaman (Tahun)</label>
-                                    <input type="number" name="years_experience" placeholder="3"
-                                        value="{{ old('years_experience') }}" min="0" required>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn-primary">Tambah Coach</button>
-                        </form>
-                    </div>
-                </div>
-
-                {{-- Coaches table --}}
-                <div class="section-card">
-                    <div class="section-header">
-                        <div class="section-header-title">Daftar Coach</div>
-                        <span class="badge badge-info">{{ $coaches->count() }} coach</span>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nama</th>
-                                <th>Spesialisasi</th>
-                                <th>Tarif</th>
-                                <th>Status</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($coaches as $coach)
-                                <tr>
-                                    <td>
-                                        {{ $coach->name }}<br>
-                                        <span
-                                            style="font-size:.72rem;color:var(--text-muted)">{{ $coach->name }}@coach.com</span>
-                                    </td>
-                                    <td>{{ $coach->specialization }}</td>
-                                    <td>Rp {{ number_format($coach->rate_per_class, 0, ',', '.') }}</td>
-                                    <td><span class="badge badge-{{ $coach->status }}">{{ $coach->status }}</span>
-                                    </td>
-                                    <td>
-                                        @if ($coach->status === 'active')
-                                            <form action="{{ route('admin.coaches.destroy', $coach->coach_id) }}"
-                                                method="POST" onsubmit="return confirm('Nonaktifkan coach ini?')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn-danger-sm">Nonaktifkan</button>
-                                            </form>
-                                        @else
-                                            <form action="{{ route('admin.coaches.restore', $coach->coach_id) }}"
-                                                method="POST">
-                                                @csrf
-                                                <button type="submit" class="btn-restore-sm">Aktifkan</button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5"
-                                        style="text-align:center;color:var(--text-muted);padding:2rem;">Belum ada coach
-                                        terdaftar.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('open');
-            document.getElementById('overlay').classList.toggle('open');
+@push('styles')
+    <style>
+        .coach-list {
+            background: var(--bg-white);
+            border: 1.5px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
         }
 
-        function toggleCoachPassword() {
+        .coach-list-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .coach-list-title {
+            font-weight: 700;
+            font-size: .95rem;
+            color: var(--text);
+        }
+
+        .btn-tambah-coach {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .75rem;
+            font-weight: 600;
+            letter-spacing: .05em;
+            cursor: pointer;
+            transition: background .18s;
+        }
+
+        .btn-tambah-coach:hover {
+            background: var(--clay-dark);
+        }
+
+        .btn-tambah-coach svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+        }
+
+        .coach-row:last-child {
+            border-bottom: none;
+        }
+
+        .coach-row:hover {
+            background: #faf8f6;
+        }
+
+        .coach-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .coach-table thead tr {
+            background: var(--clay);
+            color: #fff;
+        }
+
+        .coach-table th {
+            padding: 10px 20px;
+            text-align: left;
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .coach-table td {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: .85rem;
+            color: var(--text);
+        }
+
+        .coach-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .coach-table tr:hover td {
+            background: #faf8f6;
+        }
+
+        .coach-name {
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .btn-edit-coach {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            color: var(--clay);
+            transition: background .15s;
+        }
+
+        .btn-edit-coach:hover {
+            background: var(--clay-pale);
+        }
+
+        .btn-edit-coach svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 18px;
+            width: 100%;
+            max-width: 420px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            animation: modalIn .2s ease both;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--text-muted);
+            border-radius: 6px;
+        }
+
+        .modal-close svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .modal-field label {
+            display: block;
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: .35rem;
+        }
+
+        .modal-field input,
+        .modal-field select,
+        .modal-field textarea {
+            width: 100%;
+            padding: .72rem .9rem;
+            background: #faf8f6;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .85rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .modal-field input:focus,
+        .modal-field select:focus,
+        .modal-field textarea:focus {
+            border-color: var(--clay);
+        }
+
+        .modal-field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-modal-submit {
+            width: 100%;
+            padding: .85rem;
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .82rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: background .18s;
+        }
+
+        .btn-modal-submit:hover {
+            background: var(--clay-dark);
+        }
+
+        .login-hint {
+            font-size: .75rem;
+            color: var(--text-muted);
+            background: var(--clay-pale);
+            border-radius: 8px;
+            padding: 10px 12px;
+            line-height: 1.6;
+        }
+
+        .login-hint strong {
+            color: var(--clay);
+        }
+
+        .search-wrap {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: .65rem .9rem .65rem 2.4rem;
+            background: #faf8f6;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Raleway', sans-serif;
+            font-size: .85rem;
+            color: var(--text);
+            outline: none;
+            transition: border-color .2s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239A8C82' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: .75rem center;
+        }
+
+        .search-input:focus {
+            border-color: var(--clay);
+        }
+    </style>
+@endpush
+
+@section('content')
+    <div class="content">
+
+        <div class="coach-list">
+            <div class="coach-list-header">
+                <button class="btn-tambah-coach" onclick="openModal('modal-tambah-coach')">
+                    Tambah Pelatih
+                    <svg viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="search-wrap">
+                <input type="text" class="search-input" id="coach-search" placeholder="Search...">
+            </div>
+
+            <table class="coach-table">
+                <tbody>
+                <tbody>
+                    @forelse($coaches->where('status', 'active') as $coach)
+                        <tr>
+                            <td>{{ $coach->name }}</td>
+                            <td style="text-align:right;">
+                                <a href="{{ route('admin.coaches.detail', $coach->coach_id) }}" class="btn-edit-coach">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                    </svg>
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="2" style="text-align:center;color:var(--text-muted);padding:2rem;">
+                                Belum ada coach.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+@endsection
+
+@push('scripts')
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('open');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
+        @if ($errors->any())
+            openModal('modal-tambah-coach');
+        @endif
+
+        function togglePassword() {
             const input = document.getElementById('coach-password');
             const icon = document.getElementById('eye-icon');
-            input.type = input.type === 'password' ? 'text' : 'password';
-            icon.style.opacity = input.type === 'text' ? '1' : '.5';
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML =
+                    '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+            } else {
+                input.type = 'password';
+                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+            }
         }
-    </script>
-</body>
 
-</html>
+        document.getElementById('coach-search').addEventListener('input', function() {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('.coach-table tbody tr').forEach(row => {
+                const name = row.querySelector('td')?.textContent.toLowerCase() ?? '';
+                row.style.display = name.includes(q) ? '' : 'none';
+            });
+        });
+    </script>
+@endpush
+
+<div class="modal-overlay" id="modal-tambah-coach">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Tambah Coach</div>
+            <button class="modal-close" onclick="closeModal('modal-tambah-coach')">
+                <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+        <form action="{{ route('admin.coaches.store') }}" method="POST" class="modal-form">
+            @csrf
+
+            <div class="modal-field">
+                <label>Nama Coach</label>
+                <input type="text" name="name" placeholder="Masukan Nama Coach" value="{{ old('name') }}"
+                    required>
+            </div>
+
+            <div class="modal-field">
+                <label>Keahlian (Specialization)</literal>
+                    <select name="class_id" required>
+                        <option value="">-- Pilih Kelas --</option>
+                        @foreach ($classes as $class)
+                            <option value="{{ $class->class_id }}">{{ $class->class_name }}</option>
+                        @endforeach
+                    </select>
+            </div>
+
+            <div class="modal-field">
+                <label>Nomor HP</label>
+                <input type="text" name="phone" placeholder="contoh: +628123456789 atau 08123456789"
+                    value="{{ old('phone') }}" required>
+            </div>
+
+            <div class="modal-field">
+                <label>Deskripsi</label>
+                <textarea name="bio" rows="3" placeholder="Masukan Deskripsi">{{ old('bio') }}</textarea>
+            </div>
+
+            <div class="modal-field-row">
+                <div class="modal-field">
+                    <label>Rate per Kelas (Rp)</label>
+                    <input type="number" name="rate_per_class" placeholder="50000" value="{{ old('rate_per_class') }}"
+                        min="0" step="1000">
+                </div>
+                <div class="modal-field">
+                    <label>Pengalaman (Tahun)</label>
+                    <input type="number" name="years_experience" placeholder="0"
+                        value="{{ old('years_experience', 0) }}" min="0">
+                </div>
+            </div>
+
+            <div class="modal-field">
+                <label>Password</label>
+                <div style="position:relative;">
+                    <input type="password" name="password" id="coach-password" placeholder="Min. 6 karakter" required
+                        style="padding-right:2.5rem;">
+                    <button type="button" onclick="togglePassword()"
+                        style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--text-muted);">
+                        <svg id="eye-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor"
+                            fill="none" stroke-width="2" stroke-linecap="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="login-hint">
+                Login coach:
+                <strong>{{ old('name') ? strtolower(str_replace(' ', '', old('name'))) : 'namacoach' }}@coach.com</strong>
+            </div>
+
+            <button type="submit" class="btn-modal-submit">Tambah Coach</button>
+        </form>
+    </div>
+</div>

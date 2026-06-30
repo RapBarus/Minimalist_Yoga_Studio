@@ -22,3 +22,11 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Test files
+lighthouse-results/
+test-results.csv
+run-tests.ps1
+run-offline-tests.ps1
+headers.json
+warmup.json
