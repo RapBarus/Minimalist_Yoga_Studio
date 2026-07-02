@@ -16,6 +16,7 @@ class DashboardController extends Controller
             ->join('users', 'coaches.user_id', '=', 'users.user_id')
             ->whereIn('schedules.status', ['upcoming', 'ongoing', 'completed'])
             ->where('schedules.schedule_date', '>=', now()->toDateString())
+            ->where('schedules.schedule_date', '<=', now()->endOfMonth()->toDateString())
             ->orderBy('schedules.schedule_date', 'asc')
             ->orderBy('schedules.start_time', 'asc')
             ->select(
@@ -46,6 +47,8 @@ class DashboardController extends Controller
 
         $scheduleDates = DB::table('schedules')
             ->where('status', 'upcoming')
+            ->where('schedule_date', '>=', now()->toDateString())
+            ->where('schedule_date', '<=', now()->endOfMonth()->toDateString())
             ->pluck('schedule_date')
             ->map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'))
             ->unique()

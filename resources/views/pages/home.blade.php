@@ -4,6 +4,10 @@
 
 @push('styles')
     <style>
+        html {
+            overflow-y: scroll;
+        }
+
         .content {
             padding: 24px;
             display: flex;
@@ -141,8 +145,6 @@
             cursor: pointer;
             flex-shrink: 0;
         }
-
-
 
         @keyframes dropDown {
             from {

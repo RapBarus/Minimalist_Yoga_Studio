@@ -4,6 +4,10 @@
 
 @push('styles')
     <style>
+        html {
+            overflow-y: scroll;
+        }
+
         .content {
             padding: 24px;
             display: flex;
