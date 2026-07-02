@@ -4,6 +4,10 @@
 
 @push('styles')
     <style>
+        html {
+            overflow-y: scroll;
+        }
+
         .schedule-card {
             background: var(--clay);
             border-radius: 16px;
